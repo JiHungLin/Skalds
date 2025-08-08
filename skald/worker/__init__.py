@@ -1,0 +1,1 @@
+"""Task Worker module for Skald."""

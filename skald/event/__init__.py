@@ -1,0 +1,1 @@
+"""Event Queue module for Skald."""
