@@ -42,4 +42,3 @@ class SystemConfig:
     DB_NAME: str = os.getenv("DB_NAME", "media-module")
 
     TASK_WORKER_RETRY: int = int(os.getenv("TASK_WORKER_RETRY", -1))
-    USE_REDIS_CACHE: bool = _bool(os.getenv("USE_REDIS_CACHE", True))
