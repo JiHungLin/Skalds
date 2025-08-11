@@ -21,18 +21,31 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: System :: Distributed Computing"
 ]
-dependencies = []
+dependencies = [
+    "pydantic"
+]
+
 
 [project.urls]
 "Homepage" = "https://github.com/yourusername/skald"
 "Bug Tracker" = "https://github.com/yourusername/skald/issues"
 
-[tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
-testpaths = [
-    "tests"
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    ]
 
 [tool.black]
 line-length = 88
