@@ -44,7 +44,82 @@ Inspired by the Skald of Norse mythology—storytellers and messengers—Skald i
 
 ## Getting Started
 
-_(Pending implementation details — will be updated upon initial release)_
+### Getting Started
+
+#### 1. Install Python dependencies
+
+```bash
+pip install -e .
+```
+
+#### 2. Start Kafka, Redis, and MongoDB (using Docker)
+
+You can quickly start all required services using Docker:
+
+You can quickly start all required services using Docker Compose:
+
+```yaml
+version: '3.8'
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27027:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: {Username}
+      MONGO_INITDB_ROOT_PASSWORD: {Password}
+    volumes:
+      - $HOME/mongodb:/data/db
+
+  kafka-broker:
+    image: 'bitnami/kafka:3.9.0'
+    restart: always
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-broker:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      # Set retention time to 30 minutes
+      - KAFKA_CFG_LOG_RETENTION_HOURS=0
+      - KAFKA_CFG_LOG_RETENTION_MINUTES=30
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
+```
+
+> Save this as `docker-compose.yml` and start all services with:
+>
+> ```bash
+> docker-compose up -d
+> ```
+
+> **Note:** If you already have Redis, MongoDB, or Kafka installed locally, you can use your existing services. Adjust connection settings as needed.
+>
+> **Recommended versions:**
+> - Redis: 7.2
+> - MongoDB: 7.0
+> - Kafka: 3.9.0 (no Zookeeper required)
+
+#### 3. Run tests
+
+```bash
+pytest
+```
+
+For more details, see the documentation for each service:
+- [Redis Quick Start](https://hub.docker.com/_/redis)
+- [MongoDB Quick Start](https://hub.docker.com/_/mongo)
+- [Kafka Quick Start](https://hub.docker.com/r/bitnami/kafka)
 
 ---
 

@@ -22,7 +22,11 @@ classifiers = [
     "Topic :: System :: Distributed Computing"
 ]
 dependencies = [
-    "pydantic"
+    "pydantic>=2.5.0",
+    "kafka-python==2.2.7",
+    "redis==6.1.0",
+    "pymongo==4.4.1",
+    "pretty-loguru>=1.1.2",
 ]
 
 
