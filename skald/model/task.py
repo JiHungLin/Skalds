@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
@@ -32,6 +32,7 @@ class Task(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     executor: Optional[str] = None
+    dependencies: Optional[List[str]] = None
     mode: ModeEnum = ModeEnum.PASSIVE
     create_date_time: datetime = Field(default_factory=lambda: datetime.now(), alias="createDateTime")
     update_date_time: datetime = Field(default_factory=lambda: datetime.now(), alias="updateDateTime")

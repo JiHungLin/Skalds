@@ -20,6 +20,10 @@ class RedisKey:
     @staticmethod
     def skald_heartbeat(skald_id: str) -> str:
         return f"skald:{skald_id}:heartbeat"
+    
+    @staticmethod
+    def skald_allow_task_class_name(skald_id: str) -> str:
+        return f"skald:{skald_id}:allow-task-class-name"
 
     @staticmethod
     def skald_all_task(skald_id: str) -> str:

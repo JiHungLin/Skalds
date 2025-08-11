@@ -1,1 +1,0 @@
-"""Cache Memory module for Skald."""

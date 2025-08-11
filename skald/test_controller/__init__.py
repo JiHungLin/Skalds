@@ -1,1 +1,0 @@
-"""Test Controller module for Skald (placeholder for test discovery)."""
