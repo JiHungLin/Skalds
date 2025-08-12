@@ -1,172 +1,277 @@
+"""
+Base classes for Skald task workers.
+
+This module provides abstract and concrete base classes for task workers that
+run as separate processes, handle signals, and integrate with Kafka and Redis
+for messaging and heartbeat monitoring.
+
+Classes:
+    TaskWorkerConfig: Configuration for task worker mode.
+    AbstractTaskWorker: Abstract base class for task worker processes.
+    BaseTaskWorkerV1: Concrete base class for task workers with Kafka/Redis integration.
+"""
+
 import multiprocessing as mp
-from abc import ABC, abstractmethod
-from signal import SIGINT, signal, SIGTERM
 import sys
 import threading
+import time
+import uuid
+from abc import ABC, abstractmethod
+from functools import partial
+from signal import SIGINT, SIGTERM, signal
+from typing import Any, Optional
 
 from kafka.consumer.fetcher import ConsumerRecord
-from entity.task import Task
-from entity.task.attachment.base_class import BaseAttachment
-from entity.task.task import TaskUnitClassNameEnum
-from handler.survive import SurviveHandler, SurviveRoleEnum
-from log import logger
-from proxy.kafka import KafkaConfig, KafkaProxy, KafkaTopic
-from proxy.redis import RedisConfig, RedisKey, RedisProxy
-from store.taskworker import TaskWorkerStore
-import uuid
-from functools import partial
-import time
+from skald.model.task import Task
+from skald.handler.survive import SurviveHandler, SurviveRoleEnum
+from skald.utils.logging import logger
+from skald.proxy.kafka import KafkaConfig, KafkaProxy, KafkaTopic
+from skald.proxy.redis import RedisConfig, RedisKey, RedisProxy
+from skald.store.taskworker import TaskWorkerStore
+
 
 class TaskWorkerConfig:
-    mode: str = "node"  # 預設為 node 模式
+    """
+    Configuration for task worker mode.
+
+    Attributes:
+        mode (str): The mode of the worker. Default is "node".
+    """
+    mode: str = "node"
+
 
 class AbstractTaskWorker(mp.Process, ABC):
-    def __init__(self):
-        super(AbstractTaskWorker, self).__init__()
-        self.is_done = False
+    """
+    Abstract base class for task worker processes.
+
+    Handles process lifecycle, signal handling, and defines the required
+    interface for concrete task workers.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.is_done: bool = False
 
     @abstractmethod
-    def release(self, *args): # 任務關閉時，釋放資源用
+    def release(self, *args: Any) -> None:
+        """
+        Release resources when the task is shutting down.
+        """
         pass
 
     @abstractmethod
-    def run_before(self): # 任務初始化，建立所需物件及連線
+    def run_before(self) -> None:
+        """
+        Initialize resources and connections before running the main task logic.
+        """
         pass
 
     @abstractmethod
-    def run_main(self): # 任務實際邏輯部份
+    def run_main(self) -> None:
+        """
+        The main logic of the task.
+        """
         pass
 
     @abstractmethod
-    def run_after(self): # 任務結束後所需的結尾操作，更新完成狀態、通知總Server等...
+    def run_after(self) -> None:
+        """
+        Operations to perform after the task is complete, such as updating status or notifying the server.
+        """
         pass
 
     @abstractmethod
-    def error_handler(self, e: Exception): # 任務例外處裡部份
+    def error_handler(self, exc: Exception) -> None:
+        """
+        Handle exceptions that occur during task execution.
+
+        Args:
+            exc (Exception): The exception that was raised.
+        """
         pass
 
-    def __release(self, *args): # 任務釋放資源的實際函數，會叫release()及關閉本身Process
-        # args will get signal SIGTERM(15) or SIGINT(2) and code line.
-        if not self.is_done: # 避免重複釋放資源(若強制關閉Process，會導致重複釋放)
-            self.is_done = True # 更改狀態
-            self.release(args)
-        sys.exit(0) # 結束Process
+    def _release_and_exit(self, *args: Any) -> None:
+        """
+        Internal method to release resources and exit the process.
 
-    def run(self): # 實際Process執行的函式
-        self.daemon = True # 依賴於主Process，若主Process關閉，子Process也一起關閉
-        signal(SIGTERM, partial(self.__release)) # 註冊Process關閉時，需要呼叫__release函數
-        signal(SIGINT, partial(self.__release)) # 註冊Process關閉時，需要呼叫__release函數
+        Args:
+            *args: Signal number and stack frame (from signal handler).
+        """
+        if not self.is_done:
+            self.is_done = True
+            self.release(*args)
+        sys.exit(0)
+
+    def run(self) -> None:
+        """
+        Entry point for the process. Handles setup, main logic, and cleanup.
+        """
+        self.daemon = True  # Ensure this process is killed if the parent dies
+        signal(SIGTERM, partial(self._release_and_exit))
+        signal(SIGINT, partial(self._release_and_exit))
         try:
-            self.run_before() # 先呼叫run_before，建立所需資源
-            self.run_main() # 開始執行任務
-            self.run_after() # 結束任務前的結尾操作
-        except Exception as e:
-            self.error_handler(e) # 例外處裡函數
-        except:
-            logger.warning("Unexpected error! Force to exit.")
-            # 系統強制關閉會出發的Unexpected error，直接觸__release函數
+            self.run_before()
+            self.run_main()
+            self.run_after()
+        except Exception as exc:
+            self.error_handler(exc)
+        except BaseException:
+            logger.warning("Unexpected error! Forcing exit.")
         finally:
-            logger.info("Leaving Subprocess")
-            self.__release() # 任務最後呼叫釋放資源的函數
+            logger.info("Leaving subprocess.")
+            self._release_and_exit()
 
-class BaseTaskWorkerV1(AbstractTaskWorker): # 基底任務類別
-    
-    className: TaskUnitClassNameEnum = "BaseTaskWorkerV1" # 任務類別名稱
 
-    def __init__(self, 
-                 task: Task[BaseAttachment] = Task[BaseAttachment](), 
-                 redis_config: RedisConfig = RedisConfig(), # Redis 連線參數
-                 kafka_config: KafkaConfig = KafkaConfig()  # Kafka 連線參數
-                 ):
-        super(BaseTaskWorkerV1, self).__init__()
-        ## 初始化需要變數
-        self.task_id = task.id
-        self.task_type = task.className
-        self.redis_config = redis_config
-        self.kafka_config = kafka_config
-        self.redis_proxy: RedisProxy = None
-        self.kafka_proxy: KafkaProxy = None
-        self.survive_handler: SurviveHandler = None
-        self.update_consume_thread: threading.Thread = None
+class BaseTaskWorkerV1(AbstractTaskWorker):
+    """
+    Base implementation of a task worker with Kafka and Redis integration.
 
-    def __handle_update_message(self):
+    Handles Kafka topic consumption, Redis heartbeat, and error reporting.
+    """
+
+    def __init__(
+        self,
+        task: Task,
+        redis_config: Optional[RedisConfig] = None,
+        kafka_config: Optional[KafkaConfig] = None,
+    ) -> None:
+        """
+        Initialize the task worker.
+
+        Args:
+            task (Task): The task to be processed.
+            redis_config (Optional[RedisConfig]): Redis connection configuration.
+            kafka_config (Optional[KafkaConfig]): Kafka connection configuration.
+        """
+        super().__init__()
+        self.task_id: str = task.id
+        self.task_type: str = task.className
+        self.redis_config: RedisConfig = redis_config or RedisConfig()
+        self.kafka_config: KafkaConfig = kafka_config or KafkaConfig()
+        self.redis_proxy: Optional[RedisProxy] = None
+        self.kafka_proxy: Optional[KafkaProxy] = None
+        self.survive_handler: Optional[SurviveHandler] = None
+        self.update_consume_thread: Optional[threading.Thread] = None
+
+    def _consume_update_messages(self) -> None:
+        """
+        Thread target for consuming update messages from Kafka.
+        """
         while True:
             try:
                 for message in self.kafka_proxy.consumer:
-
                     self.handle_update_message(message)
-            except Exception as e:
-                logger.error(f"Kafka consumer might disconnected, try to reconnect later. Error: {str(e)}")
-                time.sleep(5)  # 等待5秒後重試                
+            except Exception as exc:
+                logger.error(
+                    f"Kafka consumer might be disconnected, will retry. Error: {exc}"
+                )
+                time.sleep(5)
 
-    def handle_update_message(self, message: ConsumerRecord):
+    def handle_update_message(self, message: ConsumerRecord) -> None:
+        """
+        Handle a single update message from Kafka.
+
+        Args:
+            message (ConsumerRecord): The Kafka message.
+        """
         logger.info(f"Received message: {message}")
 
-    def run_before(self):
+    def run_before(self) -> None:
+        """
+        Initialize Kafka and Redis connections, start heartbeat and message consumption.
+        """
         if self.kafka_config is not None:
-            # Kafka 訂閱主題清單
-            # self.kafka_config.consume_topic_list = [KafkaTopic.TaskNotifyProcessUpdate(self.task_id)]
+            # Set Kafka topic and group
             self.kafka_config.consume_topic_list = [KafkaTopic.TaskWorkerUpdate]
-            # 更換Kafka group ip
             self.kafka_config.consume_group_id = f"{self.task_id}_{str(uuid.uuid4())[:5]}"
-            # Kafka 連線代理
-            self.kafka_proxy = KafkaProxy(kafka_config=self.kafka_config, is_block=TaskWorkerConfig.mode == "node")
-            # Kafka 消化主題負責執行序
-            self.update_consume_thread = threading.Thread(target=self.__handle_update_message, daemon=True)
-            # 啟動執行序消化Kafka主題
+            self.kafka_proxy = KafkaProxy(
+                kafka_config=self.kafka_config,
+                is_block=TaskWorkerConfig.mode == "node"
+            )
+            self.update_consume_thread = threading.Thread(
+                target=self._consume_update_messages,
+                daemon=True
+            )
             self.update_consume_thread.start()
-        
-        if self.redis_config is not None:
-            # Redis 連線代理
-            self.redis_proxy = RedisProxy(redis_config=self.redis_config, is_block=TaskWorkerConfig.mode == "node")
-            # TaskWorker 心跳運行物件
-            self.survive_handler = SurviveHandler(
-                                    redis_proxy=self.redis_proxy, # Redis 連線代理物件，發布心跳用
-                                    key=RedisKey.TaskHeartbeat_key(self.task_id), # Redis 中的心跳名稱
-                                    role=SurviveRoleEnum.TASKWORKER.value # 心跳所屬角色
-                                    )
-            # TaskWorker 啟動心跳
-            self.survive_handler.start_heartbeat_update()
-            # 清除 Redis 中TaskWorker的異常暫存
-            self.redis_proxy.set_message(key=RedisKey.TaskException_key(self.task_id), message="")
 
-    def run_after(self):
-        if self.redis_proxy:
-            self.survive_handler.stop_heartbeat_update() # 結束心跳
+        if self.redis_config is not None:
+            self.redis_proxy = RedisProxy(
+                redis_config=self.redis_config,
+                is_block=TaskWorkerConfig.mode == "node"
+            )
+            self.survive_handler = SurviveHandler(
+                redis_proxy=self.redis_proxy,
+                key=RedisKey.TaskHeartbeat_key(self.task_id),
+                role=SurviveRoleEnum.TASKWORKER.value
+            )
+            self.survive_handler.start_heartbeat_update()
+            # Clear any previous exception state
+            self.redis_proxy.set_message(
+                key=RedisKey.TaskException_key(self.task_id),
+                message=""
+            )
+
+    def run_after(self) -> None:
+        """
+        Stop heartbeat and mark task as completed in Redis.
+        """
+        if self.redis_proxy and self.survive_handler:
+            self.survive_handler.stop_heartbeat_update()
             if not self.is_done:
-                self.survive_handler.push_success_heartbeat() # 發布完成狀態
+                self.survive_handler.push_success_heartbeat()
         logger.success(f"Task Worker {self.task_id} is done.")
 
-    def error_handler(self, e: Exception):
-        self.survive_handler.stop_heartbeat_update() # 結束心跳
-        
-        # 發布 TaskWorker 異常訊息 
-        self.redis_proxy.set_message(key=RedisKey.TaskException_key(self.task_id), message=str(e))
-        self.survive_handler.push_failed_heartbeat() # 發布異常狀態
-        logger.error(f"Task Worker {self.task_id} is failed with error: {str(e)}")
+    def error_handler(self, exc: Exception) -> None:
+        """
+        Handle errors by stopping heartbeat and reporting failure in Redis.
 
-    def release(self, *args):
+        Args:
+            exc (Exception): The exception that was raised.
+        """
+        if self.survive_handler:
+            self.survive_handler.stop_heartbeat_update()
+        if self.redis_proxy:
+            self.redis_proxy.set_message(
+                key=RedisKey.TaskException_key(self.task_id),
+                message=str(exc)
+            )
+        if self.survive_handler:
+            self.survive_handler.push_failed_heartbeat()
+        logger.error(f"Task Worker {self.task_id} failed with error: {exc}")
+
+    def release(self, *args: Any) -> None:
+        """
+        Release all resources, close connections, and update heartbeat status.
+
+        Args:
+            *args: Optional signal number and stack frame.
+        """
         try:
             if self.kafka_proxy:
-                self.kafka_proxy.consumer.close() # 關閉 Kafka 訂閱連線 
-                self.kafka_proxy.producer.close() # 關閉 Kafka 發布連線
-                # kafka_admin_client = KafkaAdmin(self.kafka_config) # 建立 Kafka 高權限連接
-                # 清除 Kafka 主題
-                # kafka_admin_client.delete_topic(topic_name=KafkaTopic.TaskNotifyProcessUpdate(self.task_id))
-        except Exception as e:
-            logger.error(f"Task Worker {self.task_id}:{self.task_type} is failed with error in release stage: {str(e)}")
-        
-        try:
-            if len(args) >= 2:
-                if args[0] == SIGINT or args[0] == SIGTERM:
-                    self.survive_handler.stop_heartbeat_update() # 結束心跳
-                    self.survive_handler.push_canceled_heartbeat()
-        except Exception as e:
-            logger.error(f"Task Worker {self.task_id}:{self.task_type} is get unknown signal: {str(e)}")
-        
-        try:
-            TaskWorkerStore.TaskWorkerUidDic.pop(self.task_id) # 清除主程式的 TaskWorker Process 暫存
-        except Exception as e:
-            logger.warning(f"Task Worker maybe not exist in Store: {str(e)}")
-        logger.info(f"Task Worker {self.task_id} is releasing.")
+                if self.kafka_proxy.consumer:
+                    self.kafka_proxy.consumer.close()
+                if self.kafka_proxy.producer:
+                    self.kafka_proxy.producer.close()
+        except Exception as exc:
+            logger.error(
+                f"Task Worker {self.task_id}:{self.task_type} failed during Kafka release: {exc}"
+            )
 
+        try:
+            # Handle signal-based cancellation
+            if len(args) >= 2:
+                signum = args[0]
+                if signum in (SIGINT, SIGTERM) and self.survive_handler:
+                    self.survive_handler.stop_heartbeat_update()
+                    self.survive_handler.push_canceled_heartbeat()
+        except Exception as exc:
+            logger.error(
+                f"Task Worker {self.task_id}:{self.task_type} received unknown signal: {exc}"
+            )
+
+        try:
+            TaskWorkerStore.TaskWorkerUidDic.pop(self.task_id, None)
+        except Exception as exc:
+            logger.warning(f"Task Worker may not exist in store: {exc}")
+
+        logger.info(f"Task Worker {self.task_id} is releasing resources.")
