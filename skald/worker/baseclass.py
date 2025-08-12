@@ -53,35 +53,35 @@ class AbstractTaskWorker(mp.Process, ABC):
         self.is_done: bool = False
 
     @abstractmethod
-    def release(self, *args: Any) -> None:
+    def _release(self, *args: Any) -> None:
         """
         Release resources when the task is shutting down.
         """
         pass
 
     @abstractmethod
-    def run_before(self) -> None:
+    def _run_before(self) -> None:
         """
         Initialize resources and connections before running the main task logic.
         """
         pass
 
     @abstractmethod
-    def run_main(self) -> None:
+    def _run_main(self) -> None:
         """
         The main logic of the task.
         """
         pass
 
     @abstractmethod
-    def run_after(self) -> None:
+    def _run_after(self) -> None:
         """
         Operations to perform after the task is complete, such as updating status or notifying the server.
         """
         pass
 
     @abstractmethod
-    def error_handler(self, exc: Exception) -> None:
+    def _error_handler(self, exc: Exception) -> None:
         """
         Handle exceptions that occur during task execution.
 
@@ -99,7 +99,7 @@ class AbstractTaskWorker(mp.Process, ABC):
         """
         if not self.is_done:
             self.is_done = True
-            self.release(*args)
+            self._release(*args)
         sys.exit(0)
 
     def run(self) -> None:
@@ -110,11 +110,11 @@ class AbstractTaskWorker(mp.Process, ABC):
         signal(SIGTERM, partial(self._release_and_exit))
         signal(SIGINT, partial(self._release_and_exit))
         try:
-            self.run_before()
-            self.run_main()
-            self.run_after()
+            self._run_before()
+            self._run_main()
+            self._run_after()
         except Exception as exc:
-            self.error_handler(exc)
+            self._error_handler(exc)
         except BaseException:
             logger.warning("Unexpected error! Forcing exit.")
         finally:
@@ -146,12 +146,12 @@ class BaseTaskWorkerV1(AbstractTaskWorker):
         super().__init__()
         self.task_id: str = task.id
         self.task_type: str = task.className
-        self.redis_config: RedisConfig = redis_config or RedisConfig()
-        self.kafka_config: KafkaConfig = kafka_config or KafkaConfig()
-        self.redis_proxy: Optional[RedisProxy] = None
-        self.kafka_proxy: Optional[KafkaProxy] = None
-        self.survive_handler: Optional[SurviveHandler] = None
-        self.update_consume_thread: Optional[threading.Thread] = None
+        self._redis_config: RedisConfig = redis_config or RedisConfig()
+        self._kafka_config: KafkaConfig = kafka_config or KafkaConfig()
+        self._redis_proxy: Optional[RedisProxy] = None
+        self._kafka_proxy: Optional[KafkaProxy] = None
+        self._survive_handler: Optional[SurviveHandler] = None
+        self._update_consume_thread: Optional[threading.Thread] = None
 
     def _consume_update_messages(self) -> None:
         """
@@ -159,7 +159,7 @@ class BaseTaskWorkerV1(AbstractTaskWorker):
         """
         while True:
             try:
-                for message in self.kafka_proxy.consumer:
+                for message in self._kafka_proxy.consumer:
                     self.handle_update_message(message)
             except Exception as exc:
                 logger.error(
@@ -176,70 +176,70 @@ class BaseTaskWorkerV1(AbstractTaskWorker):
         """
         logger.info(f"Received message: {message}")
 
-    def run_before(self) -> None:
+    def _run_before(self) -> None:
         """
         Initialize Kafka and Redis connections, start heartbeat and message consumption.
         """
-        if self.kafka_config is not None:
+        if self._kafka_config is not None:
             # Set Kafka topic and group
-            self.kafka_config.consume_topic_list = [KafkaTopic.TaskWorkerUpdate]
-            self.kafka_config.consume_group_id = f"{self.task_id}_{str(uuid.uuid4())[:5]}"
-            self.kafka_proxy = KafkaProxy(
-                kafka_config=self.kafka_config,
+            self._kafka_config.consume_topic_list = [KafkaTopic.TaskWorkerUpdate]
+            self._kafka_config.consume_group_id = f"{self.task_id}_{str(uuid.uuid4())[:5]}"
+            self._kafka_proxy = KafkaProxy(
+                kafka_config=self._kafka_config,
                 is_block=TaskWorkerConfig.mode == "node"
             )
-            self.update_consume_thread = threading.Thread(
+            self._update_consume_thread = threading.Thread(
                 target=self._consume_update_messages,
                 daemon=True
             )
-            self.update_consume_thread.start()
+            self._update_consume_thread.start()
 
-        if self.redis_config is not None:
-            self.redis_proxy = RedisProxy(
-                redis_config=self.redis_config,
+        if self._redis_config is not None:
+            self._redis_proxy = RedisProxy(
+                redis_config=self._redis_config,
                 is_block=TaskWorkerConfig.mode == "node"
             )
-            self.survive_handler = SurviveHandler(
-                redis_proxy=self.redis_proxy,
+            self._survive_handler = SurviveHandler(
+                redis_proxy=self._redis_proxy,
                 key=RedisKey.TaskHeartbeat_key(self.task_id),
                 role=SurviveRoleEnum.TASKWORKER.value
             )
-            self.survive_handler.start_heartbeat_update()
+            self._survive_handler.start_heartbeat_update()
             # Clear any previous exception state
-            self.redis_proxy.set_message(
+            self._redis_proxy.set_message(
                 key=RedisKey.TaskException_key(self.task_id),
                 message=""
             )
 
-    def run_after(self) -> None:
+    def _run_after(self) -> None:
         """
         Stop heartbeat and mark task as completed in Redis.
         """
-        if self.redis_proxy and self.survive_handler:
-            self.survive_handler.stop_heartbeat_update()
+        if self._redis_proxy and self._survive_handler:
+            self._survive_handler.stop_heartbeat_update()
             if not self.is_done:
-                self.survive_handler.push_success_heartbeat()
+                self._survive_handler.push_success_heartbeat()
         logger.success(f"Task Worker {self.task_id} is done.")
 
-    def error_handler(self, exc: Exception) -> None:
+    def _error_handler(self, exc: Exception) -> None:
         """
         Handle errors by stopping heartbeat and reporting failure in Redis.
 
         Args:
             exc (Exception): The exception that was raised.
         """
-        if self.survive_handler:
-            self.survive_handler.stop_heartbeat_update()
-        if self.redis_proxy:
-            self.redis_proxy.set_message(
+        if self._survive_handler:
+            self._survive_handler.stop_heartbeat_update()
+        if self._redis_proxy:
+            self._redis_proxy.set_message(
                 key=RedisKey.TaskException_key(self.task_id),
                 message=str(exc)
             )
-        if self.survive_handler:
-            self.survive_handler.push_failed_heartbeat()
+        if self._survive_handler:
+            self._survive_handler.push_failed_heartbeat()
         logger.error(f"Task Worker {self.task_id} failed with error: {exc}")
 
-    def release(self, *args: Any) -> None:
+    def _release(self, *args: Any) -> None:
         """
         Release all resources, close connections, and update heartbeat status.
 
@@ -247,11 +247,11 @@ class BaseTaskWorkerV1(AbstractTaskWorker):
             *args: Optional signal number and stack frame.
         """
         try:
-            if self.kafka_proxy:
-                if self.kafka_proxy.consumer:
-                    self.kafka_proxy.consumer.close()
-                if self.kafka_proxy.producer:
-                    self.kafka_proxy.producer.close()
+            if self._kafka_proxy:
+                if self._kafka_proxy.consumer:
+                    self._kafka_proxy.consumer.close()
+                if self._kafka_proxy.producer:
+                    self._kafka_proxy.producer.close()
         except Exception as exc:
             logger.error(
                 f"Task Worker {self.task_id}:{self.task_type} failed during Kafka release: {exc}"
@@ -261,9 +261,9 @@ class BaseTaskWorkerV1(AbstractTaskWorker):
             # Handle signal-based cancellation
             if len(args) >= 2:
                 signum = args[0]
-                if signum in (SIGINT, SIGTERM) and self.survive_handler:
-                    self.survive_handler.stop_heartbeat_update()
-                    self.survive_handler.push_canceled_heartbeat()
+                if signum in (SIGINT, SIGTERM) and self._survive_handler:
+                    self._survive_handler.stop_heartbeat_update()
+                    self._survive_handler.push_canceled_heartbeat()
         except Exception as exc:
             logger.error(
                 f"Task Worker {self.task_id}:{self.task_type} received unknown signal: {exc}"
