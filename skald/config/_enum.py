@@ -1,6 +1,6 @@
 from enum import Enum
 
-class LogLevelEnum(Enum):
+class LogLevelEnum(str, Enum):
     TRACE = "TRACE"
     DEBUG = "DEBUG"
     INFO = "INFO"
@@ -9,6 +9,10 @@ class LogLevelEnum(Enum):
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
 
-class SkaldEnvEnum(Enum):
+class SkaldEnvEnum(str, Enum):
     DEV = "DEV"
     PRODUCTION = "PRODUCTION"
+
+class SkaldModeEnum(str, Enum):
+    EDGE = "edge"
+    NODE = "node"

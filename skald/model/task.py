@@ -47,7 +47,7 @@ class Task(BaseModel):
         source: The source of the task (e.g., YAML, MongoDB).
         name: Optional human-readable name for the task.
         description: Optional description of the task.
-        executor: Optional identifier for the executor (e.g., slave ID).
+        executor: Optional identifier for the executor (e.g., skald ID).
         dependencies: Optional list of task IDs this task depends on.
         mode: The execution mode of the task (Active/Passive).
         create_date_time: Creation timestamp in milliseconds (alias: createDateTime).

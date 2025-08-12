@@ -38,14 +38,13 @@ class TaskWorkerFactory:
             raise ValueError(f"Task worker class must be an instance of BaseTaskWorker")
 
         cls.taskWorkerClassMap[class_name] = task_worker_class
-
-        # TODO: Need to define some way to get TaskWorker init model
+        cls.taskWorkerAttachmentModelMap[class_name] = task_worker_class.get_data_model()
 
     @classmethod
     def create_task_worker(cls, task: Task) -> Optional[BaseTaskWorker]:
         taskWorker: BaseTaskWorker = None
-        use_class = None
-        use_attachment = None
+        use_class: Optional[BaseTaskWorker] = None
+        use_attachment: Optional[BaseModel] = None
         if task is None and task.className is None:
             use_class = cls.taskWorkerClassMap.get(task.className, None)
             use_attachment = cls.taskWorkerAttachmentModelMap.get(task.className, None)
@@ -55,7 +54,12 @@ class TaskWorkerFactory:
             raise ValueError(f"Cannot find TaskWorker Attachment Model for {task.className}")
         try:
             logger.info(f"Create {task.className} Task Worker [{use_class.__name__}]")
-            # TODO: implement task worker creation logic
+            task.attachments = use_attachment.model_validate(task.attachments) if task.attachments else None
+            taskWorker = use_class(
+                task=task, 
+                redisConfig=cls.redisConfig, 
+                kafkaConfig=cls.kafkaConfig
+                )
             return taskWorker
 
         except Exception as e:

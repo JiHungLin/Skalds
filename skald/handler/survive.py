@@ -14,9 +14,9 @@ from skald.proxy.redis import RedisKey, RedisProxy
 from skald.utils.logging import logger
 from skald.config.systemconfig import SystemConfig
 
-class SurviveRoleEnum(Enum):
+class SurviveRoleEnum(str, Enum):
     """Enumeration for survive handler roles."""
-    SLAVE = "slave"
+    SKALD = "skald"
     TASKWORKER = "task_worker"
     NONE = "none"
 
@@ -45,7 +45,7 @@ class SurviveHandler:
         period: int = 3,
     ):
         if role == SurviveRoleEnum.NONE:
-            raise ValueError("The role must be SLAVE or TASKWORKER!")
+            raise ValueError("The role must be SKALD or TASKWORKER!")
         self.redis_proxy = redis_proxy
         self.key = key
         self.period = period
@@ -92,9 +92,9 @@ class SurviveHandler:
         logger.info("Heartbeat update thread stopped.")
 
     def start_activity_update(self):
-        """Start the activity update thread (only for SLAVE role)."""
-        if self.role != SurviveRoleEnum.SLAVE:
-            logger.warning("Only SLAVE can run activity update.")
+        """Start the activity update thread (only for SKALD role)."""
+        if self.role != SurviveRoleEnum.SKALD:
+            logger.warning("Only SKALD can run activity update.")
             return
 
         if self._activity_thread is None or not self._activity_thread.is_alive():
@@ -103,7 +103,7 @@ class SurviveHandler:
             def run_async_in_thread():
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                loop.run_until_complete(self.update_slave_activity_time_to_redis())
+                loop.run_until_complete(self.update_skald_activity_time_to_redis())
                 loop.close()
 
             self._activity_thread = threading.Thread(target=run_async_in_thread, daemon=True)
@@ -125,11 +125,14 @@ class SurviveHandler:
             await asyncio.sleep(self.period)
         logger.info("Heartbeat update loop exited.")
 
-    async def update_slave_activity_time_to_redis(self):
-        """Async loop to periodically update slave activity time in Redis."""
+    async def update_skald_activity_time_to_redis(self):
+        """Async loop to periodically update skald activity time in Redis."""
         while self._is_activity_thread_running:
             self.redis_proxy.set_hash(
-                RedisKey.SKALD_LIST_HASH, SystemConfig.SLAVE_ID, int(datetime.now().timestamp() * 1000)
+                RedisKey.SKALD_LIST_HASH, SystemConfig.SKALD_ID, int(datetime.now().timestamp() * 1000)
+            )
+            self.redis_proxy.set_hash(
+                RedisKey.SKALD_MODE_LIST_HASH, SystemConfig.SKALD_ID, SystemConfig.SKALD_MODE.value
             )
             await asyncio.sleep(self.period)
         logger.info("Activity update loop exited.")

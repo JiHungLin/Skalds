@@ -29,7 +29,7 @@ import uuid
 from abc import ABC, abstractmethod
 from functools import partial
 from signal import SIGINT, SIGTERM, signal
-from typing import Any, Callable, Optional, TypeVar, Generic, Type, Protocol, cast
+from typing import Any, Callable, Optional, TypeVar, Generic, Type, Protocol
 
 from kafka.consumer.fetcher import ConsumerRecord
 from pydantic import BaseModel
@@ -378,6 +378,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
         self._kafka_proxy: Optional[KafkaProxy] = None
         self._survive_handler: Optional[SurviveHandler] = None
         self._update_consume_thread: Optional[threading.Thread] = None
+        self.initialize(task.attachments)
 
     def _consume_update_messages(self) -> None:
         """
@@ -499,14 +500,14 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
                 
                 self._survive_handler = SurviveHandler(
                     redis_proxy=self._redis_proxy,
-                    key=RedisKey.TaskHeartbeat_key(self.task_id),
+                    key=RedisKey.task_heartbeat(self.task_id),
                     role=SurviveRoleEnum.TASKWORKER.value
                 )
                 self._survive_handler.start_heartbeat_update()
                 
                 # Clear any previous exception state
                 self._redis_proxy.set_message(
-                    key=RedisKey.TaskException_key(self.task_id),
+                    key=RedisKey.task_exception(self.task_id),
                     message=""
                 )
                 logger.info(f"Started heartbeat monitoring for task {self.task_id}")
@@ -547,7 +548,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
             # Report the error to Redis
             if self._redis_proxy:
                 self._redis_proxy.set_message(
-                    key=RedisKey.TaskException_key(self.task_id),
+                    key=RedisKey.task_exception(self.task_id),
                     message=str(exc)
                 )
             

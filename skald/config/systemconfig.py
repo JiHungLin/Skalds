@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-from  skald.config._enum import LogLevelEnum, SkaldEnvEnum
+from  skald.config._enum import LogLevelEnum, SkaldEnvEnum, SkaldModeEnum
 import uuid
 
 
@@ -18,10 +18,14 @@ def _bool(input):
 class SystemConfig:
     SKALD_ID : str = os.getenv("SKALD_ID", f"skald-{str(uuid.uuid4())[:5]}") 
     SKALD_ENV: SkaldEnvEnum = os.getenv("SKALD_ENV", SkaldEnvEnum.DEV.value)  # dev / production 
+    SKALD_MODE: SkaldModeEnum = os.getenv("SKALD_MODE", SkaldModeEnum.NODE.value)  # edge / node
     LOG_LEVEL: LogLevelEnum = os.getenv("LOG_LEVEL", LogLevelEnum.DEBUG.value) # TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL
     LOG_PATH: str = os.getenv("LOG_PATH", "logs")
     LOG_RETENTION: str = os.getenv("LOG_RETENTION", "3")
     LOG_ROTATION_MB: str = os.getenv("LOG_ROTATION_MB", "10")
+
+    # TaskWorker YAML Config
+    YAML_FILE: str = os.getenv("YAML_FILE", "")
 
     # Redis Config
     REDIS_HOST: str = os.getenv("REDIS_HOST", "")

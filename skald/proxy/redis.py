@@ -17,6 +17,7 @@ class RedisKey:
 
     # Skald
     SKALD_LIST_HASH = "skald:hash"
+    SKALD_MODE_LIST_HASH = "skald:mode:hash"
 
     @staticmethod
     def skald_heartbeat(skald_id: str) -> str:

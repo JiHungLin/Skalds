@@ -136,7 +136,7 @@ class TaskWorkerManager:
                             class_name=value['className'],
                             description=f"Active TaskWorker from MongoDB. ClassName: {value['className']}",
                             source="YAML",
-                            executor=SystemConfig.SLAVE_ID,
+                            executor=SystemConfig.SKALD_ID,
                             mode=ModeEnum.ACTIVE,
                             create_date_time=remote_task.createDateTime,
                             update_date_time=int(datetime.datetime.now().timestamp() * 1000),
@@ -145,7 +145,7 @@ class TaskWorkerManager:
                             priority=remote_task.priority,
                             attachments=remote_task.attachments
                         )
-                        self.task_repository.update_executor(id=task_id, executor=SystemConfig.SLAVE_ID)
+                        self.task_repository.update_executor(id=task_id, executor=SystemConfig.SKALD_ID)
                     else:
                         attachments_obj = TaskWorkerFactory.create_attachment_with_class_name_and_dict(
                             value['className'],
@@ -157,7 +157,7 @@ class TaskWorkerManager:
                             class_name=value['className'],
                             description=f"Active TaskWorker from YAML. ClassName: {value['className']}",
                             source="YAML",
-                            executor=SystemConfig.SLAVE_ID,
+                            executor=SystemConfig.SKALD_ID,
                             mode=ModeEnum.ACTIVE,
                             create_date_time=int(datetime.datetime.now().timestamp() * 1000),
                             update_date_time=int(datetime.datetime.now().timestamp() * 1000),
@@ -180,7 +180,7 @@ class TaskWorkerManager:
                         class_name=value['className'],
                         description=f"Active TaskWorker from YAML. ClassName: {value['className']}",
                         source="YAML",
-                        executor=SystemConfig.SLAVE_ID,
+                        executor=SystemConfig.SKALD_ID,
                         mode=ModeEnum.ACTIVE,
                         create_date_time=int(datetime.datetime.now().timestamp() * 1000),
                         update_date_time=int(datetime.datetime.now().timestamp() * 1000),
@@ -246,8 +246,8 @@ class TaskWorkerManager:
         Args:
             task_id: The ID of the task worker.
         """
-        self.redis_proxy.set_message(RedisKey.TaskHeartbeat_key(task_id=task_id), secrets.randbelow(200))
-        self.redis_proxy.set_message(RedisKey.TaskException_key(task_id=task_id), "")
+        self.redis_proxy.set_message(RedisKey.task_heartbeat(task_id=task_id), secrets.randbelow(200))
+        self.redis_proxy.set_message(RedisKey.task_exception(task_id=task_id), "")
 
     def _ensure_task_can_be_processed(self, task: Optional[Task], task_id: str) -> bool:
         """
@@ -268,9 +268,9 @@ class TaskWorkerManager:
                 f"Task({task_id})'s type ({task.class_name}) is not in {TaskWorkerFactory.get_all_task_worker_class_names()}"
             )
             return False
-        if task.executor != SystemConfig.SLAVE_ID:
+        if task.executor != SystemConfig.SKALD_ID:
             logger.warning(
-                f"Task({task_id})'s executor ({task.executor}) is not {SystemConfig.SLAVE_ID}"
+                f"Task({task_id})'s executor ({task.executor}) is not {SystemConfig.SKALD_ID}"
             )
             return False
         return True
@@ -381,8 +381,8 @@ class TaskWorkerManager:
             self._async_all_taskworker_to_redis_thread = None
             self.task_worker_simple_map_list.clear()
             self.redis_proxy.set_message(
-                RedisKey.SlaveAllTask_key(SystemConfig.SLAVE_ID),
-                self.task_worker_simple_map_list.to_json()
+                RedisKey.skald_all_task(SystemConfig.SKALD_ID),
+                self.task_worker_simple_map_list.model_dump_json()
             )
         else:
             logger.warning("Sync All TaskWorkerSimpleMap is already stopped.")
@@ -392,7 +392,7 @@ class TaskWorkerManager:
         def run_async_in_thread():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(self._sync_all_taskworker_and_allow_task_class_name_to_redis())
+            loop.run_until_complete(self._sync_all_skald_info_to_redis())
             loop.close()
 
         if self._async_all_taskworker_to_redis_thread is None and not self._is_sync_all_taskworker_to_redis_flag:
@@ -403,20 +403,20 @@ class TaskWorkerManager:
             self._async_all_taskworker_to_redis_thread.start()
         else:
             logger.warning("Sync All TaskWorkerSimpleMap is already running.")
-
-    async def _sync_all_taskworker_and_allow_task_class_name_to_redis(self) -> None:
+    # _sync_all_taskworker_and_allow_task_class_name_to_redis
+    async def _sync_all_skald_info_to_redis(self) -> None: # all taskworkers, allow task class names, skald mode
         """
         Periodically sync all TaskWorkerSimpleMap and allowed task class names to Redis.
         """
         while self._is_sync_all_taskworker_to_redis_flag:
             self.task_worker_simple_map_list.keep_specify_tasks(TaskWorkerStore.all_task_worker_task_id())
             self.redis_proxy.set_message(
-                RedisKey.SlaveAllTask_key(SystemConfig.SLAVE_ID),
-                self.task_worker_simple_map_list.to_json()
+                RedisKey.skald_all_task(SystemConfig.SKALD_ID),
+                self.task_worker_simple_map_list.model_dump_json()
             )
             allow_task_class_name = TaskWorkerFactory.get_all_task_worker_class_names()
             self.redis_proxy.overwrite_list(
-                RedisKey.skald_allow_task_class_name(SystemConfig.SLAVE_ID),
+                RedisKey.skald_allow_task_class_name(SystemConfig.SKALD_ID),
                 allow_task_class_name
             )
             await asyncio.sleep(SystemConfig.REDIS_SYNC_PERIOD)
