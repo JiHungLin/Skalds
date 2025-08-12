@@ -1,42 +1,76 @@
-from entity.task import Task, TaskUnitClassNameEnum
-from log import logger
+from typing import Optional
+from pydantic import BaseModel
+from skald.model.task import Task
+from skald.utils.logging import logger
 from proxy.kafka import KafkaConfig
 from proxy.redis import RedisConfig
-from taskworker.baseclass import BaseTaskWorkerV1
+from skald.worker.baseclass import BaseTaskWorkerV1
 
 class TaskWorkerFactory:
 
-    taskWorkerClassMap: dict[TaskUnitClassNameEnum, BaseTaskWorkerV1] = {}  # type: ignore
-
-    def __init__(self, 
-                redis_config: RedisConfig = None, 
-                kafka_config: KafkaConfig = None, 
-                ) -> None:
-        self.redsConfig = redis_config
-        self.kafka_config = kafka_config
+    redisConfig: Optional[RedisConfig] = None
+    kafkaConfig: Optional[KafkaConfig] = None
+    taskWorkerClassMap: dict[str, BaseTaskWorkerV1] = {}  # type: ignore
+    taskWorkerAttachmentModelMap: dict[str, BaseModel] = {}
 
     @classmethod
-    def register_task_worker(cls, task_class_name: TaskUnitClassNameEnum, task_worker_class: BaseTaskWorkerV1):
-        if task_class_name in cls.taskWorkerClassMap:
-            raise ValueError(f"Task worker for {task_class_name} already registered.")
-        else:
-            cls.taskWorkerClassMap[task_class_name] = task_worker_class
+    def set_redis_config(cls, redis_config: RedisConfig):
+        cls.redisConfig = redis_config
 
-    def create_task_worker(self, task: Task)-> BaseTaskWorkerV1:
-        taskWorker: BaseTaskWorkerV1 = None
+    @classmethod
+    def set_kafka_config(cls, kafka_config: KafkaConfig):
+        cls.kafkaConfig = kafka_config
+
+    @classmethod
+    def get_all_task_worker_class_names(cls):
+        return list(cls.taskWorkerClassMap.keys())
+
+    @classmethod
+    def register_task_worker_class(cls, task_worker_class: BaseTaskWorkerV1):
+        # check task_worker_class is instance of BaseTaskWorkerV1
+        class_name = None
         try:
-            use_class_enum = TaskUnitClassNameEnum(task.className) if isinstance(task.className, str) else task.className
-            use_class = TaskWorkerFactory.taskWorkerClassMap.get(use_class_enum, None)
-            if use_class:
-                logger.info(f"Create {task.className} Task Worker [{use_class.__name__}]")
-                taskWorker = use_class(task=task, redis_config=self.redsConfig, kafka_config=self.kafka_config)
-                return taskWorker
-            else:
-                logger.warning(f"No Task Worker registered for {task.className}, skip creating worker.")
+            class_name = task_worker_class.__class__.__name__
+        except Exception as e:
+            raise ValueError(f"Failed to get class name for task worker class {task_worker_class}: {e}")
+
+        if not isinstance(task_worker_class, BaseTaskWorkerV1):
+            raise ValueError(f"Task worker class must be an instance of BaseTaskWorkerV1")
+
+        cls.taskWorkerClassMap[class_name] = task_worker_class
+
+        # TODO: Need to define some way to get TaskWorker init model
+
+    @classmethod
+    def create_task_worker(cls, task: Task) -> Optional[BaseTaskWorkerV1]:
+        taskWorker: BaseTaskWorkerV1 = None
+        use_class = None
+        use_attachment = None
+        if task is None and task.className is None:
+            use_class = cls.taskWorkerClassMap.get(task.className, None)
+            use_attachment = cls.taskWorkerAttachmentModelMap.get(task.className, None)
+        if use_class is None:
+            raise ValueError(f"Cannot find TaskWorker Class for {task.className}")
+        if use_attachment is None:
+            raise ValueError(f"Cannot find TaskWorker Attachment Model for {task.className}")
+        try:
+            logger.info(f"Create {task.className} Task Worker [{use_class.__name__}]")
+            # TODO: implement task worker creation logic
+            return taskWorker
 
         except Exception as e:
             logger.error(f"Create {task.className} Task Worker Error: {e}")
         finally:
             return taskWorker
-        
-        
+    
+    @classmethod
+    def create_attachment_with_class_name_and_dict(cls, task_class_name: str, data: dict) -> Optional[BaseModel]:
+        attachment_model = cls.taskWorkerAttachmentModelMap.get(task_class_name, None)
+        if attachment_model is None:
+            logger.error(f"Cannot find Attachment Model for {task_class_name}")
+            return None
+        try:
+            return attachment_model.model_validate(data)
+        except Exception as e:
+            logger.error(f"Create {task_class_name} Attachment Error: {e}")
+            return None

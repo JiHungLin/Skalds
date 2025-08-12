@@ -25,7 +25,7 @@ def test_task_model_defaults_and_validation():
     now = datetime.now()
     task = Task(
         id="1",
-        className="TestClass",
+        class_name="TestClass",
         source="unit-test",
     )
     assert task.id == "1"
@@ -55,7 +55,7 @@ def test_task_model_defaults_and_validation():
     with pytest.raises(ValidationError):
         Task(
             id="3",
-            className="TestClass",
+            class_name="TestClass",
             source="unit-test",
             attachments={"foo": "bar"},
         )

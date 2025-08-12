@@ -10,6 +10,7 @@ from typing import Optional
 from skald.model.task import Task
 from skald.utils.logging import logger
 from skald.proxy.mongo import MongoProxy
+from skald.worker.factory import TaskWorkerFactory
 
 class TaskRepository:
     """
@@ -45,6 +46,13 @@ class TaskRepository:
                 logger.info(f"Task with id: {id} not found")
                 return None
             logger.info(f"Found task by id: {id}, task: {task}")
+            class_name = task.get("className", None)
+            attachments = task.get("attachments", None)
+            attachments = TaskWorkerFactory.create_attachment_with_class_name_and_dict(
+                class_name,
+                attachments
+            )
+            task["attachments"] = attachments
             return Task.model_validate(task)
         except pymongo.errors.ExecutionTimeout as e:
             logger.error(f"MongoDB execution timeout: {e}")
@@ -100,7 +108,7 @@ class TaskRepository:
             Task: The created Task object.
         """
         try:
-            result = self.mongo_proxy.db.tasks.insert_one(task.to_dict(), bypass_document_validation=False)
+            result = self.mongo_proxy.db.tasks.insert_one(task.model_dump(by_alias=True), bypass_document_validation=False)
             if result.acknowledged:
                 logger.info(f"Task created with id: {task.id}")
                 return task

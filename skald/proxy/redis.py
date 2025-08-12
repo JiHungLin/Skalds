@@ -4,6 +4,7 @@ Redis Proxy Module
 Provides a user-friendly, Pythonic interface for Redis operations.
 """
 
+from typing import Optional
 import redis
 from skald.utils.logging import logger
 import threading
@@ -66,7 +67,7 @@ class RedisProxy:
         self.host = redis_config.host
         self.port = redis_config.port
         self.is_block = is_block
-        self._client = None
+        self._client: Optional[redis.StrictRedis] = None
         self._redis_config = redis_config
         self._connection_thread = None
         self._connected = False
@@ -152,6 +153,14 @@ class RedisProxy:
                 self._client.lpush(key, value)
         except Exception as e:
             logger.error(f"Failed to push list. Error: {e}")
+    
+    def overwrite_list(self, key: str, values: list[str]):
+        """Overwrite a list with new values."""
+        try:
+            self._client.delete(key)  # Clear the existing list
+            self._client.rpush(key, *values)  # Push new values
+        except Exception as e:
+            logger.error(f"Failed to overwrite list. Error: {e}")
 
     def delete_hash(self, key: str, field: str):
         """Delete a field from a hash."""

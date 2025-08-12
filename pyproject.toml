@@ -28,6 +28,7 @@ dependencies = [
     "pymongo==4.4.1",
     "pretty-loguru>=1.1.2",
     "python-dotenv==1.1.1",
+    "ruamel.yaml==0.18.10"
 ]
 
 
