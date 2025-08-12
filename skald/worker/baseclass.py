@@ -1,14 +1,23 @@
 """
-Base classes for Skald task workers.
+Base classes for Skald task workers with extensible lifecycle hooks.
 
 This module provides abstract and concrete base classes for task workers that
 run as separate processes, handle signals, and integrate with Kafka and Redis
 for messaging and heartbeat monitoring.
 
+Developers can extend the lifecycle hooks (_run_before, _run_main, _run_after, _release)
+by registering custom handlers using the provided decorators.
+
 Classes:
     TaskWorkerConfig: Configuration for task worker mode.
     AbstractTaskWorker: Abstract base class for task worker processes.
     BaseTaskWorkerV1: Concrete base class for task workers with Kafka/Redis integration.
+
+Decorators:
+    run_before_handler: Register a custom handler to run before the main logic.
+    run_main_handler: Register a custom handler for the main logic.
+    run_after_handler: Register a custom handler to run after the main logic.
+    release_handler: Register a custom handler for resource release.
 """
 
 import multiprocessing as mp
@@ -19,7 +28,7 @@ import uuid
 from abc import ABC, abstractmethod
 from functools import partial
 from signal import SIGINT, SIGTERM, signal
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from kafka.consumer.fetcher import ConsumerRecord
 from skald.model.task import Task
@@ -28,6 +37,22 @@ from skald.utils.logging import logger
 from skald.proxy.kafka import KafkaConfig, KafkaProxy, KafkaTopic
 from skald.proxy.redis import RedisConfig, RedisKey, RedisProxy
 from skald.store.taskworker import TaskWorkerStore
+
+# --- Decorator registration mechanism for lifecycle hooks ---
+def _lifecycle_handler_decorator(attr_name: str):
+    """
+    Factory for lifecycle hook decorators. Registers the decorated function
+    as a handler for the specified lifecycle event on the class.
+    """
+    def decorator(func: Callable):
+        setattr(func, "_skald_lifecycle_hook", attr_name)
+        return func
+    return decorator
+
+run_before_handler = _lifecycle_handler_decorator("_custom_run_before")
+run_main_handler   = _lifecycle_handler_decorator("_custom_run_main")
+run_after_handler  = _lifecycle_handler_decorator("_custom_run_after")
+release_handler    = _lifecycle_handler_decorator("_custom_release")
 
 
 class TaskWorkerConfig:
@@ -42,15 +67,52 @@ class TaskWorkerConfig:
 
 class AbstractTaskWorker(mp.Process, ABC):
     """
-    Abstract base class for task worker processes.
+    Abstract base class for task worker processes with extensible lifecycle hooks.
 
     Handles process lifecycle, signal handling, and defines the required
-    interface for concrete task workers.
+    interface for concrete task workers. Supports custom lifecycle hooks via decorators.
     """
 
     def __init__(self) -> None:
         super().__init__()
         self.is_done: bool = False
+        # Discover and register custom lifecycle handlers
+        self._register_lifecycle_hooks()
+
+    def _register_lifecycle_hooks(self) -> None:
+        """
+        Scans the instance for methods decorated as lifecycle hooks and registers them.
+        """
+        for attr_name in dir(self):
+            attr = getattr(self, attr_name)
+            if callable(attr) and hasattr(attr, "_skald_lifecycle_hook"):
+                hook_name = getattr(attr, "_skald_lifecycle_hook")
+                setattr(self, hook_name, attr)
+
+    def _call_lifecycle(self, base_method: Callable, custom_attr: str, *args, **kwargs) -> None:
+        """
+        Calls the custom handler for a lifecycle event if registered, then the base method.
+        For _run_main, only the custom handler is called (never call the abstract base _run_main).
+        """
+        custom_handler = getattr(self, custom_attr, None)
+        if custom_attr == "_custom_run_main":
+            if callable(custom_handler):
+                try:
+                    logger.debug(f"Calling custom handler: {custom_attr} (replaces base _run_main)")
+                    custom_handler(*args, **kwargs)
+                except Exception as exc:
+                    logger.error(f"Exception in custom {custom_attr}: {exc}", exc_info=True)
+            else:
+                raise NotImplementedError("No custom run_main handler registered.")
+        else:
+            if callable(custom_handler):
+                try:
+                    logger.debug(f"Calling custom handler: {custom_attr}")
+                    custom_handler(*args, **kwargs)
+                except Exception as exc:
+                    logger.error(f"Exception in custom {custom_attr}: {exc}", exc_info=True)
+            # Always call the base method
+            base_method(*args, **kwargs)
 
     @abstractmethod
     def _release(self, *args: Any) -> None:
@@ -99,7 +161,7 @@ class AbstractTaskWorker(mp.Process, ABC):
         """
         if not self.is_done:
             self.is_done = True
-            self._release(*args)
+            self._call_lifecycle(self._release, "_custom_release", *args)
         sys.exit(0)
 
     def run(self) -> None:
@@ -110,9 +172,9 @@ class AbstractTaskWorker(mp.Process, ABC):
         signal(SIGTERM, partial(self._release_and_exit))
         signal(SIGINT, partial(self._release_and_exit))
         try:
-            self._run_before()
-            self._run_main()
-            self._run_after()
+            self._call_lifecycle(self._run_before, "_custom_run_before")
+            self._call_lifecycle(self._run_main, "_custom_run_main")
+            self._call_lifecycle(self._run_after, "_custom_run_after")
         except Exception as exc:
             self._error_handler(exc)
         except BaseException:
@@ -127,6 +189,7 @@ class BaseTaskWorkerV1(AbstractTaskWorker):
     Base implementation of a task worker with Kafka and Redis integration.
 
     Handles Kafka topic consumption, Redis heartbeat, and error reporting.
+    Supports custom lifecycle hooks via decorators.
     """
 
     def __init__(
