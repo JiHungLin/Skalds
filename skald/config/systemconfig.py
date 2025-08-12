@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-from  config._enum import LogLevelEnum, SkaldEnvEnum
+from  skald.config._enum import LogLevelEnum, SkaldEnvEnum
 import uuid
 
 

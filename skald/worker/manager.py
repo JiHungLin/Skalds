@@ -28,7 +28,7 @@ from skald.utils.logging import logger
 from proxy.redis import RedisConfig, RedisKey, RedisProxy
 from store.taskworker import TaskWorkerStore
 from config.systemconfig import SystemConfig
-from skald.worker.baseclass import BaseTaskWorkerV1
+from skald.worker.baseclass import BaseTaskWorker
 from skald.worker.factory import TaskWorkerFactory
 
 class TaskWorkerManager:
@@ -227,7 +227,7 @@ class TaskWorkerManager:
                     continue
                 new_task_worker = TaskWorkerFactory.create_task_worker(task=task)
                 if new_task_worker is None:
-                    logger.error(f"Failed to create TaskWorker. Task: {task.to_json(pretty=True)}")
+                    logger.error(f"Failed to create TaskWorker. Task: {task.model_dump_json(indent=2)}")
                     continue
                 TaskWorkerStore.register_task_and_start(task_id=task_id, process=new_task_worker)
                 self.task_worker_simple_map_list.push(task_id=task_id, class_name=task.class_name)
@@ -322,16 +322,16 @@ class TaskWorkerManager:
             task: The Task object to update.
         """
         try:
-            update_task_event = UpdateTaskWorkerEvent(task=task)
+            update_task_event = UpdateTaskWorkerEvent(attachments=task.attachments)
             if update_task_event is not None:
                 self.kafka_proxy.producer.send(
                     KafkaTopic.TaskWorkerUpdate,
-                    value=update_task_event.to_json().encode('utf-8'),
+                    value=update_task_event.model_dump_json().encode('utf-8'),
                     key=task.id
                 )
                 self.kafka_proxy.producer.flush()
                 logger.success(
-                    f"TaskWorker updating. TaskId: {task.id}, TaskWorker: {update_task_event.to_json(pretty=True)}"
+                    f"TaskWorker updating. TaskId: {task.id}, TaskWorker: {update_task_event.model_dump_json(indent=2)}"
                 )
         except Exception as e:
             logger.error(f"Error updating {task.class_name} TaskWorker: {e}")

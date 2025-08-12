@@ -6,7 +6,7 @@ from skald.config.systemconfig import SystemConfig
 from skald.handler.survive import SurviveHandler
 from skald.store.taskworker import TaskWorkerStore
 from skald.utils.logging import logger
-from skald.worker.baseclass import BaseTaskWorkerV1, TaskWorkerConfig
+from skald.worker.baseclass import BaseTaskWorker, TaskWorkerConfig
 from skald.worker.manager import TaskWorkerManager
 import multiprocessing as mp
 
@@ -48,7 +48,7 @@ class Skald:
         self.slave_survive_handler: Optional[SurviveHandler] = None
         self.task_worker_manager: Optional[TaskWorkerManager] = None
 
-    def register_task_worker(self, worker: BaseTaskWorkerV1):
+    def register_task_worker(self, worker: BaseTaskWorker):
         ...
 
     def run(self):

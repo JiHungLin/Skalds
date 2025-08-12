@@ -16,7 +16,6 @@ class TaskEvent(BaseModel):
     )
 
 class UpdateTaskWorkerEvent(BaseModel):
-    id: Optional[str] = None
     attachments: Optional[Any] = None # This must use Pydantic's BaseModel base
 
     @field_validator("attachments", mode="before")

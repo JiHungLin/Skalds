@@ -11,7 +11,7 @@ by registering custom handlers using the provided decorators.
 Classes:
     TaskWorkerConfig: Configuration for task worker mode.
     AbstractTaskWorker: Abstract base class for task worker processes.
-    BaseTaskWorkerV1: Concrete base class for task workers with Kafka/Redis integration.
+    BaseTaskWorker: Concrete base class for task workers with Kafka/Redis integration.
 
 Decorators:
     run_before_handler: Register a custom handler to run before the main logic.
@@ -28,15 +28,17 @@ import uuid
 from abc import ABC, abstractmethod
 from functools import partial
 from signal import SIGINT, SIGTERM, signal
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TypeVar, Generic
 
 from kafka.consumer.fetcher import ConsumerRecord
+from pydantic import BaseModel
 from skald.model.task import Task
 from skald.handler.survive import SurviveHandler, SurviveRoleEnum
 from skald.utils.logging import logger
 from skald.proxy.kafka import KafkaConfig, KafkaProxy, KafkaTopic
 from skald.proxy.redis import RedisConfig, RedisKey, RedisProxy
 from skald.store.taskworker import TaskWorkerStore
+from skald.model.event import UpdateTaskWorkerEvent
 
 # --- Decorator registration mechanism for lifecycle hooks ---
 def _lifecycle_handler_decorator(attr_name: str):
@@ -53,6 +55,7 @@ run_before_handler = _lifecycle_handler_decorator("_custom_run_before")
 run_main_handler   = _lifecycle_handler_decorator("_custom_run_main")
 run_after_handler  = _lifecycle_handler_decorator("_custom_run_after")
 release_handler    = _lifecycle_handler_decorator("_custom_release")
+update_event_handler = _lifecycle_handler_decorator("_custom_update_event")
 
 
 class TaskWorkerConfig:
@@ -64,8 +67,8 @@ class TaskWorkerConfig:
     """
     mode: str = "node"
 
-
-class AbstractTaskWorker(mp.Process, ABC):
+T = TypeVar('T', bound=BaseModel)
+class AbstractTaskWorker(mp.Process, ABC, Generic[T]):
     """
     Abstract base class for task worker processes with extensible lifecycle hooks.
 
@@ -78,6 +81,21 @@ class AbstractTaskWorker(mp.Process, ABC):
         self.is_done: bool = False
         # Discover and register custom lifecycle handlers
         self._register_lifecycle_hooks()
+    
+
+    @abstractmethod
+    def initialize(self, data: T) -> None:
+        """
+        Initialize the task worker with the provided data.
+
+        Args:
+            data: The data to initialize the task worker.
+        """
+        pass
+
+    @classmethod
+    def get_data_model(cls) -> BaseModel:
+        return cls.__orig_bases__[0].__args__[0]
 
     def _register_lifecycle_hooks(self) -> None:
         """
@@ -184,7 +202,8 @@ class AbstractTaskWorker(mp.Process, ABC):
             self._release_and_exit()
 
 
-class BaseTaskWorkerV1(AbstractTaskWorker):
+
+class BaseTaskWorker(AbstractTaskWorker, Generic[T]):
     """
     Base implementation of a task worker with Kafka and Redis integration.
 
@@ -234,10 +253,27 @@ class BaseTaskWorkerV1(AbstractTaskWorker):
         """
         Handle a single update message from Kafka.
 
+        If a user-defined handler is registered via @update_event_handler,
+        it will be called instead of the default implementation.
+
         Args:
             message (ConsumerRecord): The Kafka message.
         """
-        logger.info(f"Received message: {message}")
+        # logger.info(f"Received message: {message}")
+        logger.info("Get kafka message: %s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+            message.offset, message.key,
+            message.value.decode('utf-8')))
+        if message.key.decode('utf-8') != self.task_id:
+            pass
+        else:
+            data = UpdateTaskWorkerEvent.model_validate_json(message.value.decode('utf-8'))
+            custom_handler = getattr(self, "_custom_update_event", None)
+            if callable(custom_handler):
+                try:
+                    custom_handler(data)
+                except Exception as exc:
+                    logger.error(f"Exception in custom update_event_handler: {exc}", exc_info=True)
+                return
 
     def _run_before(self) -> None:
         """

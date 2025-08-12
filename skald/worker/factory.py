@@ -4,13 +4,13 @@ from skald.model.task import Task
 from skald.utils.logging import logger
 from proxy.kafka import KafkaConfig
 from proxy.redis import RedisConfig
-from skald.worker.baseclass import BaseTaskWorkerV1
+from skald.worker.baseclass import BaseTaskWorker
 
 class TaskWorkerFactory:
 
     redisConfig: Optional[RedisConfig] = None
     kafkaConfig: Optional[KafkaConfig] = None
-    taskWorkerClassMap: dict[str, BaseTaskWorkerV1] = {}  # type: ignore
+    taskWorkerClassMap: dict[str, BaseTaskWorker] = {}  # type: ignore
     taskWorkerAttachmentModelMap: dict[str, BaseModel] = {}
 
     @classmethod
@@ -26,24 +26,24 @@ class TaskWorkerFactory:
         return list(cls.taskWorkerClassMap.keys())
 
     @classmethod
-    def register_task_worker_class(cls, task_worker_class: BaseTaskWorkerV1):
-        # check task_worker_class is instance of BaseTaskWorkerV1
+    def register_task_worker_class(cls, task_worker_class: BaseTaskWorker):
+        # check task_worker_class is instance of BaseTaskWorker
         class_name = None
         try:
             class_name = task_worker_class.__class__.__name__
         except Exception as e:
             raise ValueError(f"Failed to get class name for task worker class {task_worker_class}: {e}")
 
-        if not isinstance(task_worker_class, BaseTaskWorkerV1):
-            raise ValueError(f"Task worker class must be an instance of BaseTaskWorkerV1")
+        if not isinstance(task_worker_class, BaseTaskWorker):
+            raise ValueError(f"Task worker class must be an instance of BaseTaskWorker")
 
         cls.taskWorkerClassMap[class_name] = task_worker_class
 
         # TODO: Need to define some way to get TaskWorker init model
 
     @classmethod
-    def create_task_worker(cls, task: Task) -> Optional[BaseTaskWorkerV1]:
-        taskWorker: BaseTaskWorkerV1 = None
+    def create_task_worker(cls, task: Task) -> Optional[BaseTaskWorker]:
+        taskWorker: BaseTaskWorker = None
         use_class = None
         use_attachment = None
         if task is None and task.className is None:
