@@ -125,7 +125,6 @@ class TaskWorkerManager:
                 task: Optional[Task] = None
                 attachments = value.get('attachments', {})
                 try:
-                    raise NotImplementedError("YAML loading not implemented")
                     remote_task = self.task_repository.get_task_by_task_id(id=task_id)
                     if remote_task is not None:
                         # If task already exists, update task attachments
@@ -170,7 +169,6 @@ class TaskWorkerManager:
                         self.task_repository.create_task(task=task)
                         logger.info(f"Task {task_id} did not exist, created new task.")
                 except Exception as e:
-                    logger.error(f"Error loading task {task_id} from MongoDB or YAML: {e}")
                     attachments_obj = TaskWorkerFactory.create_attachment_with_class_name_and_dict(
                         value['className'],
                         attachments

@@ -186,11 +186,16 @@ class AbstractTaskWorker(mp.Process, ABC, Generic[T]):
         lifecycle phases.
         """
         for attr_name in dir(self):
-            attr = getattr(self, attr_name)
-            if callable(attr) and hasattr(attr, "_skald_lifecycle_hook"):
-                hook_name = getattr(attr, "_skald_lifecycle_hook")
-                setattr(self, hook_name, attr)
-                logger.debug(f"Registered lifecycle hook: {hook_name} -> {attr_name}")
+            try:
+                attr = getattr(self, attr_name)
+                if callable(attr) and hasattr(attr, "_skald_lifecycle_hook"):
+                    hook_name = getattr(attr, "_skald_lifecycle_hook")
+                    setattr(self, hook_name, attr)
+                    logger.debug(f"Registered lifecycle hook: {hook_name} -> {attr_name}")
+            except (ValueError, AttributeError) as exc:
+                # Skip attributes that can't be accessed (e.g., multiprocessing attributes before process start)
+                logger.debug(f"Skipping attribute {attr_name}: {exc}")
+                continue
 
     def _call_lifecycle(
         self, 
@@ -376,14 +381,14 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
             self.task_type = self.__class__.__name__
         else:
             self.task_id: str = task.id
-            self.task_type: str = task.className
-        self._redis_config: RedisConfig = redis_config or RedisConfig()
-        self._kafka_config: KafkaConfig = kafka_config or KafkaConfig()
+            self.task_type: str = task.class_name
+            self.initialize(task.attachments)
+        self._redis_config: RedisConfig = redis_config
+        self._kafka_config: KafkaConfig = kafka_config
         self._redis_proxy: Optional[RedisProxy] = None
         self._kafka_proxy: Optional[KafkaProxy] = None
         self._survive_handler: Optional[SurviveHandler] = None
         self._update_consume_thread: Optional[threading.Thread] = None
-        self.initialize(task.attachments)
 
     def _consume_update_messages(self) -> None:
         """

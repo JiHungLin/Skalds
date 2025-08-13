@@ -1,6 +1,8 @@
 from skald.worker.baseclass import BaseTaskWorker, run_before_handler, run_main_handler
 from skald.utils.logging import logger
 from pydantic import BaseModel, Field, ConfigDict
+from skald.config.systemconfig import SystemConfig
+import time
 
 class MyDataModel(BaseModel):
     rtsp_url: str = Field(..., description="RTSP stream URL", alias="rtspUrl")
@@ -24,7 +26,9 @@ class MyWorker(BaseTaskWorker[MyDataModel]):
 
     @run_main_handler
     def main_run(self) -> None:
-        logger.info(f"Running main logic for MyWorker")
+        for _ in range(30):
+            logger.info(f"Running main logic for MyWorker")
+            time.sleep(1)
 
 if __name__ == "__main__":
     my_data = MyDataModel(rtsp_url="rtsp://example.com/stream", fix_frame=10)

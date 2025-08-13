@@ -35,7 +35,11 @@ class MongoProxy:
         self.db = None
         try:
             logger.info(f"Connecting to MongoDB: {self.host} ...")
-            self.client = pymongo.MongoClient(self.host)
+            self.client = pymongo.MongoClient(self.host,
+                serverSelectionTimeoutMS=3000,
+                connectTimeoutMS=3000,
+                socketTimeoutMS=3000    
+            )
             self.db = self.client[self.db_name]
             logger.info(f"Connected to MongoDB: {self.host}, using db: {self.db_name}")
         except Exception as e:

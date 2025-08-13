@@ -167,7 +167,7 @@ class Skald:
         )
         self.task_worker_manager.start_kafka_consume()
 
-        if self.config.yaml_file:
+        if self.config.yaml_file and self.config.skald_mode == "edge":
             self.task_worker_manager.load_taskworker_from_yaml(yaml_file=self.config.yaml_file)
 
         loop = asyncio.get_event_loop()
