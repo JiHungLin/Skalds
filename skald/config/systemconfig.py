@@ -45,7 +45,6 @@ class SystemConfig:
 
     # Mongo Config
     MONGO_HOST: str = os.getenv("MONGO_HOST", "")
-    MONGO_PORT: int = int(os.getenv("MONGO_PORT", 27017))
     DB_NAME: str = os.getenv("DB_NAME", "skald")
 
     TASK_WORKER_RETRY: int = int(os.getenv("TASK_WORKER_RETRY", -1))

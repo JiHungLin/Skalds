@@ -20,7 +20,7 @@ from typing import Optional
 
 from skald.model.event import TaskEvent, UpdateTaskWorkerEvent
 from skald.repository.repository import TaskRepository
-from skald.model.task import ModeEnum, Task, TaskWorkerSimpleMapList
+from skald.model.task import ModeEnum, Task, TaskWorkerSimpleMapList, TaskLifecycleStatus
 from skald.proxy.kafka import KafkaConfig, KafkaProxy, KafkaTopic
 from ruamel.yaml import YAML
 from skald.proxy.mongo import MongoProxy
@@ -125,6 +125,7 @@ class TaskWorkerManager:
                 task: Optional[Task] = None
                 attachments = value.get('attachments', {})
                 try:
+                    raise NotImplementedError("YAML loading not implemented")
                     remote_task = self.task_repository.get_task_by_task_id(id=task_id)
                     if remote_task is not None:
                         # If task already exists, update task attachments
@@ -162,7 +163,7 @@ class TaskWorkerManager:
                             create_date_time=int(datetime.datetime.now().timestamp() * 1000),
                             update_date_time=int(datetime.datetime.now().timestamp() * 1000),
                             deadline_date_time=0,
-                            lifecycle_status="Active",
+                            lifecycle_status=TaskLifecycleStatus.RUNNING,
                             priority=0,
                             attachments=attachments_obj
                         )
@@ -185,7 +186,7 @@ class TaskWorkerManager:
                         create_date_time=int(datetime.datetime.now().timestamp() * 1000),
                         update_date_time=int(datetime.datetime.now().timestamp() * 1000),
                         deadline_date_time=0,
-                        lifecycle_status="Active",
+                        lifecycle_status=TaskLifecycleStatus.RUNNING,
                         priority=0,
                         attachments=attachments_obj
                     )
@@ -200,7 +201,8 @@ class TaskWorkerManager:
                         )
                     else:
                         logger.warning(
-                            f"Task {task_id} has no cameraId in attachments, or got None for task worker. Skipping registration."
+                            f"Failed to create TaskWorker from YAML. TaskId: {task_id}, " +
+                            f"ClassName: {task.class_name}, Attachments: {attachments_obj}"
                         )
 
         try:

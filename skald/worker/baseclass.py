@@ -30,6 +30,7 @@ from abc import ABC, abstractmethod
 from functools import partial
 from signal import SIGINT, SIGTERM, signal
 from typing import Any, Callable, Optional, TypeVar, Generic, Type, Protocol
+import secrets
 
 from kafka.consumer.fetcher import ConsumerRecord
 from pydantic import BaseModel
@@ -263,7 +264,6 @@ class AbstractTaskWorker(mp.Process, ABC, Generic[T]):
         """
         pass
 
-    @abstractmethod
     def _run_main(self) -> None:
         """
         Execute the main logic of the task.
@@ -358,7 +358,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
 
     def __init__(
         self,
-        task: Task,
+        task: Task = None,
         redis_config: Optional[RedisConfig] = None,
         kafka_config: Optional[KafkaConfig] = None,
     ) -> None:
@@ -371,26 +371,18 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
             kafka_config: Kafka connection configuration. Uses default if None.
         """
         super().__init__()
-        self.task_id: str = task.id
-        self.task_type: str = task.className
+        if task is None:
+            self.task_id = f"MOCK_TASK_{secrets.token_hex(4)}"
+            self.task_type = self.__class__.__name__
+        else:
+            self.task_id: str = task.id
+            self.task_type: str = task.className
         self._redis_config: RedisConfig = redis_config or RedisConfig()
         self._kafka_config: KafkaConfig = kafka_config or KafkaConfig()
         self._redis_proxy: Optional[RedisProxy] = None
         self._kafka_proxy: Optional[KafkaProxy] = None
         self._survive_handler: Optional[SurviveHandler] = None
         self._update_consume_thread: Optional[threading.Thread] = None
-
-        if SystemConfig.LOG_SPLIT_WITH_WORKER_ID:
-            from skald.utils.logging import init_logger
-            logger_name = f"{SystemConfig.SKALD_ID}_{self.task_id}"
-            init_logger(
-                logger_name=logger_name,
-                level=SystemConfig.LOG_LEVEL,
-                log_path=SystemConfig.LOG_PATH,
-                process_id=SystemConfig.SKALD_ID,
-                rotation=SystemConfig.LOG_ROTATION_MB
-            )
-
         self.initialize(task.attachments)
 
     def _consume_update_messages(self) -> None:
@@ -477,6 +469,16 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
         - Starts background threads for message consumption and heartbeat
         """
         # Initialize Kafka proxy and start message consumption
+        if SystemConfig.LOG_SPLIT_WITH_WORKER_ID:
+            from skald.utils.logging import init_logger
+            logger_name = f"{SystemConfig.SKALD_ID}_{self.task_id}"
+            init_logger(
+                logger_name=logger_name,
+                level=SystemConfig.LOG_LEVEL,
+                log_path=SystemConfig.LOG_PATH,
+                process_id=SystemConfig.SKALD_ID,
+                rotation=SystemConfig.LOG_ROTATION_MB
+            )
         if self._kafka_config is not None:
             try:
                 # Configure Kafka topic and consumer group

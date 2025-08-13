@@ -117,13 +117,32 @@ class Skald:
         
         config_str_list = []
         for k, v in self.config.dict().items():
+            if "password" in k.lower():
+                v = "******"
+            if k == "mongo_host":
+                # mongodb://username:password@localhost:27017/
+                if isinstance(v, str) and '@' in v:
+                    parts = v.split('@')
+                    sub_part1 = parts[0].split(':')[:-1]
+                    v = f"{':'.join(sub_part1)}:******@{parts[1]}"
             config_str_list.append(f"{k}: {v}")
-        
 
         logger.block(
             "Configuration",
             config_str_list
         )
+
+        all_allow_task_worker_class_names = TaskWorkerFactory.get_all_task_worker_class_names()
+        all_allow_task_worker_data_model = TaskWorkerFactory.get_all_task_worker_attachment_models()
+        all_allow_task_worker_data_model = [cls.__name__ for cls in all_allow_task_worker_data_model]
+        message = ["Class \t\tDataModel"]
+        for class_name, data_model in zip(all_allow_task_worker_class_names, all_allow_task_worker_data_model):
+            message.append(f"{class_name} \t\t{data_model}")
+        logger.block(
+            "All Allowed TaskWorker Class And DataModel",
+            message
+        )
+
         logger.info("\n=============================Start main loop.=============================")
         
         # 啟動 Slave 活動註冊與心跳於Redis

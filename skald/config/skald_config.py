@@ -39,7 +39,6 @@ class SkaldConfig:
         kafka_topic_partitions: int = None,
         kafka_replication_factor: int = None,
         mongo_host: str = None,
-        mongo_port: int = None,
         db_name: str = None,
         task_worker_retry: int = None,
         yaml_file: str = None,
@@ -74,7 +73,6 @@ class SkaldConfig:
 
         # Mongo Config
         self.mongo_host: str = mongo_host if mongo_host is not None else SystemConfig.MONGO_HOST
-        self.mongo_port: int = mongo_port if mongo_port is not None else SystemConfig.MONGO_PORT
         self.db_name: str = db_name if db_name is not None else SystemConfig.DB_NAME
 
         # Task Worker
@@ -110,7 +108,6 @@ class SkaldConfig:
             "kafka_topic_partitions": self.kafka_topic_partitions,
             "kafka_replication_factor": self.kafka_replication_factor,
             "mongo_host": self.mongo_host,
-            "mongo_port": self.mongo_port,
             "db_name": self.db_name,
             "task_worker_retry": self.task_worker_retry,
             "yaml_file": self.yaml_file
