@@ -47,10 +47,13 @@ class Skald:
             if hasattr(SystemConfig, sys_attr):
                 setattr(SystemConfig, sys_attr, getattr(config, attr))
 
-        init_logger(level=SystemConfig.LOG_LEVEL,
-                log_path=SystemConfig.LOG_PATH,
-                process_id=SystemConfig.SKALD_ID,
-                rotation=SystemConfig.LOG_ROTATION_MB)
+        init_logger(
+            logger_name=SystemConfig.SKALD_ID,
+            level=SystemConfig.LOG_LEVEL,
+            log_path=SystemConfig.LOG_PATH,
+            process_id=SystemConfig.SKALD_ID,
+            rotation=SystemConfig.LOG_ROTATION_MB
+        )
 
         self.logger_cleaner = LoggerCleaner(log_path=SystemConfig.LOG_PATH, 
                                    log_retention=SystemConfig.LOG_RETENTION, 

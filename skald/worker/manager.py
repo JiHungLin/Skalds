@@ -349,9 +349,10 @@ class TaskWorkerManager:
             try:
                 for message in self.kafka_proxy.consumer:
                     logger.info(
-                        "Received Kafka message: %s:%d:%d: key=%s value=%s",
-                        message.topic, message.partition, message.offset,
-                        message.key, message.value.decode('utf-8')
+                        # "Received Kafka message: %s:%d:%d: key=%s value=%s",
+                        # message.topic, message.partition, message.offset,
+                        # message.key, message.value.decode('utf-8')
+                        f"Received Kafka message: {message.topic}:{message.partition}:{message.offset}: key={message.key.decode('utf-8')}, value={message.value.decode('utf-8') if message.value else None}"
                     )
                     try:
                         if message.topic == KafkaTopic.TASK_ASSIGN:

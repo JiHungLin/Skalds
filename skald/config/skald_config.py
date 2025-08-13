@@ -55,6 +55,7 @@ class SkaldConfig:
         self.log_path: str = log_path if log_path is not None else SystemConfig.LOG_PATH
         self.log_retention: str = log_retention if log_retention is not None else SystemConfig.LOG_RETENTION
         self.log_rotation_mb: str = log_rotation_mb if log_rotation_mb is not None else SystemConfig.LOG_ROTATION_MB
+        self.log_split_with_worker_id: bool = _bool(os.getenv("LOG_SPLIT_WITH_WORKER_ID", "false")) if SystemConfig.LOG_SPLIT_WITH_WORKER_ID is None else SystemConfig.LOG_SPLIT_WITH_WORKER_ID
 
         # Redis Config
         self.redis_host: str = redis_host if redis_host is not None else SystemConfig.REDIS_HOST
@@ -96,6 +97,7 @@ class SkaldConfig:
             "log_path": self.log_path,
             "log_retention": self.log_retention,
             "log_rotation_mb": self.log_rotation_mb,
+            "log_split_with_worker_id": self.log_split_with_worker_id,
             "redis_host": self.redis_host,
             "redis_port": self.redis_port,
             "redis_password": self.redis_password,

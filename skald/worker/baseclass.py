@@ -40,6 +40,7 @@ from skald.proxy.kafka import KafkaConfig, KafkaProxy, KafkaTopic
 from skald.proxy.redis import RedisConfig, RedisKey, RedisProxy
 from skald.store.taskworker import TaskWorkerStore
 from skald.model.event import UpdateTaskWorkerEvent
+from skald.config.systemconfig import SystemConfig
 
 
 # Type variables for generic constraints
@@ -378,6 +379,18 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
         self._kafka_proxy: Optional[KafkaProxy] = None
         self._survive_handler: Optional[SurviveHandler] = None
         self._update_consume_thread: Optional[threading.Thread] = None
+
+        if SystemConfig.LOG_SPLIT_WITH_WORKER_ID:
+            from skald.utils.logging import init_logger
+            logger_name = f"{SystemConfig.SKALD_ID}_{self.task_id}"
+            init_logger(
+                logger_name=logger_name,
+                level=SystemConfig.LOG_LEVEL,
+                log_path=SystemConfig.LOG_PATH,
+                process_id=SystemConfig.SKALD_ID,
+                rotation=SystemConfig.LOG_ROTATION_MB
+            )
+
         self.initialize(task.attachments)
 
     def _consume_update_messages(self) -> None:
@@ -418,12 +431,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
         """
         try:
             logger.info(
-                "Received Kafka message: %s:%d:%d: key=%s value=%s",
-                message.topic,
-                message.partition,
-                message.offset,
-                message.key,
-                message.value.decode('utf-8') if message.value else None
+                f"Received Kafka message: {message.topic}:{message.partition}:{message.offset}: key={message.key.decode('utf-8')}, value={message.value.decode('utf-8') if message.value else None}"
             )
             
             if not message.key or message.key.decode('utf-8') != self.task_id:

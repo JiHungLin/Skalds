@@ -159,6 +159,12 @@ class KafkaProxy:
             return
 
         try:
+            value = value.encode('utf-8')
+        except (UnicodeEncodeError, AttributeError):
+            logger.error(f"Value cannot be encoded as UTF-8: {value}")
+            return
+
+        try:
             logger.info(f"Producing - topic:{topic_name}, key:{key}, value:{value}")
             future = self.producer.send(topic_name, key=key, value=value)
 

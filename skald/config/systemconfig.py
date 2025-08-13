@@ -23,6 +23,7 @@ class SystemConfig:
     LOG_PATH: str = os.getenv("LOG_PATH", "logs")
     LOG_RETENTION: str = os.getenv("LOG_RETENTION", "3 days")
     LOG_ROTATION_MB: str = os.getenv("LOG_ROTATION_MB", "10")
+    LOG_SPLIT_WITH_WORKER_ID: bool = _bool(os.getenv("LOG_SPLIT_WITH_WORKER_ID", "false"))
 
     # TaskWorker YAML Config
     YAML_FILE: str = os.getenv("YAML_FILE", "")

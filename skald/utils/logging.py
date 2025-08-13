@@ -13,7 +13,7 @@ config = LoggerConfig(level="INFO", rotation="1 day", retention="7 days")
 # 預設全域 logger
 logger = create_logger()
 
-def init_logger(level: LogLevelEnum = "INFO", log_path = "logs", process_id = "", rotation = "20"):
+def init_logger(logger_name: str, level: LogLevelEnum = "INFO", log_path = "logs", process_id = "", rotation = "20"):
     global logger
     format = (
         "<green>{time:YYYY-MM-DD HH:mm:ss} </green> | "
@@ -22,7 +22,7 @@ def init_logger(level: LogLevelEnum = "INFO", log_path = "logs", process_id = ""
     )
 
     logger_config = LoggerConfig(
-        name=SystemConfig.SKALD_ID,
+        name=logger_name,
         log_path=log_path,
         level=level,
         rotation=f"{rotation}MB",  # Rotate log file when it reaches 20 MB
