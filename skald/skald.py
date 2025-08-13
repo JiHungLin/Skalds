@@ -108,6 +108,9 @@ class Skald:
         # mongo
         mongo_config = MongoConfig(host=SystemConfig.MONGO_HOST, db_name=SystemConfig.DB_NAME)
         self.mongo_proxy = MongoProxy(mongo_config=mongo_config)
+        if config.skald_mode == "node":
+            self.mongo_proxy.init_db_index()
+            logger.info("MongoDB index initialized.")
 
     def register_task_worker(self, worker: BaseTaskWorker):
         TaskWorkerFactory.register_task_worker_class(worker)

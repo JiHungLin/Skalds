@@ -45,6 +45,10 @@ class MongoProxy:
         except Exception as e:
             logger.error(f"Failed to connect to MongoDB at {self.host}: {e}")
             raise
+    
+    def init_db_index(self):
+        # Create unique index for tasks collection
+        self.db.tasks.create_index([("id", pymongo.ASCENDING)], unique=True)
 
     def close(self):
         """

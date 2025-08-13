@@ -219,8 +219,9 @@ class TaskWorkerManager:
         Args:
             message: JSON string representing a TaskEvent.
         """
-        task_event = TaskEvent(json_str=message)
-        for task_id in task_event.taskIds:
+        print(message)
+        task_event = TaskEvent.model_validate_json(message)
+        for task_id in task_event.task_ids:
             if task_id not in TaskWorkerStore.all_task_worker_task_id():
                 task = self.task_repository.get_task_by_task_id(id=task_id)
                 if not self._ensure_task_can_be_processed(task=task, task_id=task_id):
@@ -285,8 +286,8 @@ class TaskWorkerManager:
         Args:
             message: JSON string representing a TaskEvent.
         """
-        task_event = TaskEvent(json_str=message)
-        for task_id in task_event.taskIds:
+        task_event = TaskEvent.model_validate_json(message)
+        for task_id in task_event.task_ids:
             if task_id in TaskWorkerStore.all_task_worker_task_id():
                 TaskWorkerStore.terminate_task_by_task_id(task_id)
                 logger.success(f"TaskWorker canceled. TaskId: {task_id}")
@@ -303,9 +304,9 @@ class TaskWorkerManager:
         Args:
             message: JSON string representing a TaskEvent.
         """
-        task_event = TaskEvent(json_str=message)
+        task_event = TaskEvent.model_validate_json(message)
         logger.info(f"Update task worker event: {task_event}")
-        for task_id in task_event.taskIds:
+        for task_id in task_event.task_ids:
             if task_id in TaskWorkerStore.all_task_worker_task_id():
                 task = self.task_repository.get_task_by_task_id(id=task_id)
                 if not self._ensure_task_can_be_processed(task=task, task_id=task_id):
