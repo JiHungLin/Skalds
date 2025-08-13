@@ -1,5 +1,7 @@
 import asyncio
 import atexit
+import signal
+import sys
 from typing import Optional
 from skald.config.skald_config import SkaldConfig, SkaldModeEnum
 from skald.config.systemconfig import SystemConfig
@@ -17,19 +19,6 @@ import multiprocessing as mp
 from skald.utils.logging import init_logger
 
 
-def exit_handler(skald_survive_handler: Optional[SurviveHandler], task_worker_manager: Optional[TaskWorkerManager]):
-    # 結束所有子進程
-    try:
-        TaskWorkerStore.terminate_all_task()
-        if skald_survive_handler:
-            skald_survive_handler.stop_activity_update()
-            skald_survive_handler.stop_heartbeat_update()
-        if task_worker_manager:
-            task_worker_manager.stop_kafka_consume()
-    finally:
-        return 0
-
-
 class Skald:
     """
     Main class for the Skald application.
@@ -40,6 +29,8 @@ class Skald:
         Initialize the Skald application.
         """
         self.config = config
+        self._shutdown_event = asyncio.Event()
+        self._is_shutting_down = False
 
         # Overwrite SystemConfig class variables with values from SkaldConfig
         for attr in vars(config):
@@ -115,6 +106,60 @@ class Skald:
     def register_task_worker(self, worker: BaseTaskWorker):
         TaskWorkerFactory.register_task_worker_class(worker)
 
+    def _setup_signal_handlers(self, loop):
+        """Setup signal handlers"""
+        def signal_handler(signum, frame):
+            if not self._is_shutting_down:
+                logger.info(f"Received signal {signum}, starting graceful shutdown...")
+                self._is_shutting_down = True
+                # Set shutdown event in the event loop
+                loop.call_soon_threadsafe(self._shutdown_event.set)
+            else:
+                logger.warning("Already shutting down, forcing exit...")
+                sys.exit(1)
+
+        # Register signal handlers
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+    async def _shutdown_gracefully(self):
+        """Graceful shutdown"""
+        logger.info("Starting resource cleanup...")
+        
+        try:
+            # Stop task workers
+            if self.task_worker_manager:
+                self.task_worker_manager.stop_kafka_consume()
+                logger.info("Kafka consumption stopped")
+            
+            # Terminate all tasks
+            TaskWorkerStore.terminate_all_task()
+            logger.info("All tasks terminated")
+            
+            # Stop survive handler
+            if self.skald_survive_handler:
+                self.skald_survive_handler.stop_activity_update()
+                self.skald_survive_handler.stop_heartbeat_update()
+                logger.info("Heartbeat update stopped")
+            
+            # Stop logger cleaner
+            if hasattr(self, 'logger_cleaner'):
+                self.logger_cleaner.stop()
+                logger.info("Logger cleaner stopped")
+                
+        except Exception as e:
+            logger.error(f"Error during resource cleanup: {e}")
+        
+        logger.info("Resource cleanup completed")
+
+    async def _run_async(self):
+        """Async run main program"""
+        # Wait for shutdown signal
+        await self._shutdown_event.wait()
+        
+        # Execute graceful shutdown
+        await self._shutdown_gracefully()
+
     def run(self):
         TaskWorkerStore.TaskWorkerUidDic = mp.Manager().dict()  # str: str
         
@@ -148,19 +193,18 @@ class Skald:
 
         logger.info("\n=============================Start main loop.=============================")
         
-        # 啟動 Slave 活動註冊與心跳於Redis
+        # Start Slave activity registration and heartbeat to Redis
         if self.redis_proxy is not None:
-            slave_survive_handler = SurviveHandler(
+            self.skald_survive_handler = SurviveHandler(
                 redis_proxy=self.redis_proxy,
                 key=RedisKey.skald_heartbeat(SystemConfig.SKALD_ID), 
                 role=SurviveRoleEnum.SKALD
                 )
-            slave_survive_handler.start_activity_update()
+            self.skald_survive_handler.start_activity_update()
             logger.info("Start update slave activity time.")
-            slave_survive_handler.start_heartbeat_update()
+            self.skald_survive_handler.start_heartbeat_update()
             logger.info("Start update slave heartbeat.")
         else:
-            slave_survive_handler = None
             logger.info("Redis is not available, skip update slave activity time and heartbeat.")
 
         self.task_worker_manager = TaskWorkerManager(
@@ -173,14 +217,21 @@ class Skald:
         if self.config.yaml_file and self.config.skald_mode == "edge":
             self.task_worker_manager.load_taskworker_from_yaml(yaml_file=self.config.yaml_file)
 
-        loop = asyncio.get_event_loop()
+        # Use new event loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
         try:
-            atexit.register(exit_handler, 
-                            skald_survive_handler=self.skald_survive_handler, 
-                            task_worker_manager=self.task_worker_manager
-                            )
-            loop.run_forever()
-        except KeyboardInterrupt:
-            logger.warning("強制中斷主程式")
+            # Setup signal handlers
+            self._setup_signal_handlers(loop)
+            
+            # Run async main program
+            loop.run_until_complete(self._run_async())
+            
+        except Exception as e:
+            logger.error(f"Runtime error occurred: {e}")
         finally:
-            loop.close()
+            # Ensure event loop is closed
+            if not loop.is_closed():
+                loop.close()
+            logger.info("Program completely shutdown")

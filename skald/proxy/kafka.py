@@ -130,12 +130,12 @@ class KafkaProxy:
                     break
                 except NoBrokersAvailable as nba:
                     logger.debug(f"Failed to connect to Kafka at {self._kafka_config.host}:{self._kafka_config.port}. ConnectionError: {nba}")
+                    time.sleep(5)
                 except Exception as e:
                     logger.error(
-                        f"Failed to connect to Kafka at {self._kafka_config.host}:{self._kafka_config.port}. "
+                        f"Failed to connect to Kafka at {self._kafka_config.host}:{self._kafka_config.port}. " +
                         f"Error: {e}. Retrying in 5 seconds..."
                     )
-                finally:
                     time.sleep(5)
 
         if self._is_block:

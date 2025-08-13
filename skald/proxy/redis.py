@@ -108,13 +108,11 @@ class RedisProxy:
                     break
                 except redis.ConnectionError as ce:
                     logger.debug(f"Failed to connect to Redis at {self.host}:{self.port}. ConnectionError: {ce}")
+                    time.sleep(5)
                 except Exception as e:
                     logger.error(
                         f"Failed to connect to Redis at {self.host}:{self.port}. Error: {e}. Retrying in 5 seconds..."
                     )
-                    if self.is_block:
-                        raise
-                finally:
                     time.sleep(5)
 
         if self.is_block:
