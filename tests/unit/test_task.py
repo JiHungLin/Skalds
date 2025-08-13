@@ -13,8 +13,8 @@ class DummyAttachment(BaseModel):
     foo: str
 
 def test_mode_enum_values():
-    assert ModeEnum.ACTIVE.value == "Active"
-    assert ModeEnum.PASSIVE.value == "Passive"
+    assert ModeEnum.ACTIVE == "Active"
+    assert ModeEnum.PASSIVE == "Passive"
     assert set(ModeEnum.list()) == {"Active", "Passive"}
 
 def test_task_lifecycle_status_values():

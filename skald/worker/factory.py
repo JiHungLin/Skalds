@@ -2,8 +2,8 @@ from typing import Optional
 from pydantic import BaseModel
 from skald.model.task import Task
 from skald.utils.logging import logger
-from proxy.kafka import KafkaConfig
-from proxy.redis import RedisConfig
+from skald.proxy.kafka import KafkaConfig
+from skald.proxy.redis import RedisConfig
 from skald.worker.baseclass import BaseTaskWorker
 
 class TaskWorkerFactory:

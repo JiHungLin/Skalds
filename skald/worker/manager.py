@@ -21,13 +21,13 @@ from typing import Optional
 from skald.model.event import TaskEvent, UpdateTaskWorkerEvent
 from skald.repository.repository import TaskRepository
 from skald.model.task import ModeEnum, Task, TaskWorkerSimpleMapList
-from proxy.kafka import KafkaConfig, KafkaProxy, KafkaTopic
+from skald.proxy.kafka import KafkaConfig, KafkaProxy, KafkaTopic
 from ruamel.yaml import YAML
-from proxy.mongo import MongoProxy
+from skald.proxy.mongo import MongoProxy
 from skald.utils.logging import logger
-from proxy.redis import RedisConfig, RedisKey, RedisProxy
-from store.taskworker import TaskWorkerStore
-from config.systemconfig import SystemConfig
+from skald.proxy.redis import RedisConfig, RedisKey, RedisProxy
+from skald.store.taskworker import TaskWorkerStore
+from skald.config.systemconfig import SystemConfig
 from skald.worker.baseclass import BaseTaskWorker
 from skald.worker.factory import TaskWorkerFactory
 
@@ -354,20 +354,23 @@ class TaskWorkerManager:
                         message.key, message.value.decode('utf-8')
                     )
                     try:
-                        if message.topic == KafkaTopic.TaskAssign:
+                        if message.topic == KafkaTopic.TASK_ASSIGN:
                             self._create_task_worker(message.value.decode('utf-8'))
-                        elif message.topic == KafkaTopic.TaskCancel:
+                        elif message.topic == KafkaTopic.TASK_CANCEL:
                             self._cancel_task_worker(message.value.decode('utf-8'))
-                        elif message.topic == KafkaTopic.TaskUpdateAttachment:
+                        elif message.topic == KafkaTopic.TASK_UPDATE_ATTACHMENT:
                             self._update_task_worker(message.value.decode('utf-8'))
-                        elif message.topic == KafkaTopic.TestingProducer:
+                        elif message.topic == KafkaTopic.TESTING_PRODUCER:
                             self._testing_kafka_producer(message.value.decode('utf-8'))
                         else:
                             logger.warning(f"Unknown Kafka topic: {message.topic}")
                     except Exception as e:
                         logger.error(f"Error processing Kafka message: {e}")
+            except TypeError as te:
+                logger.debug(f"Kafka Client not created yet, message: {te}")
             except Exception as e:
                 logger.error(f"Kafka consumer disconnected, retrying in 5s. Error: {e}")
+            finally:
                 time.sleep(5)
 
     # -------------------
@@ -412,12 +415,15 @@ class TaskWorkerManager:
             self.task_worker_simple_map_list.keep_specify_tasks(TaskWorkerStore.all_task_worker_task_id())
             self.redis_proxy.set_message(
                 RedisKey.skald_all_task(SystemConfig.SKALD_ID),
-                self.task_worker_simple_map_list.model_dump_json()
+                self.task_worker_simple_map_list.model_dump_json(),
+                0,
+                SystemConfig.REDIS_KEY_TTL
             )
             allow_task_class_name = TaskWorkerFactory.get_all_task_worker_class_names()
             self.redis_proxy.overwrite_list(
                 RedisKey.skald_allow_task_class_name(SystemConfig.SKALD_ID),
-                allow_task_class_name
+                allow_task_class_name,
+                SystemConfig.REDIS_KEY_TTL
             )
             await asyncio.sleep(SystemConfig.REDIS_SYNC_PERIOD)
         logger.info("Sync All TaskWorkerSimpleMap done!")

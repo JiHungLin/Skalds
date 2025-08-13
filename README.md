@@ -106,7 +106,7 @@ services:
 > **Note:** If you already have Redis, MongoDB, or Kafka installed locally, you can use your existing services. Adjust connection settings as needed.
 >
 > **Recommended versions:**
-> - Redis: 7.2
+> - Redis: 7.4+ (Requires 7.4 or above to support per-hash-field TTL)
 > - MongoDB: 7.0
 > - Kafka: 3.9.0 (no Zookeeper required)
 

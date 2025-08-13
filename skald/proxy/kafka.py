@@ -6,7 +6,7 @@ Provides simplified, user-friendly interfaces for Kafka producer, consumer, and 
 
 from typing import List, Optional
 from kafka import KafkaConsumer, KafkaProducer, KafkaAdminClient
-from kafka.errors import TopicAlreadyExistsError
+from kafka.errors import TopicAlreadyExistsError, NoBrokersAvailable
 from kafka.admin import NewTopic
 from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
@@ -74,7 +74,6 @@ class KafkaProxy:
                 try:
                     bootstrap_servers = f"{self._kafka_config.host}:{self._kafka_config.port}"
                     # Consumer
-                    logger.info(f"Creating KafkaConsumer - host:{bootstrap_servers}")
                     consumer_kwargs = dict(
                         bootstrap_servers=bootstrap_servers,
                         enable_auto_commit=True,
@@ -129,11 +128,14 @@ class KafkaProxy:
                     self._connected = True
                     logger.success(f"Connected to Kafka at {self._kafka_config.host}:{self._kafka_config.port}")
                     break
+                except NoBrokersAvailable as nba:
+                    logger.debug(f"Failed to connect to Kafka at {self._kafka_config.host}:{self._kafka_config.port}. ConnectionError: {nba}")
                 except Exception as e:
                     logger.error(
                         f"Failed to connect to Kafka at {self._kafka_config.host}:{self._kafka_config.port}. "
                         f"Error: {e}. Retrying in 5 seconds..."
                     )
+                finally:
                     time.sleep(5)
 
         if self._is_block:

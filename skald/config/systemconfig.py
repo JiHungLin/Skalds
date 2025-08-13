@@ -17,11 +17,11 @@ def _bool(input):
     
 class SystemConfig:
     SKALD_ID : str = os.getenv("SKALD_ID", f"skald-{str(uuid.uuid4())[:5]}") 
-    SKALD_ENV: SkaldEnvEnum = os.getenv("SKALD_ENV", SkaldEnvEnum.DEV.value)  # dev / production 
-    SKALD_MODE: SkaldModeEnum = os.getenv("SKALD_MODE", SkaldModeEnum.NODE.value)  # edge / node
-    LOG_LEVEL: LogLevelEnum = os.getenv("LOG_LEVEL", LogLevelEnum.DEBUG.value) # TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL
+    SKALD_ENV: SkaldEnvEnum = os.getenv("SKALD_ENV", SkaldEnvEnum.DEV)  # dev / production 
+    SKALD_MODE: SkaldModeEnum = os.getenv("SKALD_MODE", SkaldModeEnum.NODE)  # edge / node
+    LOG_LEVEL: LogLevelEnum = os.getenv("LOG_LEVEL", LogLevelEnum.INFO) # TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL
     LOG_PATH: str = os.getenv("LOG_PATH", "logs")
-    LOG_RETENTION: str = os.getenv("LOG_RETENTION", "3")
+    LOG_RETENTION: str = os.getenv("LOG_RETENTION", "3 days")
     LOG_ROTATION_MB: str = os.getenv("LOG_ROTATION_MB", "10")
 
     # TaskWorker YAML Config
@@ -32,6 +32,7 @@ class SystemConfig:
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
     REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD", "")
     REDIS_SYNC_PERIOD: int = int(os.getenv("REDIS_SYNC_PERIOD", 3))
+    REDIS_KEY_TTL: int = int(os.getenv("REDIS_KEY_TTL", 3600))
 
     # Kafka Config
     KAFKA_HOST: str = os.getenv("KAFKA_HOST", "")
@@ -43,6 +44,7 @@ class SystemConfig:
 
     # Mongo Config
     MONGO_HOST: str = os.getenv("MONGO_HOST", "")
-    DB_NAME: str = os.getenv("DB_NAME", "media-module")
+    MONGO_PORT: int = int(os.getenv("MONGO_PORT", 27017))
+    DB_NAME: str = os.getenv("DB_NAME", "skald")
 
     TASK_WORKER_RETRY: int = int(os.getenv("TASK_WORKER_RETRY", -1))

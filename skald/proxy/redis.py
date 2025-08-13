@@ -106,127 +106,193 @@ class RedisProxy:
                     self._connected = True
                     logger.success(f"Connected to Redis at {self.host}:{self.port}")
                     break
+                except redis.ConnectionError as ce:
+                    logger.debug(f"Failed to connect to Redis at {self.host}:{self.port}. ConnectionError: {ce}")
                 except Exception as e:
                     logger.error(
                         f"Failed to connect to Redis at {self.host}:{self.port}. Error: {e}. Retrying in 5 seconds..."
                     )
                     if self.is_block:
                         raise
+                finally:
                     time.sleep(5)
 
         if self.is_block:
             connection_worker()
         else:
+            logger.info("Starting Redis connection worker in a separate thread")
             self._connection_thread = threading.Thread(target=connection_worker, daemon=True)
             self._connection_thread.start()
 
-        logger.info("Redis connection attempt started in background thread")
-
     def flush_all(self):
         """Flush all keys in the current database."""
+        if not self._client:
+            return None
         try:
             self._client.flushall()
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to flush all. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to flush all. Error: {e}")
 
-    def set_hash(self, key: str, field: str, value: str):
+    def set_hash(self, key: str, field: str, value: str, ttl: int = 0):
         """Set a field in a hash."""
+        if not self._client:
+            return None
         try:
             self._client.hset(key, field, value)
+            if ttl > 0:
+                self._client.hexpire(key, ttl, field)
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to set hash. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to set hash. Error: {e}")
 
     def get_hash(self, key: str, field: str):
         """Get a field value from a hash."""
+        if not self._client:
+            return None
         try:
             value = self._client.hget(key, field)
             return value.decode() if value else None
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to get hash. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to get hash. Error: {e}")
             return None
 
-    def push_list(self, key: str, value: str, insert_head: bool = True):
+    def push_list(self, key: str, value: str, insert_head: bool = True, ttl: int = 0):
         """Push a value to a list (head or tail)."""
+        if not self._client:
+            return None
         try:
             if insert_head:
                 self._client.rpush(key, value)
             else:
                 self._client.lpush(key, value)
+            if ttl > 0:
+                self._client.expire(key, ttl)
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to push list. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to push list. Error: {e}")
-    
-    def overwrite_list(self, key: str, values: list[str]):
+
+    def overwrite_list(self, key: str, values: list[str], ttl: int = 0):
         """Overwrite a list with new values."""
+        if not self._client:
+            return None
         try:
             self._client.delete(key)  # Clear the existing list
-            self._client.rpush(key, *values)  # Push new values
+            for value in values:
+                self._client.rpush(key, value)
+            if ttl > 0:
+                self._client.expire(key, ttl)
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to overwrite list. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to overwrite list. Error: {e}")
 
     def delete_hash(self, key: str, field: str):
         """Delete a field from a hash."""
+        if not self._client:
+            return None
         try:
             self._client.hdel(key, field)
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to delete hash. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to delete hash. Error: {e}")
 
-    def set_message(self, key: str, message, expire: int = 0):
+    def set_message(self, key: str, message, expire: int = 0, ttl: int = 0):
         """Set a string value with optional expiration."""
+        if not self._client:
+            return None
         try:
             if expire > 0:
                 self._client.set(key, message, ex=expire)
             else:
                 self._client.set(key, message)
+            if ttl > 0:
+                self._client.expire(key, ttl)
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to set message. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to set message. Error: {e}")
 
     def get_message(self, key: str):
         """Get a string value."""
+        if not self._client:
+            return None
         try:
             message = self._client.get(key)
             return message
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to get message. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to get message. Error: {e}")
             return None
 
     def get_sub_keys(self, root_key: str):
         """Get all keys matching a root pattern."""
+        if not self._client:
+            return []
         try:
             keys = self._client.keys(root_key + "*")
             return [key.decode() for key in keys]
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to get sub keys. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to get sub keys. Error: {e}")
             return []
 
     def get_all_hash(self, root_key: str):
         """Get all fields and values from a hash."""
+        if not self._client:
+            return {}
         try:
             hash_dict = self._client.hgetall(root_key)
             return {k.decode(): v.decode() for k, v in hash_dict.items()}
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to get all hash. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to get all hash. Error: {e}")
             return {}
 
     def get_subscribe(self, ignore_subscribe_messages=True):
         """Get a pubsub object for subscribing to channels."""
+        if not self._client:
+            return None
         try:
             return self._client.pubsub(ignore_subscribe_messages=ignore_subscribe_messages)
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to get subscribe. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to get subscribe. Error: {e}")
             return None
 
-    def publish_message(self, channel, message):
+    def publish_message(self, channel, message, ttl: int = 0):
         """Publish a message to a channel."""
+        if not self._client:
+            return None
         try:
-            return self._client.publish(channel, message)
+            result = self._client.publish(channel, message)
+            if ttl > 0:
+                self._client.expire(channel, ttl)
+            return result
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to publish message. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to publish message. Error: {e}")
             return None
 
     def delete_key(self, key):
         """Delete a key."""
+        if not self._client:
+            return None
         try:
             return self._client.delete(key)
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to delete key. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to delete key. Error: {e}")
             return None

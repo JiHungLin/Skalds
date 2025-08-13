@@ -395,11 +395,14 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
                         if self.is_done:
                             break
                         self.handle_update_message(message)
+            except TypeError as te:
+                logger.debug(f"Kafka Client not created yet, message: {te}")
             except Exception as exc:
                 if not self.is_done:
                     logger.error(
                         f"Kafka consumer error, will retry in 5 seconds. Error: {exc}"
                     )
+            finally:
                     time.sleep(5)
 
     def handle_update_message(self, message: ConsumerRecord) -> None:
@@ -469,7 +472,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
         if self._kafka_config is not None:
             try:
                 # Configure Kafka topic and consumer group
-                self._kafka_config.consume_topic_list = [KafkaTopic.TaskWorkerUpdate]
+                self._kafka_config.consume_topic_list = [KafkaTopic.TASK_WORKER_UPDATE]
                 self._kafka_config.consume_group_id = f"{self.task_id}_{str(uuid.uuid4())[:8]}"
                 
                 self._kafka_proxy = KafkaProxy(
@@ -501,7 +504,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
                 self._survive_handler = SurviveHandler(
                     redis_proxy=self._redis_proxy,
                     key=RedisKey.task_heartbeat(self.task_id),
-                    role=SurviveRoleEnum.TASKWORKER.value
+                    role=SurviveRoleEnum.TASKWORKER
                 )
                 self._survive_handler.start_heartbeat_update()
                 

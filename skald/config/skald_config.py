@@ -31,6 +31,7 @@ class SkaldConfig:
         redis_port: int = None,
         redis_password: str = None,
         redis_sync_period: int = None,
+        redis_key_ttl: int = None,
         kafka_host: str = None,
         kafka_port: int = None,
         kafka_username: str = None,
@@ -38,6 +39,7 @@ class SkaldConfig:
         kafka_topic_partitions: int = None,
         kafka_replication_factor: int = None,
         mongo_host: str = None,
+        mongo_port: int = None,
         db_name: str = None,
         task_worker_retry: int = None,
         yaml_file: str = None,
@@ -59,6 +61,7 @@ class SkaldConfig:
         self.redis_port: int = redis_port if redis_port is not None else SystemConfig.REDIS_PORT
         self.redis_password: str = redis_password if redis_password is not None else SystemConfig.REDIS_PASSWORD
         self.redis_sync_period: int = redis_sync_period if redis_sync_period is not None else SystemConfig.REDIS_SYNC_PERIOD
+        self.redis_key_ttl: int = redis_key_ttl if redis_key_ttl is not None else SystemConfig.REDIS_KEY_TTL
 
         # Kafka Config
         self.kafka_host: str = kafka_host if kafka_host is not None else SystemConfig.KAFKA_HOST
@@ -70,6 +73,7 @@ class SkaldConfig:
 
         # Mongo Config
         self.mongo_host: str = mongo_host if mongo_host is not None else SystemConfig.MONGO_HOST
+        self.mongo_port: int = mongo_port if mongo_port is not None else SystemConfig.MONGO_PORT
         self.db_name: str = db_name if db_name is not None else SystemConfig.DB_NAME
 
         # Task Worker
@@ -79,3 +83,33 @@ class SkaldConfig:
         self.yaml_file: str = yaml_file if yaml_file is not None else SystemConfig.YAML_FILE
 
         self.skald_mode: SkaldModeEnum = skald_mode if skald_mode is not None else SystemConfig.SKALD_MODE
+
+    def dict(self):
+        """
+        Convert the configuration to a dictionary.
+        """
+        return {
+            "skald_id": self.skald_id,
+            "skald_env": self.skald_env,
+            "skald_mode": self.skald_mode,
+            "log_level": self.log_level,
+            "log_path": self.log_path,
+            "log_retention": self.log_retention,
+            "log_rotation_mb": self.log_rotation_mb,
+            "redis_host": self.redis_host,
+            "redis_port": self.redis_port,
+            "redis_password": self.redis_password,
+            "redis_sync_period": self.redis_sync_period,
+            "redis_key_ttl": self.redis_key_ttl,
+            "kafka_host": self.kafka_host,
+            "kafka_port": self.kafka_port,
+            "kafka_username": self.kafka_username,
+            "kafka_password": self.kafka_password,
+            "kafka_topic_partitions": self.kafka_topic_partitions,
+            "kafka_replication_factor": self.kafka_replication_factor,
+            "mongo_host": self.mongo_host,
+            "mongo_port": self.mongo_port,
+            "db_name": self.db_name,
+            "task_worker_retry": self.task_worker_retry,
+            "yaml_file": self.yaml_file
+        }

@@ -54,19 +54,19 @@ class SurviveHandler:
         self._heartbeat_thread = None
         self._activity_thread = None
         self.role = role
-        logger.info(f"SurviveHandler initialized. Key: {key}, role: {role.value}")
+        logger.info(f"SurviveHandler initialized. Key: {key}, role: {role}")
 
     def push_success_heartbeat(self):
         """Push a successful heartbeat value to Redis."""
-        self.redis_proxy.set_message(self.key, HeartBeat.SUCCESS)
+        self.redis_proxy.set_message(self.key, HeartBeat.SUCCESS,0, SystemConfig.REDIS_KEY_TTL)
 
     def push_failed_heartbeat(self):
         """Push a failed heartbeat value to Redis."""
-        self.redis_proxy.set_message(self.key, HeartBeat.FAILED)
+        self.redis_proxy.set_message(self.key, HeartBeat.FAILED,0, SystemConfig.REDIS_KEY_TTL)
 
     def push_canceled_heartbeat(self):
         """Push a canceled heartbeat value to Redis."""
-        self.redis_proxy.set_message(self.key, HeartBeat.CANCELED)
+        self.redis_proxy.set_message(self.key, HeartBeat.CANCELED,0, SystemConfig.REDIS_KEY_TTL)
 
     def start_heartbeat_update(self):
         """Start the heartbeat update thread."""
@@ -121,7 +121,7 @@ class SurviveHandler:
     async def update_heartbeat_to_redis(self):
         """Async loop to periodically update heartbeat value in Redis."""
         while self._is_heartbeat_thread_running:
-            self.redis_proxy.set_message(self.key, secrets.randbelow(200), 5)
+            self.redis_proxy.set_message(self.key, secrets.randbelow(200), self.period+5)
             await asyncio.sleep(self.period)
         logger.info("Heartbeat update loop exited.")
 
@@ -129,10 +129,16 @@ class SurviveHandler:
         """Async loop to periodically update skald activity time in Redis."""
         while self._is_activity_thread_running:
             self.redis_proxy.set_hash(
-                RedisKey.SKALD_LIST_HASH, SystemConfig.SKALD_ID, int(datetime.now().timestamp() * 1000)
+                RedisKey.SKALD_LIST_HASH, 
+                SystemConfig.SKALD_ID, 
+                int(datetime.now().timestamp() * 1000),
+                SystemConfig.REDIS_KEY_TTL
             )
             self.redis_proxy.set_hash(
-                RedisKey.SKALD_MODE_LIST_HASH, SystemConfig.SKALD_ID, SystemConfig.SKALD_MODE.value
+                RedisKey.SKALD_MODE_LIST_HASH, 
+                SystemConfig.SKALD_ID, 
+                SystemConfig.SKALD_MODE,
+                SystemConfig.REDIS_KEY_TTL
             )
             await asyncio.sleep(self.period)
         logger.info("Activity update loop exited.")
