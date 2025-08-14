@@ -1,60 +1,69 @@
 # Skald
 
-**An event-driven, modular distributed task scheduling and execution system.**
+**一個事件驅動的模組化分散式任務調度與執行系統。**
 
-Inspired by the Skald of Norse mythology—storytellers and messengers—Skald is designed to efficiently manage complex AI and high-concurrency backend tasks through event-driven communication, flexible resource allocation, and robust task lifecycle management.
-
----
-
-## Features
-
-- **Modular architecture:** Clear separation of System Controller, Task Generator, Task Worker, Event Queue, Cache Memory, and Storage.
-- **Event-driven communication:** Uses Pub/Sub style event queues to ensure loose coupling and high scalability.
-- **Dynamic resource allocation:** Task Generator manages resources and task scheduling supporting auto-scaling in container orchestration platforms like Kubernetes.
-- **Robust task lifecycle management:** Centralized monitoring, task state control, pause/resume/cancel functionalities.
-- **High performance storage:** Separation of high-frequency cache with persistent disk storage for fault tolerance and efficiency.
-- **Extensible and fault-tolerant:** Supports integration with Kafka, RabbitMQ or other message brokers. Designed for high availability and disaster recovery.
-- **Security-focused:** Supports authentication and authorization between components ensuring secure task execution and data access.
+靈感來自北歐神話中的 Skald（吟遊詩人與使者），Skald 專為高併發後端任務管理而設計，透過事件驅動的通訊機制與靈活的資源配置，實現高效能、可擴展的任務調度與執行。
 
 ---
 
-## System Components Overview
+## 主要特色
 
-| Module              | Description                                                                                     |
-| ------------------- | ----------------------------------------------------------------------------------------------- |
-| **System Controller** | Provides system access interface. Monitors task states and controls Task Generator.            |
-| **Task Generator**    | Allocates resources for tasks. Receives task requests and dispatches to Task Workers.          |
-| **Task Worker**       | Executes tasks independently. Handles media resources, caching, and storing results.           |
-| **Event Queue**       | Facilitates communication between modules using pub/sub mechanisms.                            |
-| **Cache Memory**      | Stores frequently accessed, high-speed read/write data.                                       |
-| **Disk Storage**      | Stores statistics, recovery data, recording data for persistence and fault tolerance.          |
+- **模組化架構**  
+  將系統劃分為明確職責的模組，包括 System Controller、Task Generator、Task Worker、Event Queue、Cache Memory 與 Storage，促進系統可維護性與擴展性。
+
+- **事件驅動通訊**  
+  採用發佈/訂閱（Pub/Sub）機制的事件佇列，實現模組間的鬆耦合互動，提高系統的彈性與可擴展能力。
+
+- **動態資源調度**  
+  Task Generator 根據即時的資源可用性進行任務分配，支援在容器化平台（如 Kubernetes）上的自動擴容與動態調整。
+
+- **健全的任務生命週期管理**  
+  中央化監控與控制任務狀態，提供暫停、恢復、取消等操作，確保任務執行的穩定與可靠。
 
 ---
 
-## Architecture Highlights
+## 系統模組總覽
 
-- **Loose coupling:** Components communicate through event queues making the system highly extensible and maintainable.
-- **Resource-aware scheduling:** Task Generator assigns tasks based on real-time resource availability.
-- **Status synchronization:** Bi-directional state updates ensure accurate task lifecycle tracking.
-- **Dynamic updates:** Supports dynamic parameter updates and hot reloading capabilities.
-- **High availability:** Replicated event queues and storage for fault tolerance.
-- **Secure:** Configurable authentication and authorization between components.
+| 模組               | 功能說明                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| **System Controller** | 提供 RESTful 系統介面，負責任務建立與控制，監控 Task Generator 及 Task Worker 的心跳，依此更新任務狀態，並將任務指派給 Task Generator。 |
+| **Task Generator(Skald)**    | 管理資源配置，從 System Controller 接收任務請求並負責任務生成與分配。                                                      |
+| **Task Worker**       | 使用獨立資源（CPU、RAM）執行具體任務，擷取媒體資料來源含 RTSP、快取記憶體(Cache Memory)、磁碟(Storage)，並將結果存入快取或磁碟中。 |
+| **Event Queue**       | 負責模組間事件通訊，運用 Pub/Sub 機制實現 System Controller、Task Generator 與 Task Worker 間的消息傳遞。                      |
+| **Cache Memory**      | 儲存高頻率讀寫的數據，以提升系統效能。                                                             |
+| **Disk Storage**      | 負責持久化資料存儲，包括統計數據、復原資料及錄製資料，提供容錯與資料耐久性。                                          |
+
+---
+
+## 架構亮點
+
+- **鬆耦合設計**  
+  各模組透過事件佇列通訊，強化系統擴展性與維護性。
+
+- **資源感知的排程**  
+  Task Generator 依據實時資源狀態動態分配任務，提升使用效率。
+
+- **狀態同步機制**  
+  雙向的狀態更新確保任務生命週期的準確追蹤。
+
+- **動態參數更新**  
+  支援參數熱更新與熱重載，降低系統重啟時間。
+
+- **高可用設計**  
+  事件佇列及存儲採用多副本機制，保障系統在故障時仍保持穩定運行。
+
 
 ---
 
 ## Getting Started
 
-### Getting Started
-
-#### 1. Install Python dependencies
+#### 1. 安裝 Python dependencies
 
 ```bash
 pip install -e .
 ```
 
-#### 2. Start Kafka, Redis, and MongoDB (using Docker)
-
-You can quickly start all required services using Docker:
+#### 2. 啟動 Kafka, Redis, and MongoDB (使用 Docker)
 
 You can quickly start all required services using Docker Compose:
 
@@ -110,30 +119,18 @@ services:
 > - MongoDB: 7.0
 > - Kafka: 3.9.0 (no Zookeeper required)
 
-#### 3. Run tests
-
-```bash
-pytest
-```
-
-For more details, see the documentation for each service:
-- [Redis Quick Start](https://hub.docker.com/_/redis)
-- [MongoDB Quick Start](https://hub.docker.com/_/mongo)
-- [Kafka Quick Start](https://hub.docker.com/r/bitnami/kafka)
-
 ---
 
-## Use Cases
+## 適用場景（Use Cases）
 
-- AI image recognition and long-running compute tasks  
-- Backend services requiring high concurrency and dynamic scaling  
-- Systems needing real-time task management, including pausing, canceling or updating tasks dynamically  
+- **AI 影像辨識與長時間運算任務**  
+  適用於需要大量運算資源且任務執行時間較長的工作，比如影像分析、視訊流處理、深度學習推論等。
 
----
+- **高併發後端服務**  
+  支援動態擴展的後端服務架構，適合負載波動大且需快速調整資源的場景，如大型 Web 服務、數據處理流水線。
 
-## Contribution
-
-Contributions, issues, and feature requests are welcome. Please feel free to check [issues page].
+- **即時任務管理**  
+  提供靈活的任務控制能力，支持任務的暫停、取消與動態更新，滿足需要即時調度與變更的業務需求。
 
 ---
 
@@ -163,6 +160,17 @@ SOFTWARE.
 
 ---
 
-## About the Name
+## 關於名稱（About the Name）
 
-The project name **Skald** is inspired by Norse mythology, where Skalds are storytellers and messengers who preserve knowledge and convey information, reflecting the system’s core design philosophy of event-driven communication and task orchestration.
+本專案名稱 **Skald** 源自北歐神話中的「吟遊詩人」（Skald）。  
+在古代北歐文化中，Skalds 扮演著故事傳述者與使者的角色，負責保存知識並傳達資訊。
+
+這個命名正好呼應了系統核心的設計理念：  
+透過**事件驅動的通訊機制**，在分散式架構中負責**任務調度與資訊流轉**，如同 Skald 一樣靈活且高效地承載並傳遞任務狀態與資料。
+
+---
+
+For more details, see the documentation for each service:
+- [Redis Quick Start](https://hub.docker.com/_/redis)
+- [MongoDB Quick Start](https://hub.docker.com/_/mongo)
+- [Kafka Quick Start](https://hub.docker.com/r/bitnami/kafka)

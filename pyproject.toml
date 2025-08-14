@@ -43,6 +43,10 @@ include = ["skald*"]
 dev = [
     "pytest>=7.4.0",
 ]
+backend = [
+    "fastapi",
+    "uvicorn",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
