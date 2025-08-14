@@ -6,11 +6,10 @@ config = SkaldConfig(
     log_level="DEBUG",
     redis_host="localhost",
     redis_port=6379,
-    kafka_host="192.168.1.110",
+    kafka_host="127.0.0.1",
     kafka_port=9092,
-    mongo_host="mongodb://root:root@localhost:27027/",
+    mongo_host="mongodb://root:root@localhost:27017/",
     skald_mode="node",
-    yaml_file="/home/jihung/Projects/dev/Skald/tests/manual/all_workers.yml",
     log_split_with_worker_id=True,
 )
 

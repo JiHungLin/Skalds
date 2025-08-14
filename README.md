@@ -91,7 +91,7 @@ services:
       - KAFKA_CFG_LOG_RETENTION_MINUTES=30
 
   redis:
-    image: redis
+    image: redis:8
     restart: always
     ports:
       - "6379:6379"

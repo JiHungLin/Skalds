@@ -4,3 +4,20 @@ TaskWorkers:
       fixFrame: 30
       rtspUrl: rtsp://192.168.1.1/camera1
     className: MyWorker
+  TaskWorker2:
+    className: ComplexWorker
+    attachments:
+      jobId: "job-12345"
+      retries: 2
+      enable_feature_x: true
+      sub_tasks:
+        - name: "Download Data"
+          duration: 1.5
+          fail_chance: 0.2
+        - name: "Process Data"
+          duration: 2.0
+          fail_chance: 0.1
+        - name: "Upload Results"
+          duration: 1.0
+          fail_chance: 0.0
+      notes: "This is a demonstration of a complex worker."

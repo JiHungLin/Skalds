@@ -143,6 +143,8 @@ class RedisProxy:
                 self._client.hexpire(key, ttl, field)
         except redis.ConnectionError as ce:
             logger.debug(f"Failed to set hash. ConnectionError: {ce}")
+        except redis.ResponseError as re:
+            logger.debug(f"Please check Redis version is > 7.4+. ResponseError: {re}")
         except Exception as e:
             logger.error(f"Failed to set hash. Error: {e}")
 

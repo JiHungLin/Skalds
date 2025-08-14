@@ -1,22 +1,24 @@
 from skald import Skald
 from skald.config.skald_config import SkaldConfig
 from my_worker import MyWorker
+from complex_worker import ComplexWorker
 
 config = SkaldConfig(
     log_level="DEBUG",
     redis_host="localhost",
     redis_port=6379,
-    kafka_host="192.168.1.110",
+    kafka_host="127.0.0.1",
     kafka_port=9092,
-    mongo_host="mongodb://root:root@localhost:27027/",
+    mongo_host="mongodb://root:root@localhost:27017/",
     skald_mode="edge",
-    yaml_file="/home/jihung/Projects/dev/Skald/tests/manual/all_workers.yml",
+    yaml_file="all_workers.yml",
     log_split_with_worker_id=True,
 )
 
 app = Skald(config)
 
 app.register_task_worker(MyWorker)
+app.register_task_worker(ComplexWorker)
 
 if __name__ == "__main__":
     app.run()
