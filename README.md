@@ -8,30 +8,57 @@
 
 ## 主要特色
 
-- **模組化架構**  
-  將系統劃分為明確職責的模組，包括 System Controller、Task Generator、Task Worker、Event Queue、Cache Memory 與 Storage，促進系統可維護性與擴展性。
+- **模組化架構**
+  將系統劃分為三大核心模組（Skald、Monitor、Dispatcher）及其支援模組，各司其職，實現高效能的分散式任務處理。
 
-- **事件驅動通訊**  
+- **事件驅動通訊**
   採用發佈/訂閱（Pub/Sub）機制的事件佇列，實現模組間的鬆耦合互動，提高系統的彈性與可擴展能力。
 
-- **動態資源調度**  
-  Task Generator 根據即時的資源可用性進行任務分配，支援在容器化平台（如 Kubernetes）上的自動擴容與動態調整。
+- **智能資源調度**
+  結合 Task Generator (Skald) 與 Dispatcher 的優勢，實現基於資源感知的智能任務分配，支援容器化平台的自動擴容。
 
-- **健全的任務生命週期管理**  
-  中央化監控與控制任務狀態，提供暫停、恢復、取消等操作，確保任務執行的穩定與可靠。
+- **完整的監控與管理**
+  透過 Monitor 模組提供全方位的系統監控，搭配健全的任務生命週期管理，確保系統穩定運行與資源最佳利用。
 
 ---
 
 ## 系統模組總覽
 
+### 系統架構圖
+
+![Skald Architecture](architecture.jpg)
+
+### 模組說明
+
 | 模組               | 功能說明                                                                                            |
 | ------------------ | ------------------------------------------------------------------------------------------------- |
-| **System Controller** | 提供 RESTful 系統介面，負責任務建立與控制，監控 Task Generator 及 Task Worker 的心跳，依此更新任務狀態，並將任務指派給 Task Generator。 |
-| **Task Generator(Skald)**    | 管理資源配置，從 System Controller 接收任務請求並負責任務生成與分配。                                                      |
-| **Task Worker**       | 使用獨立資源（CPU、RAM）執行具體任務，擷取媒體資料來源含 RTSP、快取記憶體(Cache Memory)、磁碟(Storage)，並將結果存入快取或磁碟中。 |
+| **System Controller** | 系統核心控制器，整合以下功能：<br>- RESTful API 介面：提供任務建立與控制<br>- 系統監控 (Monitor)：追蹤系統效能與資源使用<br>- 任務調度 (Dispatcher)：智能分配任務與負載平衡<br>- 心跳監控：追蹤 Task Generator 與 Worker 狀態<br>- 狀態管理：統一管理任務狀態與系統配置 |
+| **└─ Monitor**     | (規劃中)System Controller 的監控模組，負責：<br>- 系統效能監控與指標收集<br>- 任務執行狀態追蹤<br>- 資源使用率分析<br>- 警報觸發與通知管理 |
+| **└─ Dispatcher**  | (規劃中)System Controller 的調度模組，負責：<br>- 智能任務分配策略<br>- 動態負載平衡<br>- 資源使用優化<br>- 緊急任務優先處理 |
+| **Task Generator(Skald)**    | 核心任務生成與調度系統。支援邊緣(Edge)與節點(Node)兩種運行模式，通過事件驅動機制實現任務的動態分配與資源管理。特色功能包括：<br>- 彈性配置：支援 YAML 檔案配置工作者(Worker)參數<br>- 自動註冊：簡化的工作者註冊機制，支援多種任務類型<br>- 狀態追蹤：整合 Redis 與 MongoDB 實現任務狀態的可靠追蹤<br>- 錯誤處理：提供任務重試機制與完整的錯誤處理流程 |
+| **Task Worker**       | 使用獨立資源（CPU、RAM）執行具體任務，擷取媒體資料來源含 RTSP、快取記憶體(Cache Memory)、磁碟(Storage)，並將結果存入快取或磁碟中。支援：<br>- 多階段任務執行<br>- 自動重試機制<br>- 彈性配置選項 |
 | **Event Queue**       | 基於 Kafka 3.9.0+ 的事件通訊系統，運用 Pub/Sub 機制實現 System Controller、Task Generator 與 Task Worker 間的消息傳遞，具備高吞吐量和可靠性。無需 Zookeeper，簡化部署與維護。                      |
 | **Cache Memory**      | 採用 Redis 8+ 作為快取引擎，儲存高頻率讀寫的數據以提升系統效能。支援進階特性如每個雜湊欄位的 TTL 控制，實現精細的數據生命週期管理。                                                             |
 | **Disk Storage**      | 使用 MongoDB 7.0+ 進行持久化資料存儲，包括統計數據、復原資料及錄製資料。提供強大的查詢能力、自動分片，以及容錯與資料耐久性保障。                                          |
+
+## 模組互動
+
+系統三大核心模組（Skald、Monitor、Dispatcher）協同運作，構建完整的任務生命週期：
+
+1. **Skald (Task Generator)**
+   - 負責任務的初始化與生成
+   - 管理工作者（Worker）的註冊與配置
+   - 透過事件佇列與其他模組通訊
+
+2. **Monitor**
+   - 持續監控系統狀態與效能
+   - 收集並分析資源使用情況
+   - 觸發必要的警報與通知
+
+3. **Dispatcher**
+   - 基於 Monitor 提供的系統資訊進行智能調度
+   - 實現動態負載平衡
+   - 處理緊急任務優先級
 
 ---
 
@@ -52,6 +79,147 @@
 - **高可用設計**  
   事件佇列及存儲採用多副本機制，保障系統在故障時仍保持穩定運行。
 
+
+---
+
+## 使用範例
+
+### 1. 建立工作者（Worker）
+
+#### 簡單工作者
+```python
+from skald.worker.baseclass import BaseTaskWorker, run_before_handler, run_main_handler
+from pydantic import BaseModel, Field
+
+class MyDataModel(BaseModel):
+    rtsp_url: str = Field(..., description="RTSP stream URL", alias="rtspUrl")
+    fix_frame: int = Field(..., description="Fix frame number", alias="fixFrame")
+
+class MyWorker(BaseTaskWorker[MyDataModel]):
+    def initialize(self, data: MyDataModel) -> None:
+        self.rtsp_url = data.rtsp_url
+        self.fix_frame = data.fix_frame
+
+    @run_before_handler
+    def before_run(self) -> None:
+        logger.info(f"Starting MyWorker with RTSP URL: {self.rtsp_url}")
+
+    @run_main_handler
+    def main_run(self) -> None:
+        # 執行工作邏輯
+        logger.info(f"Running main logic for MyWorker")
+```
+
+#### 複雜工作者
+```python
+class ComplexWorker(BaseTaskWorker[ComplexDataModel]):
+    """支援多階段執行、重試機制與特性切換的進階工作者"""
+    
+    def initialize(self, data: ComplexDataModel) -> None:
+        self.job_id = data.job_id
+        self.retries = data.retries
+        self.sub_tasks = data.sub_tasks
+
+    @run_before_handler
+    def before_run(self) -> None:
+        # 前置檢查
+        if not self.sub_tasks:
+            raise RuntimeError("No sub-tasks configured")
+
+    @run_main_handler
+    def main_run(self) -> None:
+        # 執行子任務並支援重試
+        for subtask in self.sub_tasks:
+            self._execute_subtask(subtask)
+```
+
+### 2. 配置工作者（YAML）
+
+```yaml
+TaskWorkers:
+  TaskWorker1:
+    attachments:
+      fixFrame: 30
+      rtspUrl: rtsp://192.168.1.1/camera1
+    className: MyWorker
+  
+  TaskWorker2:
+    attachments:
+      enable_feature_x: true
+      jobId: job-12345
+      retries: 2
+      sub_tasks:
+        - name: Download Data
+          duration: 1.5
+          fail_chance: 0.2
+        - name: Process Data
+          duration: 2.0
+          fail_chance: 0.1
+    className: ComplexWorker
+```
+
+### 3. 啟動 Skald 服務
+
+#### Edge 模式（邊緣節點）
+```python
+from skald import Skald
+from skald.config.skald_config import SkaldConfig
+
+config = SkaldConfig(
+    skald_mode="edge",
+    yaml_file="all_workers.yml",
+    log_split_with_worker_id=True,
+    redis_host="localhost",
+    kafka_host="127.0.0.1",
+    mongo_host="mongodb://root:root@localhost:27017/"
+)
+
+app = Skald(config)
+app.register_task_worker(MyWorker)
+app.register_task_worker(ComplexWorker)
+app.run()
+```
+
+#### Node 模式（工作節點）
+```python
+config = SkaldConfig(
+    skald_mode="node",
+    log_split_with_worker_id=True,
+    redis_host="localhost",
+    kafka_host="127.0.0.1",
+    mongo_host="mongodb://root:root@localhost:27017/"
+)
+
+app = Skald(config)
+app.register_task_worker(MyWorker)
+app.run()
+```
+
+### 4. 建立與分配任務
+
+```python
+from skald.model.task import Task
+from skald.model.event import TaskEvent
+
+# 建立任務
+new_task_attachment = MyDataModel(rtsp_url="rtsp://example.com/stream", fix_frame=30)
+new_task = Task(
+    id="task_1",
+    class_name=MyWorker.__name__,
+    source="Test",
+    attachments=new_task_attachment
+)
+
+# 儲存任務
+task_rep.create_task(new_task)
+
+# 觸發任務分配
+task_event = TaskEvent(task_ids=[new_task.id])
+kafka_proxy.produce(KafkaTopic.TASK_ASSIGN,
+    key=new_task.id,
+    value=task_event.model_dump_json()
+)
+```
 
 ---
 
