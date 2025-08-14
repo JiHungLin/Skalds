@@ -16,3 +16,14 @@ class SkaldEnvEnum(str, Enum):
 class SkaldModeEnum(str, Enum):
     EDGE = "edge"
     NODE = "node"
+
+class SystemControllerModeEnum(str, Enum):
+    """Enumeration for SystemController operational modes."""
+    CONTROLLER = "controller"      # API only
+    MONITOR = "monitor"           # API + monitoring + dashboard  
+    DISPATCHER = "dispatcher"     # Full system (API + monitoring + dispatching)
+
+    @classmethod
+    def list(cls) -> list[str]:
+        """Return a list of all mode values."""
+        return [c.value for c in cls]

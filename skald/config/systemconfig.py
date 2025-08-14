@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-from  skald.config._enum import LogLevelEnum, SkaldEnvEnum, SkaldModeEnum
+from  skald.config._enum import LogLevelEnum, SkaldEnvEnum, SkaldModeEnum, SystemControllerModeEnum
 import uuid
 
 
@@ -48,3 +48,20 @@ class SystemConfig:
     DB_NAME: str = os.getenv("DB_NAME", "skald")
 
     TASK_WORKER_RETRY: int = int(os.getenv("TASK_WORKER_RETRY", -1))
+
+    # SystemController Configuration
+    SYSTEM_CONTROLLER_MODE: SystemControllerModeEnum = os.getenv("SYSTEM_CONTROLLER_MODE", SystemControllerModeEnum.CONTROLLER)
+    SYSTEM_CONTROLLER_HOST: str = os.getenv("SYSTEM_CONTROLLER_HOST", "0.0.0.0")
+    SYSTEM_CONTROLLER_PORT: int = int(os.getenv("SYSTEM_CONTROLLER_PORT", 8000))
+
+    # Monitor Configuration  
+    MONITOR_SKALD_INTERVAL: int = int(os.getenv("MONITOR_SKALD_INTERVAL", 5))
+    MONITOR_TASK_INTERVAL: int = int(os.getenv("MONITOR_TASK_INTERVAL", 3))
+    MONITOR_HEARTBEAT_TIMEOUT: int = int(os.getenv("MONITOR_HEARTBEAT_TIMEOUT", 5))
+
+    # Dispatcher Configuration
+    DISPATCHER_INTERVAL: int = int(os.getenv("DISPATCHER_INTERVAL", 5))
+    DISPATCHER_STRATEGY: str = os.getenv("DISPATCHER_STRATEGY", "least_tasks")
+
+    # Dashboard Configuration
+    DASHBOARD_STATIC_PATH: str = os.getenv("DASHBOARD_STATIC_PATH", "skald/system_controller/static/dashboard")
