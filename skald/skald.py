@@ -89,7 +89,7 @@ class Skald:
         if config.skald_mode == "edge" and not SystemConfig.REDIS_HOST:
             redis_config = None
             self.redis_proxy = None
-            logger.info("Edge mode, No Redis Config. Skip update slave task.")
+            logger.info("Edge mode, No Redis Config. Skip update skald task.")
         else:
             redis_config = RedisConfig(host=SystemConfig.REDIS_HOST, 
                                     port=SystemConfig.REDIS_PORT,
@@ -193,7 +193,7 @@ class Skald:
 
         logger.info("\n=============================Start main loop.=============================")
         
-        # Start Slave activity registration and heartbeat to Redis
+        # Start Skald activity registration and heartbeat to Redis
         if self.redis_proxy is not None:
             self.skald_survive_handler = SurviveHandler(
                 redis_proxy=self.redis_proxy,
@@ -201,11 +201,11 @@ class Skald:
                 role=SurviveRoleEnum.SKALD
                 )
             self.skald_survive_handler.start_activity_update()
-            logger.info("Start update slave activity time.")
+            logger.info("Start update skald activity time.")
             self.skald_survive_handler.start_heartbeat_update()
-            logger.info("Start update slave heartbeat.")
+            logger.info("Start update skald heartbeat.")
         else:
-            logger.info("Redis is not available, skip update slave activity time and heartbeat.")
+            logger.info("Redis is not available, skip update skald activity time and heartbeat.")
 
         self.task_worker_manager = TaskWorkerManager(
             kafka_proxy=self.kafka_proxy, 
