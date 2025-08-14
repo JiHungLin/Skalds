@@ -379,10 +379,12 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
         if task is None:
             self.task_id = f"MOCK_TASK_{secrets.token_hex(4)}"
             self.task_type = self.__class__.__name__
+            self.dependencies = []
         else:
             self.task_id: str = task.id
             self.task_type: str = task.class_name
             self.initialize(task.attachments)
+            self.dependencies = task.dependencies if task.dependencies else []
         self._redis_config: RedisConfig = redis_config
         self._kafka_config: KafkaConfig = kafka_config
         self._redis_proxy: Optional[RedisProxy] = None
