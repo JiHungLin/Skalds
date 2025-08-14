@@ -44,3 +44,8 @@ SystemController可依照參數執行不同的模組，並起使用FastAPI為基
 3. dispatcher：啟動分派模組
 
 | 其中依賴關係為 dispatcher -> monitor -> controller，可依照參數來決定是否加開元件，否則只提供基本的API服務
+
+
+TODO: 需要跟Skald一樣，開獨立的SystemControllerConfig，並且覆蓋邏輯也同Skald
+TODO: 目前網頁開啟後，貌似沒有call api，在檢查
+TODO: 應該是先檢查Skald Store是否有可以分派任務的，如果有，在指定executor給Task，並更新為Assigning。沒有Skald可以分派，就不要把Task的狀態改為Assigning
