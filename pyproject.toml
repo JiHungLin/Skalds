@@ -36,8 +36,8 @@ include = ["skald*"]
 
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/skald"
-"Bug Tracker" = "https://github.com/yourusername/skald/issues"
+"Homepage" = "https://github.com/JiHungLin/skald"
+"Bug Tracker" = "https://github.com/JiHungLin/skald/issues"
 
 [project.optional-dependencies]
 dev = [
