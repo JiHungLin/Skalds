@@ -29,9 +29,9 @@
 | **System Controller** | 提供 RESTful 系統介面，負責任務建立與控制，監控 Task Generator 及 Task Worker 的心跳，依此更新任務狀態，並將任務指派給 Task Generator。 |
 | **Task Generator(Skald)**    | 管理資源配置，從 System Controller 接收任務請求並負責任務生成與分配。                                                      |
 | **Task Worker**       | 使用獨立資源（CPU、RAM）執行具體任務，擷取媒體資料來源含 RTSP、快取記憶體(Cache Memory)、磁碟(Storage)，並將結果存入快取或磁碟中。 |
-| **Event Queue**       | 負責模組間事件通訊，運用 Pub/Sub 機制實現 System Controller、Task Generator 與 Task Worker 間的消息傳遞。                      |
-| **Cache Memory**      | 儲存高頻率讀寫的數據，以提升系統效能。                                                             |
-| **Disk Storage**      | 負責持久化資料存儲，包括統計數據、復原資料及錄製資料，提供容錯與資料耐久性。                                          |
+| **Event Queue**       | 基於 Kafka 3.9.0+ 的事件通訊系統，運用 Pub/Sub 機制實現 System Controller、Task Generator 與 Task Worker 間的消息傳遞，具備高吞吐量和可靠性。無需 Zookeeper，簡化部署與維護。                      |
+| **Cache Memory**      | 採用 Redis 8+ 作為快取引擎，儲存高頻率讀寫的數據以提升系統效能。支援進階特性如每個雜湊欄位的 TTL 控制，實現精細的數據生命週期管理。                                                             |
+| **Disk Storage**      | 使用 MongoDB 7.0+ 進行持久化資料存儲，包括統計數據、復原資料及錄製資料。提供強大的查詢能力、自動分片，以及容錯與資料耐久性保障。                                          |
 
 ---
 
