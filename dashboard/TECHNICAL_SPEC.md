@@ -29,13 +29,14 @@ interface Task {
   exception?: string;
 }
 
-type TaskStatus = 
+type TaskStatus =
   | 'Created'
   | 'Assigning'
   | 'Running'
-  | 'Completed'
+  | 'Paused'
+  | 'Finished'
   | 'Failed'
-  | 'Canceled';
+  | 'Cancelled';
 
 // SSE Event Types
 interface SkaldEvent {
@@ -98,7 +99,7 @@ type GetTaskResponse = Task;
 
 // PUT /api/tasks/{id}/status
 interface UpdateTaskStatusRequest {
-  status: 'Created' | 'Canceled';
+  status: 'Created' | 'Cancelled';
 }
 
 // PUT /api/tasks/{id}/attachments

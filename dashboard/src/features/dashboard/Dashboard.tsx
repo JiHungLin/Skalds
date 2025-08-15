@@ -101,7 +101,7 @@ export default function Dashboard() {
       bgColor: 'bg-blue-100'
     },
     {
-      name: 'Completed Tasks',
+      name: 'Finished Tasks',
       value: summary?.completedTasks || 0,
       subValue: 'Successfully finished',
       icon: CheckCircleIcon,
@@ -161,7 +161,7 @@ export default function Dashboard() {
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-900">Skald Connectivity</span>
                 <span className="text-xs text-gray-500">
-                  {summary?.onlineSkalds || 0} of {summary?.totalSkalds || 0} nodes online
+                  {summary?.onlineSkalds || 0} of {summary?.totalSkalds || 0} skalds online
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -177,7 +177,7 @@ export default function Dashboard() {
                     return (
                       <span
                         className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-sm bg-warning-100 text-warning-800 border-warning-200 cursor-help"
-                        title={`Status: Partial - ${Math.round(onlineRatio * 100)}% of nodes online (≥70% threshold met, but not all nodes available)`}
+                        title={`Status: Partial - ${Math.round(onlineRatio * 100)}% of skalds online (≥70% threshold met, but not all nodes available)`}
                       >
                         <div className="w-3 h-3 rounded-full bg-warning-500 animate-pulse" />
                         Partial
@@ -187,7 +187,7 @@ export default function Dashboard() {
                     return (
                       <span
                         className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-sm bg-danger-100 text-danger-800 border-danger-200 cursor-help"
-                        title={`Status: Degraded - Only ${Math.round(onlineRatio * 100)}% of nodes online (<70% threshold, system performance may be impacted)`}
+                        title={`Status: Degraded - Only ${Math.round(onlineRatio * 100)}% of skalds online (<70% threshold, system performance may be impacted)`}
                       >
                         <div className="w-3 h-3 rounded-full bg-danger-500 animate-pulse" />
                         Degraded
@@ -214,9 +214,9 @@ export default function Dashboard() {
                     const completed = summary?.completedTasks || 0;
                     const failed = summary?.failedTasks || 0;
                     if (running === 0 && completed === 0 && failed > 0) {
-                      return `0 running, 0 completed, all failed`;
+                      return `0 running, 0 finished, all failed`;
                     }
-                    return `${running} running, ${completed} completed`;
+                    return `${running} running, ${completed} finished`;
                   })()}
                 </span>
               </div>
@@ -233,8 +233,8 @@ export default function Dashboard() {
                     );
                   } else if (failedTasks === 0) {
                     return (
-                      <div title="Status: Completed - No active tasks, all previous tasks completed successfully">
-                        <StatusIndicator status="Completed" />
+                      <div title="Status: Finished - No active tasks, all previous tasks finished successfully">
+                        <StatusIndicator status="Finished" />
                       </div>
                     );
                   } else {
@@ -367,7 +367,7 @@ export default function Dashboard() {
                       Partial
                     </span>
                   </td>
-                  <td className="py-3 text-gray-600">≥70% of nodes online, but not all nodes are available</td>
+                  <td className="py-3 text-gray-600">≥70% of skalds online, but not all nodes are available</td>
                 </tr>
                 <tr>
                   <td className="py-3">
@@ -376,7 +376,7 @@ export default function Dashboard() {
                       Degraded
                     </span>
                   </td>
-                  <td className="py-3 text-gray-600">&lt;70% of nodes online, system performance may be impacted</td>
+                  <td className="py-3 text-gray-600">&lt;70% of skalds online, system performance may be impacted</td>
                 </tr>
                 <tr>
                   <td className="py-3">
@@ -405,10 +405,10 @@ export default function Dashboard() {
                   <td className="py-3">
                     <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs bg-success-100 text-success-800 border-success-200">
                       <div className="w-2 h-2 rounded-full bg-success-500" />
-                      Completed
+                      Finished
                     </span>
                   </td>
-                  <td className="py-3 text-gray-600">No active tasks, all previous tasks completed successfully</td>
+                  <td className="py-3 text-gray-600">No active tasks, all previous tasks finished successfully</td>
                 </tr>
                 <tr>
                   <td className="py-3">

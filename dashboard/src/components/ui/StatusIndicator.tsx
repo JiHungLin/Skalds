@@ -27,9 +27,14 @@ const statusConfig = {
     label: 'Running',
     dotColor: 'bg-primary-500'
   },
-  Completed: {
-    color: 'status-completed',
-    label: 'Completed',
+  Paused: {
+    color: 'status-paused',
+    label: 'Paused',
+    dotColor: 'bg-warning-500'
+  },
+  Finished: {
+    color: 'status-finished',
+    label: 'Finished',
     dotColor: 'bg-success-500'
   },
   Failed: {
@@ -37,9 +42,9 @@ const statusConfig = {
     label: 'Failed',
     dotColor: 'bg-danger-500'
   },
-  Canceled: {
-    color: 'status-canceled',
-    label: 'Canceled',
+  Cancelled: {
+    color: 'status-cancelled',
+    label: 'Cancelled',
     dotColor: 'bg-gray-500'
   }
 }

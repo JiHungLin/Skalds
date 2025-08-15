@@ -153,11 +153,12 @@ export default function TasksPage() {
   const statusOptions: (TaskStatus | undefined)[] = [
     undefined,
     'Created',
-    'Assigning', 
+    'Assigning',
     'Running',
-    'Completed',
+    'Paused',
+    'Finished',
     'Failed',
-    'Canceled'
+    'Cancelled'
   ]
 
   return (
