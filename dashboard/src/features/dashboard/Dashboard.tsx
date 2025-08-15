@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../../lib/api/client'
@@ -11,10 +12,56 @@ import {
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { data: summary, isLoading } = useQuery({
+  const { data: summary, isLoading, error } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: () => apiClient.getDashboardSummary(),
+    retry: 2,
+    retryDelay: 1000,
   })
+
+  // Log API call status for debugging
+  useEffect(() => {
+    console.log('Dashboard component mounted - API call status:', { isLoading, error, summary })
+  }, [isLoading, error, summary])
+
+  if (error) {
+    console.error('Dashboard API error:', error)
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <XCircleIcon className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                API Connection Error
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>Failed to load dashboard data. Please check:</p>
+                <ul className="list-disc list-inside mt-1">
+                  <li>SystemController backend is running</li>
+                  <li>API endpoints are accessible</li>
+                  <li>Network connectivity</li>
+                </ul>
+                <p className="mt-2 font-mono text-xs bg-red-100 p-2 rounded">
+                  Error: {error instanceof Error ? error.message : 'Unknown error'}
+                </p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="btn btn-sm btn-primary"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (

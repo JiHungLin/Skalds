@@ -39,7 +39,8 @@ class SystemController:
     This class orchestrates the entire SystemController system based on the
     configured mode (controller, monitor, dispatcher).
     """
-    
+    _instance: Optional["SystemController"] = None
+
     def __init__(self, config: SystemControllerConfig):
         """
         Initialize the SystemController application.
@@ -103,7 +104,8 @@ class SystemController:
         self._is_shutting_down = False
         
         logger.info(f"SystemController initialized in {self.mode} mode")
-    
+        SystemController._instance = self
+
     async def start(self) -> None:
         """
         Start the SystemController with all configured components.

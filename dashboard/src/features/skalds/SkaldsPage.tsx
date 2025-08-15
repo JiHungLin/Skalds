@@ -1,14 +1,64 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api/client'
 import DataGrid from '../../components/ui/DataGrid'
 import StatusIndicator from '../../components/ui/StatusIndicator'
 import { Skald, DataGridColumn } from '../../types'
+import { XCircleIcon } from '@heroicons/react/24/outline'
 
 export default function SkaldsPage() {
-  const { data: skalds, isLoading } = useQuery({
+  const { data: skalds, isLoading, error } = useQuery({
     queryKey: ['skalds'],
     queryFn: () => apiClient.getSkalds(),
+    retry: 2,
+    retryDelay: 1000,
   })
+
+  // Log API call status for debugging
+  useEffect(() => {
+    console.log('SkaldsPage component mounted - API call status:', { isLoading, error, skalds })
+  }, [isLoading, error, skalds])
+
+  if (error) {
+    console.error('Skalds API error:', error)
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Skalds</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Monitor and manage your Skald workers
+          </p>
+        </div>
+        
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <XCircleIcon className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Failed to Load Skalds
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>Unable to fetch Skald data from the API.</p>
+                <p className="mt-2 font-mono text-xs bg-red-100 p-2 rounded">
+                  Error: {error instanceof Error ? error.message : 'Unknown error'}
+                </p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="btn btn-sm btn-primary"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const columns: DataGridColumn<Skald>[] = [
     {
