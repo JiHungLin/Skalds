@@ -30,6 +30,7 @@ class SkaldData:
         self.heartbeat = 0
         self.mode = mode  # node or edge
         self.all_tasks: List[TaskWorkerSimpleMap] = []
+        self.supported_tasks: List[str] = []
         self._lock = threading.RLock()
 
     def update_update_time(self, new_update_time: int) -> None:
@@ -46,6 +47,11 @@ class SkaldData:
         """Update the list of assigned tasks."""
         with self._lock:
             self.all_tasks = new_tasks.copy() if new_tasks else []
+
+    def update_supported_tasks(self, new_supported_tasks: List[str]) -> None:
+        """Update the list of supported task class names."""
+        with self._lock:
+            self.supported_tasks = new_supported_tasks.copy() if new_supported_tasks else []
 
     def get_task_count(self) -> int:
         """Get the number of tasks assigned to this Skald."""
@@ -66,7 +72,7 @@ class SkaldData:
                 "type": self.mode,
                 "status": "online" if self.is_online() else "offline",
                 "lastHeartbeat": self.update_time,
-                "supportedTasks": [],  # TODO: Add supported task types
+                "supportedTasks": self.supported_tasks.copy(),
                 "currentTasks": [task.id for task in self.all_tasks],
                 "heartbeat": self.heartbeat,
                 "taskCount": len(self.all_tasks)
@@ -133,6 +139,12 @@ class SkaldStore:
         with self._store_lock:
             if skald_id in self.all_skalds:
                 self.all_skalds[skald_id].update_tasks(new_tasks)
+
+    def update_skald_supported_tasks(self, skald_id: str, new_supported_tasks: List[str]) -> None:
+        """Update the supported task class names for a Skald."""
+        with self._store_lock:
+            if skald_id in self.all_skalds:
+                self.all_skalds[skald_id].update_supported_tasks(new_supported_tasks)
 
     def update_skald_mode(self, skald_id: str, mode: str) -> None:
         """Update the mode for a Skald."""

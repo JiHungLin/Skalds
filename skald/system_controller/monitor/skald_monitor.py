@@ -173,6 +173,11 @@ class SkaldMonitor:
                 all_tasks = self._get_skald_all_tasks(skald_id)
                 if all_tasks is not None:
                     self.skald_store.update_skald_tasks(skald_id, all_tasks)
+
+                # Update supported tasks
+                supported_tasks = self._get_skald_supported_tasks(skald_id)
+                if supported_tasks is not None:
+                    self.skald_store.update_skald_supported_tasks(skald_id, supported_tasks)
                     
             except Exception as e:
                 logger.error(f"Error updating details for Skald {skald_id}: {e}")
@@ -208,15 +213,14 @@ class SkaldMonitor:
                 # Parse task data (assuming JSON format)
                 import json
                 task_list_data = json.loads(task_data)
-                
                 # Convert to TaskWorkerSimpleMap objects
                 tasks = []
                 if isinstance(task_list_data, dict) and 'tasks' in task_list_data:
                     for task_info in task_list_data['tasks']:
-                        if isinstance(task_info, dict) and 'id' in task_info and 'className' in task_info:
+                        if isinstance(task_info, dict) and 'id' in task_info and 'class_name' in task_info:
                             tasks.append(TaskWorkerSimpleMap(
                                 id=task_info['id'],
-                                className=task_info['className']
+                                className=task_info['class_name']
                             ))
                 
                 return tasks
@@ -226,6 +230,19 @@ class SkaldMonitor:
             return []
         except Exception as e:
             logger.error(f"Error getting tasks for Skald {skald_id}: {e}")
+            return []
+
+    def _get_skald_supported_tasks(self, skald_id: str) -> Optional[List[str]]:
+        """Get supported task class names for a Skald."""
+        try:
+            supported_tasks_key = RedisKey.skald_allow_task_class_name(skald_id)
+            supported_tasks = self.redis_proxy.get_list(supported_tasks_key)
+            
+            if supported_tasks is not None:
+                return supported_tasks
+            return []
+        except Exception as e:
+            logger.error(f"Error getting supported tasks for Skald {skald_id}: {e}")
             return []
 
     def start(self) -> None:

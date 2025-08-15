@@ -176,6 +176,19 @@ class RedisProxy:
             logger.debug(f"Failed to push list. ConnectionError: {ce}")
         except Exception as e:
             logger.error(f"Failed to push list. Error: {e}")
+    
+    def get_list(self, key: str, start: int = 0, end: int = -1):
+        """Get a range of values from a list."""
+        if not self._client:
+            return None
+        try:
+            values = self._client.lrange(key, start, end)
+            return [value.decode() for value in values]
+        except redis.ConnectionError as ce:
+            logger.debug(f"Failed to get list. ConnectionError: {ce}")
+        except Exception as e:
+            logger.error(f"Failed to get list. Error: {e}")
+            return None
 
     def overwrite_list(self, key: str, values: list[str], ttl: int = 0):
         """Overwrite a list with new values."""

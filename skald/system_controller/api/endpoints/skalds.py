@@ -50,7 +50,7 @@ async def get_skalds(
                 type=skald_data.mode,
                 status=skald_status,
                 lastHeartbeat=str(skald_data.update_time),
-                supportedTasks=[],  # TODO: Add supported task types from Redis
+                supportedTasks=skald_data.supported_tasks,
                 currentTasks=[task.id for task in skald_data.all_tasks],
                 heartbeat=skald_data.heartbeat,
                 taskCount=skald_data.get_task_count()
@@ -92,7 +92,7 @@ async def get_skald(
             type=skald_data.mode,
             status=skald_status,
             lastHeartbeat=str(skald_data.update_time),
-            supportedTasks=[],  # TODO: Add supported task types from Redis
+            supportedTasks=skald_data.supported_tasks,
             currentTasks=[task.id for task in skald_data.all_tasks],
             heartbeat=skald_data.heartbeat,
             taskCount=skald_data.get_task_count()
