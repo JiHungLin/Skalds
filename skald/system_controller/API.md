@@ -177,8 +177,8 @@ Get paginated list of tasks with optional filters.
       "type": "DataProcessingTask",
       "status": "Running",
       "executor": "skald-001",
-      "createdAt": "1640995200000",
-      "updatedAt": "1640995260000",
+      "createDateTime": "1640995200000",
+      "updateDateTime": "1640995260000",
       "attachments": {},
       "heartbeat": 150,
       "error": null,
@@ -202,8 +202,8 @@ Get specific task by ID.
   "type": "DataProcessingTask",
   "status": "Running",
   "executor": "skald-001",
-  "createdAt": "1640995200000",
-  "updatedAt": "1640995260000",
+  "createDateTime": "1640995200000",
+  "updateDateTime": "1640995260000",
   "attachments": {
     "inputFile": "data.csv",
     "outputPath": "/tmp/output"

@@ -130,7 +130,7 @@ class TaskHeartbeatRecord:
             return {
                 "taskId": self.task_id,
                 "heartbeat": self.get_latest_heartbeat(),
-                "status": self.get_status(),
+                "lifecycleStatus": self.get_status(),
                 "error": self.error_message,
                 "exception": self.exception_message,
                 "lastUpdate": self.last_update,

@@ -81,7 +81,7 @@ export default function TasksPage() {
       )
     },
     {
-      key: 'type',
+      key: 'className',
       header: 'Type',
       sortable: true,
       render: (value) => (
@@ -91,7 +91,7 @@ export default function TasksPage() {
       )
     },
     {
-      key: 'status',
+      key: 'lifecycleStatus',
       header: 'Status',
       sortable: true,
       render: (value) => <StatusIndicator status={value} animated />
@@ -107,11 +107,12 @@ export default function TasksPage() {
       )
     },
     {
-      key: 'createdAt',
+      key: 'createDateTime',
       header: 'Created',
       sortable: true,
       render: (value) => {
         try {
+          console.log('Rendering createDateTime column with value:', value)
           const date = new Date(value)
           if (isNaN(date.getTime())) {
             return <span className="text-sm text-gray-400">Invalid date</span>
@@ -128,7 +129,7 @@ export default function TasksPage() {
       }
     },
     {
-      key: 'updatedAt',
+      key: 'updateDateTime',
       header: 'Updated',
       sortable: true,
       render: (value) => {

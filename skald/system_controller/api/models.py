@@ -16,11 +16,11 @@ class TaskResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     
     id: str
-    type: str = Field(alias="className")
-    status: str = Field(alias="lifecycleStatus")
+    className: str = Field(alias="className")
+    lifecycleStatus: str = Field(alias="lifecycleStatus")
     executor: Optional[str] = None
-    createdAt: str = Field(alias="createDateTime")
-    updatedAt: str = Field(alias="updateDateTime")
+    createDateTime: int = Field(alias="createDateTime")
+    updateDateTime: int = Field(alias="updateDateTime")
     attachments: Dict[str, Any] = {}
     heartbeat: int = 0
     error: Optional[str] = None
@@ -33,7 +33,7 @@ class GetTasksRequest(BaseModel):
     page: int = Field(1, ge=1, description="Page number (1-based)")
     pageSize: int = Field(20, ge=1, le=100, description="Number of items per page")
     status: Optional[str] = Field(None, description="Filter by task status")
-    type: Optional[str] = Field(None, description="Filter by task type/className")
+    className: Optional[str] = Field(None, description="Filter by task type/className")
     executor: Optional[str] = Field(None, description="Filter by executor Skald ID")
 
 

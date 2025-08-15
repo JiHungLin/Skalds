@@ -13,11 +13,11 @@ export interface Skald {
 // Task Types
 export interface Task {
   id: string;
-  type: string;
-  status: TaskStatus;
+  className: string;
+  lifecycleStatus: TaskStatus;
   executor?: string;
-  createdAt: string;
-  updatedAt: string;
+  createDateTime: string;
+  updateDateTime: string;
   attachments: Record<string, any>;
   heartbeat: number;
   error?: string;
@@ -63,7 +63,7 @@ export interface GetTasksRequest {
   page: number;
   pageSize: number;
   status?: TaskStatus;
-  type?: string;
+  className?: string;
   executor?: string;
 }
 

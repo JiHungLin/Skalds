@@ -36,8 +36,8 @@ def get_task_repository() -> TaskRepository:
 async def get_tasks(
     page: int = Query(1, ge=1, description="Page number"),
     pageSize: int = Query(20, ge=1, le=100, description="Items per page"),
-    status: Optional[str] = Query(None, description="Filter by status"),
-    type: Optional[str] = Query(None, description="Filter by task type"),
+    lifecycleStatus: Optional[str] = Query(None, description="Filter by lifecycle status"),
+    className: Optional[str] = Query(None, description="Filter by task type"),
     executor: Optional[str] = Query(None, description="Filter by executor"),
     task_repository: TaskRepository = Depends(get_task_repository)
 ):
@@ -50,10 +50,10 @@ async def get_tasks(
         
         # Build MongoDB query
         query = {}
-        if status:
-            query["lifecycleStatus"] = status
-        if type:
-            query["className"] = type
+        if lifecycleStatus:
+            query["lifecycleStatus"] = lifecycleStatus
+        if className:
+            query["className"] = className
         if executor:
             query["executor"] = executor
         
@@ -76,8 +76,8 @@ async def get_tasks(
                 className=doc.get("className", ""),
                 lifecycleStatus=doc.get("lifecycleStatus", TaskLifecycleStatus.CREATED.value),
                 executor=doc.get("executor"),
-                createDateTime=str(doc.get("createDateTime", 0)),
-                updateDateTime=str(doc.get("updateDateTime", 0)),
+                createDateTime=doc.get("createDateTime", 0),
+                updateDateTime=doc.get("updateDateTime", 0),
                 attachments=doc.get("attachments", {}),
                 priority=doc.get("priority", 0),
                 heartbeat=0,  # Will be populated from TaskStore if available
@@ -94,8 +94,8 @@ async def get_tasks(
                 task_response.exception = task_record.exception_message
                 # Update status from real-time data if more current
                 realtime_status = task_record.get_status()
-                if realtime_status != task_response.status:
-                    task_response.status = realtime_status
+                if realtime_status != task_response.lifecycleStatus:
+                    task_response.lifecycleStatus = realtime_status
             
             tasks.append(task_response)
         
@@ -134,8 +134,8 @@ async def get_task(
             className=task.class_name,
             lifecycleStatus=task.lifecycle_status,
             executor=task.executor,
-            createDateTime=str(task.create_date_time),
-            updateDateTime=str(task.update_date_time),
+            createDateTime=task.create_date_time,
+            updateDateTime=task.update_date_time,
             attachments=task.attachments.model_dump() if task.attachments else {},
             priority=task.priority,
             heartbeat=0,
