@@ -126,8 +126,9 @@ class TaskMonitor:
             try:
                 # Get heartbeat
                 heartbeat = self._get_task_heartbeat(task_id)
-                if heartbeat is not None:
-                    self.task_store.update_task_heartbeat(task_id, heartbeat)
+                if heartbeat is None:
+                    heartbeat = 0  # Treat missing heartbeat as 0
+                self.task_store.update_task_heartbeat(task_id, heartbeat)
                 
                 # Get error message
                 error = self._get_task_error(task_id)

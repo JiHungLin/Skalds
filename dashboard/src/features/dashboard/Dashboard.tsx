@@ -209,7 +209,15 @@ export default function Dashboard() {
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-900">Task Processing</span>
                 <span className="text-xs text-gray-500">
-                  {summary?.runningTasks || 0} running, {summary?.completedTasks || 0} completed
+                  {(() => {
+                    const running = summary?.runningTasks || 0;
+                    const completed = summary?.completedTasks || 0;
+                    const failed = summary?.failedTasks || 0;
+                    if (running === 0 && completed === 0 && failed > 0) {
+                      return `0 running, 0 completed, all failed`;
+                    }
+                    return `${running} running, ${completed} completed`;
+                  })()}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
