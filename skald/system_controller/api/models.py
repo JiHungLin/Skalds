@@ -6,13 +6,15 @@ Based on the dashboard technical specification.
 """
 
 from typing import Optional, List, Dict, Any, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from skald.model.task import TaskLifecycleStatus
 
 
 # Task Models
 class TaskResponse(BaseModel):
     """Task response model for API endpoints."""
+    model_config = ConfigDict(populate_by_name=True)
+    
     id: str
     type: str = Field(alias="className")
     status: str = Field(alias="lifecycleStatus")
@@ -24,10 +26,6 @@ class TaskResponse(BaseModel):
     error: Optional[str] = None
     exception: Optional[str] = None
     priority: int = 0
-
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
 
 
 class GetTasksRequest(BaseModel):
@@ -51,7 +49,7 @@ class UpdateTaskStatusRequest(BaseModel):
     """Request model for updating task status."""
     status: str = Field(..., description="New task status (Created or Canceled)")
 
-    def validate_status(self):
+    def model_post_init(self, __context: Any) -> None:
         """Validate that status is one of the allowed values."""
         allowed_statuses = [TaskLifecycleStatus.CREATED.value, TaskLifecycleStatus.CANCELLED.value]
         if self.status not in allowed_statuses:

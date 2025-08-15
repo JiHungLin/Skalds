@@ -6,6 +6,7 @@ Includes all endpoints, middleware, and static file serving.
 """
 
 import os
+import pkg_resources
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
@@ -19,6 +20,21 @@ from skald.system_controller.api.endpoints import (
 )
 from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
+
+
+def get_dashboard_static_path() -> str:
+    """
+    Get the dashboard static files path from the installed package.
+    This ensures the path works correctly after pip install.
+    """
+    try:
+        # Try to get the path from the installed package
+        return pkg_resources.resource_filename('skald', 'system_controller/static/dashboard')
+    except Exception:
+        # Fallback to relative path for development
+        import skald
+        skald_path = os.path.dirname(skald.__file__)
+        return os.path.join(skald_path, 'system_controller', 'static', 'dashboard')
 
 
 @asynccontextmanager
@@ -175,7 +191,7 @@ def _add_routers(app: FastAPI, enable_dashboard: bool = True) -> None:
 def _add_dashboard_routes(app: FastAPI) -> None:
     """Add dashboard static file serving."""
     
-    dashboard_path = SystemConfig.DASHBOARD_STATIC_PATH
+    dashboard_path = get_dashboard_static_path()
     
     # Check if dashboard files exist
     if not os.path.exists(dashboard_path):
@@ -280,7 +296,7 @@ def get_app_info() -> dict:
 
 def validate_dashboard_files() -> bool:
     """Validate that dashboard files exist."""
-    dashboard_path = SystemConfig.DASHBOARD_STATIC_PATH
+    dashboard_path = get_dashboard_static_path()
     index_file = os.path.join(dashboard_path, "index.html")
     return os.path.exists(index_file)
 

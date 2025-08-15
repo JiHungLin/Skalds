@@ -6,7 +6,7 @@ FastAPI endpoints for system status, health checks, and dashboard summary.
 
 import time
 from typing import Dict, Any
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from skald.system_controller.api.models import (
     DashboardSummary, SystemStatus, ComponentStatus,
     HealthCheckResponse, SuccessResponse
@@ -191,7 +191,7 @@ async def get_system_config():
             },
             "dispatcher": {
                 "interval": SystemConfig.DISPATCHER_INTERVAL,
-                "strategy": SystemConfig.DISPATCHER_STRATEGY
+                "strategy": SystemConfig.DISPATCHER_STRATEGY.value
             },
             "environment": SystemConfig.SKALD_ENV.value,
             "logLevel": SystemConfig.LOG_LEVEL.value

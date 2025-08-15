@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-from  skald.config._enum import LogLevelEnum, SkaldEnvEnum, SkaldModeEnum, SystemControllerModeEnum
+from  skald.config._enum import LogLevelEnum, SkaldEnvEnum, SkaldModeEnum, SystemControllerModeEnum, DispatcherStrategyEnum
 import uuid
 
 
@@ -61,7 +61,4 @@ class SystemConfig:
 
     # Dispatcher Configuration
     DISPATCHER_INTERVAL: int = int(os.getenv("DISPATCHER_INTERVAL", 5))
-    DISPATCHER_STRATEGY: str = os.getenv("DISPATCHER_STRATEGY", "least_tasks")
-
-    # Dashboard Configuration
-    DASHBOARD_STATIC_PATH: str = os.getenv("DASHBOARD_STATIC_PATH", "skald/system_controller/static/dashboard")
+    DISPATCHER_STRATEGY: DispatcherStrategyEnum = os.getenv("DISPATCHER_STRATEGY", DispatcherStrategyEnum.LEAST_TASKS)

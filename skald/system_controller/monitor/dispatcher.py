@@ -17,6 +17,7 @@ from skald.system_controller.store.skald_store import SkaldStore
 from skald.model.task import TaskLifecycleStatus
 from skald.repository.repository import TaskRepository
 from skald.config.systemconfig import SystemConfig
+from skald.config._enum import DispatcherStrategyEnum
 from skald.utils.logging import logger
 
 
@@ -79,22 +80,28 @@ class Dispatcher:
     async def _dispatch_tasks(self) -> None:
         """Main dispatching logic."""
         try:
-            # Get tasks that need assignment
+            # First check if we have available Skalds before doing anything
+            available_skalds = self._get_available_skalds()
+            
+            if not available_skalds:
+                logger.debug("No Skalds available for task assignment")
+                return
+            
+            # Only get tasks that need assignment if we have available Skalds
             tasks_to_assign = await self._get_tasks_needing_assignment()
             
             if not tasks_to_assign:
                 logger.debug("No tasks need assignment")
                 return
             
-            # Get available Skalds
-            available_skalds = self._get_available_skalds()
-            
-            if not available_skalds:
-                logger.warning("No Skalds available for task assignment")
-                return
+            logger.info(f"Found {len(tasks_to_assign)} tasks to assign and {len(available_skalds)} available Skalds")
             
             # Assign tasks using the configured strategy
             assignments = self._calculate_assignments(tasks_to_assign, available_skalds)
+            
+            if not assignments:
+                logger.debug("No task assignments calculated")
+                return
             
             # Execute assignments
             for task, skald_id in assignments:
@@ -196,18 +203,18 @@ class Dispatcher:
         if not skald_task_counts:
             return None
         
-        if self.strategy == "least_tasks":
+        if self.strategy == DispatcherStrategyEnum.LEAST_TASKS:
             # Select Skald with the least number of tasks
             return min(skald_task_counts.keys(), key=lambda x: skald_task_counts[x])
         
-        elif self.strategy == "round_robin":
+        elif self.strategy == DispatcherStrategyEnum.ROUND_ROBIN:
             # Simple round-robin selection
             skald_ids = list(skald_task_counts.keys())
             # Use task ID hash for consistent selection
             task_hash = hash(task.id) % len(skald_ids)
             return skald_ids[task_hash]
         
-        elif self.strategy == "random":
+        elif self.strategy == DispatcherStrategyEnum.RANDOM:
             # Random selection
             import random
             return random.choice(list(skald_task_counts.keys()))
@@ -331,13 +338,13 @@ class Dispatcher:
             "total_skald_tasks": sum(available_skalds.values()) if available_skalds else 0
         }
 
-    def set_strategy(self, strategy: str) -> None:
+    def set_strategy(self, strategy: DispatcherStrategyEnum) -> None:
         """Change the assignment strategy."""
-        valid_strategies = ["least_tasks", "round_robin", "random"]
-        if strategy in valid_strategies:
+        if isinstance(strategy, DispatcherStrategyEnum):
             self.strategy = strategy
-            logger.info(f"Dispatcher strategy changed to: {strategy}")
+            logger.info(f"Dispatcher strategy changed to: {strategy.value}")
         else:
+            valid_strategies = DispatcherStrategyEnum.list()
             logger.error(f"Invalid strategy: {strategy}. Valid options: {valid_strategies}")
 
     def force_assignment_check(self) -> None:

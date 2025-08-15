@@ -20,10 +20,22 @@ class SkaldModeEnum(str, Enum):
 class SystemControllerModeEnum(str, Enum):
     """Enumeration for SystemController operational modes."""
     CONTROLLER = "controller"      # API only
-    MONITOR = "monitor"           # API + monitoring + dashboard  
+    MONITOR = "monitor"           # API + monitoring + dashboard
     DISPATCHER = "dispatcher"     # Full system (API + monitoring + dispatching)
 
     @classmethod
     def list(cls) -> list[str]:
         """Return a list of all mode values."""
+        return [c.value for c in cls]
+
+
+class DispatcherStrategyEnum(str, Enum):
+    """Enumeration for task assignment strategies."""
+    LEAST_TASKS = "least_tasks"    # Assign to Skald with fewest tasks
+    ROUND_ROBIN = "round_robin"    # Round-robin assignment
+    RANDOM = "random"              # Random assignment
+
+    @classmethod
+    def list(cls) -> list[str]:
+        """Return a list of all strategy values."""
         return [c.value for c in cls]
