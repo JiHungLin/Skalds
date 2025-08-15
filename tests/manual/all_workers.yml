@@ -1,13 +1,13 @@
 TaskWorkers:
   TaskWorker1:
     attachments:
-      fixFrame: 30
-      rtspUrl: rtsp://192.168.1.1/camera1
+      fix_frame: 30
+      rtsp_url: rtsp://192.168.1.1/camera1
     className: MyWorker
   TaskWorker2:
     attachments:
       enable_feature_x: true
-      jobId: job-12345
+      job_id: job-12345
       notes: This is a demonstration of a complex worker.
       retries: 2
       sub_tasks:

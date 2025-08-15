@@ -5,7 +5,7 @@ FastAPI endpoints for system status, health checks, and dashboard summary.
 """
 
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from skald.system_controller.api.models import (
     DashboardSummary, SystemStatus, ComponentStatus,
@@ -13,6 +13,8 @@ from skald.system_controller.api.models import (
 )
 from skald.system_controller.store.skald_store import SkaldStore
 from skald.system_controller.store.task_store import TaskStore
+from skald.system_controller.service.summary_service import SummaryService
+from skald.proxy.mongo import MongoProxy
 from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
 
@@ -24,6 +26,29 @@ def get_skald_store() -> SkaldStore:
 
 def get_task_store() -> TaskStore:
     return TaskStore()
+
+def get_mongo_proxy() -> Optional[MongoProxy]:
+    """Get MongoDB proxy from SystemController instance."""
+    try:
+        from skald.system_controller.main import SystemController
+        system_controller = SystemController._instance if hasattr(SystemController, '_instance') else None
+        if system_controller and hasattr(system_controller, 'mongo_proxy'):
+            return system_controller.mongo_proxy
+        return None
+    except Exception as e:
+        logger.warning(f"Could not get MongoDB proxy: {e}")
+        return None
+
+def get_summary_service(
+    mongo_proxy: Optional[MongoProxy] = Depends(get_mongo_proxy),
+    task_store: TaskStore = Depends(get_task_store),
+    skald_store: SkaldStore = Depends(get_skald_store)
+) -> Optional[SummaryService]:
+    """Get summary service instance."""
+    if mongo_proxy is None:
+        logger.warning("MongoDB proxy not available, summary service will be limited")
+        return None
+    return SummaryService(mongo_proxy, task_store, skald_store)
 
 
 @router.get("/health", response_model=HealthCheckResponse)
@@ -143,6 +168,7 @@ async def get_system_status():
 
 @router.get("/dashboard/summary", response_model=DashboardSummary)
 async def get_dashboard_summary(
+    summary_service: Optional[SummaryService] = Depends(get_summary_service),
     skald_store: SkaldStore = Depends(get_skald_store),
     task_store: TaskStore = Depends(get_task_store)
 ):
@@ -150,24 +176,40 @@ async def get_dashboard_summary(
     Get summary statistics for the dashboard.
     """
     try:
-        # Get Skald statistics
-        skald_summary = skald_store.get_summary()
-        
-        # Get Task statistics
-        task_summary = task_store.get_summary()
-        
-        return DashboardSummary(
-            totalSkalds=skald_summary["totalSkalds"],
-            onlineSkalds=skald_summary["onlineSkalds"],
-            totalTasks=task_summary["totalTasks"],
-            runningTasks=task_summary["runningTasks"],
-            completedTasks=task_summary["completedTasks"],
-            failedTasks=task_summary["failedTasks"],
-            assigningTasks=task_summary["assigningTasks"],
-            canceledTasks=task_summary["canceledTasks"],
-            nodeSkalds=skald_summary["nodeSkalds"],
-            edgeSkalds=skald_summary["edgeSkalds"]
-        )
+        if summary_service:
+            # Use the comprehensive summary service
+            summary = summary_service.get_dashboard_summary()
+            
+            return DashboardSummary(
+                totalSkalds=summary["totalSkalds"],
+                onlineSkalds=summary["onlineSkalds"],
+                totalTasks=summary["totalTasks"],
+                runningTasks=summary["runningTasks"],
+                completedTasks=summary["completedTasks"],
+                failedTasks=summary["failedTasks"],
+                assigningTasks=summary["assigningTasks"],
+                canceledTasks=summary["canceledTasks"],
+                nodeSkalds=summary["nodeSkalds"],
+                edgeSkalds=summary["edgeSkalds"]
+            )
+        else:
+            # Fallback to store-only data when MongoDB is not available
+            logger.warning("Using fallback summary (MongoDB not available)")
+            skald_summary = skald_store.get_summary()
+            task_summary = task_store.get_summary()
+            
+            return DashboardSummary(
+                totalSkalds=skald_summary["totalSkalds"],
+                onlineSkalds=skald_summary["onlineSkalds"],
+                totalTasks=task_summary["totalTasks"],
+                runningTasks=task_summary["runningTasks"],
+                completedTasks=0,  # Cannot get from store
+                failedTasks=0,     # Cannot get from store
+                assigningTasks=task_summary["assigningTasks"],
+                canceledTasks=0,   # Cannot get from store
+                nodeSkalds=skald_summary["nodeSkalds"],
+                edgeSkalds=skald_summary["edgeSkalds"]
+            )
         
     except Exception as e:
         logger.error(f"Error getting dashboard summary: {e}")
@@ -204,6 +246,7 @@ async def get_system_config():
 
 @router.get("/metrics")
 async def get_system_metrics(
+    summary_service: Optional[SummaryService] = Depends(get_summary_service),
     skald_store: SkaldStore = Depends(get_skald_store),
     task_store: TaskStore = Depends(get_task_store)
 ):
@@ -218,10 +261,32 @@ async def get_system_metrics(
         online_skalds = skald_store.get_online_skalds()
         node_skalds = skald_store.get_node_skalds()
         
-        # Task metrics
-        all_tasks = task_store.get_all_tasks()
-        running_tasks = task_store.get_running_tasks()
-        failed_tasks = task_store.get_failed_tasks()
+        # Task metrics - use summary service if available
+        if summary_service:
+            task_summary = summary_service.get_task_summary()
+            task_metrics = {
+                "monitored": len(task_store.get_all_tasks()),  # Currently monitored
+                "running": task_summary["runningTasks"],
+                "failed": task_summary["failedTasks"],
+                "completed": task_summary["completedTasks"],
+                "canceled": task_summary["canceledTasks"],
+                "assigning": task_summary["assigningTasks"],
+                "total": task_summary["totalTasks"]
+            }
+        else:
+            # Fallback to store-only data
+            all_tasks = task_store.get_all_tasks()
+            running_tasks = task_store.get_running_tasks()
+            failed_tasks = task_store.get_failed_tasks()
+            task_metrics = {
+                "monitored": len(all_tasks),
+                "running": len(running_tasks),
+                "failed": len(failed_tasks),
+                "completed": 0,  # Cannot get from store
+                "canceled": 0,   # Cannot get from store
+                "assigning": len(task_store.get_assigning_tasks()),
+                "total": len(all_tasks)  # Only currently monitored
+            }
         
         # Calculate additional metrics
         total_skald_tasks = sum(skald.get_task_count() for skald in all_skalds.values())
@@ -246,12 +311,7 @@ async def get_system_metrics(
                 "idleNodes": len([s for s in node_skalds.values() if s.get_task_count() == 0])
             },
             "tasks": {
-                "monitored": len(all_tasks),
-                "running": len(running_tasks),
-                "failed": len(failed_tasks),
-                "completed": len(task_store.get_completed_tasks()),
-                "canceled": len(task_store.get_canceled_tasks()),
-                "assigning": len(task_store.get_assigning_tasks()),
+                **task_metrics,
                 "totalAssigned": total_skald_tasks
             },
             "performance": {
@@ -292,6 +352,51 @@ async def cleanup_system(
         
     except Exception as e:
         logger.error(f"Error during system cleanup: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/analytics/task-distribution")
+async def get_task_distribution(
+    summary_service: Optional[SummaryService] = Depends(get_summary_service)
+):
+    """
+    Get task status distribution for analytics.
+    """
+    try:
+        if not summary_service:
+            raise HTTPException(status_code=503, detail="Analytics service not available (MongoDB required)")
+        
+        distribution = summary_service.get_task_status_distribution()
+        return {
+            "distribution": distribution,
+            "timestamp": int(time.time() * 1000)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting task distribution: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/analytics/recent-activity")
+async def get_recent_activity(
+    hours: int = 24,
+    summary_service: Optional[SummaryService] = Depends(get_summary_service)
+):
+    """
+    Get recent task activity within specified hours.
+    """
+    try:
+        if not summary_service:
+            raise HTTPException(status_code=503, detail="Analytics service not available (MongoDB required)")
+        
+        if hours < 1 or hours > 168:  # Max 1 week
+            raise HTTPException(status_code=400, detail="Hours must be between 1 and 168")
+        
+        activity = summary_service.get_recent_task_activity(hours)
+        return activity
+        
+    except Exception as e:
+        logger.error(f"Error getting recent activity: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
