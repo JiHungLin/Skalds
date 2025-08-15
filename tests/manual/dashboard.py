@@ -12,10 +12,10 @@ config = SystemControllerConfig(
     redis_port=6379,
     mongo_host="mongodb://root:root@localhost:27017",
     db_name="skald",
-    monitor_skald_interval=1000,
-    monitor_task_interval=1000,
-    monitor_heartbeat_timeout=5000,
-    dispatcher_interval=1000,
+    monitor_skald_interval=5,
+    monitor_task_interval=5,
+    monitor_heartbeat_timeout=5,
+    dispatcher_interval=5,
     dispatcher_strategy=DispatcherStrategyEnum.ROUND_ROBIN,
     log_level=LogLevelEnum.DEBUG
 )

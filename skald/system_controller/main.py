@@ -151,20 +151,25 @@ class SystemController:
         try:
             # Stop FastAPI server
             if self.server_task:
+                logger.info("Stopping FastAPI server...")
                 self.server_task.cancel()
                 try:
                     await self.server_task
+                    logger.info("FastAPI server stopped successfully")
                 except asyncio.CancelledError:
                     pass
             
             # Stop monitor components
             if self.dispatcher:
+                logger.info("Stopping Dispatcher...10s")
                 self.dispatcher.stop()
             
             if self.task_monitor:
+                logger.info("Stopping TaskMonitor...10s")
                 self.task_monitor.stop()
             
             if self.skald_monitor:
+                logger.info("Stopping SkaldMonitor...10s")
                 self.skald_monitor.stop()
             
             # Stop logger cleaner

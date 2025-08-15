@@ -110,21 +110,43 @@ export default function TasksPage() {
       key: 'createdAt',
       header: 'Created',
       sortable: true,
-      render: (value) => (
-        <span className="text-sm text-gray-500">
-          {format(new Date(value), 'MMM dd, HH:mm')}
-        </span>
-      )
+      render: (value) => {
+        try {
+          const date = new Date(value)
+          if (isNaN(date.getTime())) {
+            return <span className="text-sm text-gray-400">Invalid date</span>
+          }
+          return (
+            <span className="text-sm text-gray-500">
+              {format(date, 'MMM dd, HH:mm')}
+            </span>
+          )
+        } catch (error) {
+          console.warn('Invalid date value:', value, error)
+          return <span className="text-sm text-gray-400">Invalid date</span>
+        }
+      }
     },
     {
       key: 'updatedAt',
       header: 'Updated',
       sortable: true,
-      render: (value) => (
-        <span className="text-sm text-gray-500">
-          {format(new Date(value), 'MMM dd, HH:mm')}
-        </span>
-      )
+      render: (value) => {
+        try {
+          const date = new Date(value)
+          if (isNaN(date.getTime())) {
+            return <span className="text-sm text-gray-400">Invalid date</span>
+          }
+          return (
+            <span className="text-sm text-gray-500">
+              {format(date, 'MMM dd, HH:mm')}
+            </span>
+          )
+        } catch (error) {
+          console.warn('Invalid date value:', value, error)
+          return <span className="text-sm text-gray-400">Invalid date</span>
+        }
+      }
     }
   ]
 
