@@ -112,7 +112,6 @@ export default function TasksPage() {
       sortable: true,
       render: (value) => {
         try {
-          console.log('Rendering createDateTime column with value:', value)
           const date = new Date(value)
           if (isNaN(date.getTime())) {
             return <span className="text-sm text-gray-400">Invalid date</span>

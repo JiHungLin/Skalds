@@ -4,6 +4,7 @@ TaskRepository Module
 Provides CRUD operations for Task objects using MongoDB.
 """
 
+from datetime import datetime
 import pymongo
 import pymongo.errors
 from typing import Optional
@@ -78,8 +79,7 @@ class TaskRepository:
         try:
             result = self.mongo_proxy.db.tasks.update_one(
                 {"id": id},
-                {"$set": {"executor": executor}},
-                max_time_ms=3000
+                {"$set": {"executor": executor, "updateDateTime": int(datetime.now().timestamp() * 1000)}}
             )
             if result.modified_count > 0:
                 logger.info(f"Task with id: {id} updated executor to {executor}")

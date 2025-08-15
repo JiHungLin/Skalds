@@ -57,6 +57,123 @@ class TaskMonitor:
             self._initialized = True
             logger.info(f"TaskMonitor initialized with {duration}s interval")
 
+    async def _initialize_task_sync(self, page_size: int = 100) -> None:
+        """
+        Initialize task synchronization by fetching all tasks from DB and updating
+        their status based on Redis heartbeat values.
+        
+        Args:
+            page_size: Number of tasks to process per batch
+        """
+        logger.info("Starting task synchronization initialization...")
+        
+        try:
+            total_synced = 0
+            page = 0
+            
+            while True:
+                # Fetch tasks with paging
+                tasks = await self._get_all_tasks_paged(page, page_size)
+                if not tasks:
+                    break
+                
+                logger.debug(f"Processing page {page} with {len(tasks)} tasks")
+                
+                # Process each task in the current page
+                for task in tasks:
+                    try:
+                        await self._sync_task_status_from_redis(task['id'])
+                        total_synced += 1
+                    except Exception as e:
+                        logger.error(f"Error syncing task {task['id']}: {e}")
+                
+                page += 1
+                
+                # Break if we got fewer tasks than page_size (last page)
+                if len(tasks) < page_size:
+                    break
+            
+            logger.info(f"Task synchronization completed. Synced {total_synced} tasks")
+            
+        except Exception as e:
+            logger.error(f"Error during task synchronization initialization: {e}")
+            raise
+
+    async def _get_all_tasks_paged(self, page: int, page_size: int) -> List[Dict]:
+        """
+        Get all tasks from MongoDB with paging support.
+        
+        Args:
+            page: Page number (0-based)
+            page_size: Number of tasks per page
+            
+        Returns:
+            List of task documents
+        """
+        try:
+            collection = self.mongo_proxy.db.tasks
+            skip = page * page_size
+            
+            cursor = collection.find({}).skip(skip).limit(page_size)
+            tasks = []
+            
+            for doc in cursor:
+                tasks.append(doc)
+            
+            return tasks
+            
+        except Exception as e:
+            logger.error(f"Error fetching tasks page {page}: {e}")
+            return []
+
+    async def _sync_task_status_from_redis(self, task_id: str) -> None:
+        """
+        Sync a single task's status based on its Redis heartbeat value.
+        
+        Args:
+            task_id: The task ID to sync
+        """
+        try:
+            # Get heartbeat from Redis
+            heartbeat = self._get_task_heartbeat(task_id)
+            
+            if heartbeat is None:
+                # No heartbeat found, skip this task
+                return
+            
+            # Map heartbeat to status
+            new_status = self._map_heartbeat_to_status(heartbeat)
+            
+            if new_status is None:
+                # Heartbeat value doesn't require status update
+                return
+            
+            # Update status in MongoDB
+            await self._update_task_status(task_id, new_status)
+            logger.debug(f"Synced task {task_id}: heartbeat {heartbeat} → {new_status.value}")
+            
+        except Exception as e:
+            logger.error(f"Error syncing task {task_id} from Redis: {e}")
+
+    def _map_heartbeat_to_status(self, heartbeat: int) -> Optional[TaskLifecycleStatus]:
+        """
+        Map heartbeat value to corresponding TaskLifecycleStatus.
+        
+        Args:
+            heartbeat: The heartbeat value from Redis
+            
+        Returns:
+            TaskLifecycleStatus if mapping exists, None otherwise
+        """
+        # Based on HeartBeat enum from skald.handler.survive
+        heartbeat_status_map = {
+            200: TaskLifecycleStatus.FINISHED,  # SUCCESS
+            -1: TaskLifecycleStatus.FAILED,     # FAILED
+            -2: TaskLifecycleStatus.CANCELLED   # CANCELED
+        }
+        
+        return heartbeat_status_map.get(heartbeat)
+
     def _work(self) -> None:
         """Main monitoring loop with async support."""
         # Create new event loop for this thread
@@ -276,7 +393,7 @@ class TaskMonitor:
             # Update only if status is different
             result = collection.update_one(
                 {"id": task_id},
-                {"$set": {"lifecycleStatus": status.value}}
+                {"$set": {"lifecycleStatus": status.value, "updateDateTime": int(time.time() * 1000)}}
             )
             
             if result.modified_count > 0:
@@ -311,15 +428,39 @@ class TaskMonitor:
             logger.error(f"Error sending cancel event for task {task_id}: {e}")
 
     def start(self) -> None:
-        """Start the monitoring thread."""
+        """Start the monitoring thread with initialization."""
         if self._running:
             logger.warning("TaskMonitor is already running")
             return
             
         self._running = True
-        self._thread = threading.Thread(target=self._work, daemon=True, name="TaskMonitor")
+        self._thread = threading.Thread(target=self._work_with_init, daemon=True, name="TaskMonitor")
         self._thread.start()
         logger.info("TaskMonitor started")
+
+    def _work_with_init(self) -> None:
+        """Main monitoring loop with initialization and async support."""
+        # Create new event loop for this thread
+        self._event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._event_loop)
+        
+        try:
+            # Run initialization first
+            logger.info("Running task synchronization before starting monitoring...")
+            self._event_loop.run_until_complete(self._initialize_task_sync())
+            logger.info("Task synchronization completed, starting regular monitoring...")
+            
+            # Start regular monitoring loop
+            while self._running:
+                try:
+                    self._event_loop.run_until_complete(self._monitor_tasks())
+                    time.sleep(self.duration)
+                except Exception as e:
+                    logger.error(f"TaskMonitor error: {e}")
+                    time.sleep(self.duration)
+        finally:
+            if self._event_loop:
+                self._event_loop.close()
 
     def stop(self) -> None:
         """Stop the monitoring thread."""

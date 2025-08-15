@@ -130,21 +130,25 @@ class TaskWorkerManager:
                         # If task already exists, update task attachments
                         value['attachments'] = remote_task.attachments.model_dump()
                         logger.info(f"Task {task_id} already exists, updating attachments from MongoDB.")
-                        task = Task(
-                            id=task_id,
-                            name=task_id,
-                            class_name=value['className'],
-                            description=f"Active TaskWorker from MongoDB. ClassName: {value['className']}",
-                            source="YAML",
-                            executor=SystemConfig.SKALD_ID,
-                            mode=ModeEnum.ACTIVE,
-                            create_date_time=remote_task.createDateTime,
-                            update_date_time=int(datetime.datetime.now().timestamp() * 1000),
-                            deadline_date_time=remote_task.deadlineDateTime,
-                            lifecycle_status=remote_task.lifecycleStatus,
-                            priority=remote_task.priority,
-                            attachments=remote_task.attachments
-                        )
+                        try:
+                            task = Task(
+                                id=task_id,
+                                name=task_id,
+                                class_name=value['className'],
+                                description=f"Active TaskWorker from MongoDB. ClassName: {value['className']}",
+                                source="YAML",
+                                executor=SystemConfig.SKALD_ID,
+                                mode=ModeEnum.ACTIVE,
+                                create_date_time=remote_task.create_date_time,
+                                update_date_time=int(datetime.datetime.now().timestamp() * 1000),
+                                deadline_date_time=remote_task.deadline_date_time,
+                                lifecycle_status=remote_task.lifecycle_status,
+                                priority=remote_task.priority,
+                                attachments=remote_task.attachments
+                            )
+                        except Exception as e:
+                            logger.error(f"Failed to create task from remote: {e}")
+                            raise e
                         self.task_repository.update_executor(id=task_id, executor=SystemConfig.SKALD_ID)
                     else:
                         attachments_obj = TaskWorkerFactory.create_attachment_with_class_name_and_dict(
@@ -219,7 +223,6 @@ class TaskWorkerManager:
         Args:
             message: JSON string representing a TaskEvent.
         """
-        print(message)
         task_event = TaskEvent.model_validate_json(message)
         for task_id in task_event.task_ids:
             if task_id not in TaskWorkerStore.all_task_worker_task_id():
