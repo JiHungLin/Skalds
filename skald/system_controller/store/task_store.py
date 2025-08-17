@@ -31,6 +31,18 @@ class TaskHeartbeatRecord:
         self.current_status: Optional[str] = None  # Explicit status from MongoDB
         self.last_status_update = int(time.time() * 1000)
 
+    def model_dump(self) -> dict:
+        """Dump the model data as a dictionary."""
+        with self._lock:
+            return {
+                "task_id": self.task_id,
+                "heartbeat_list": self.heartbeat_list,
+                "error_message": self.error_message,
+                "exception_message": self.exception_message,
+                "last_update": self.last_update,
+                "current_status": self.current_status
+            }
+
     def append_heartbeat(self, heartbeat: int) -> None:
         """Add a new heartbeat value to the record."""
         with self._lock:
@@ -74,7 +86,8 @@ class TaskHeartbeatRecord:
             bool: True if heartbeat shows variation (task is active)
         """
         with self._lock:
-            if len(self.heartbeat_list) < 2:
+            print(self.task_id, "heartbeat_list:", self.heartbeat_list)
+            if len(self.heartbeat_list) <= 2:
                 return True  # Not enough data, assume alive
             
             # Check for heartbeat variation
@@ -123,6 +136,11 @@ class TaskHeartbeatRecord:
                 return "Running"
             else:
                 return "Failed"  # No heartbeat variation, consider failed
+
+    def set_status(self, status: str) -> None:
+        """Set the current status of the task."""
+        with self._lock:
+            self.current_status = status
 
     def to_dict(self) -> Dict:
         """Convert record to dictionary for API responses."""
@@ -174,6 +192,7 @@ class TaskStore:
             task_id: Unique identifier for the task
             heartbeat: Initial heartbeat value
         """
+        print("storeID: ", id(self))
         with self._store_lock:
             if task_id not in self.running_task_heartbeat_records:
                 self.running_task_heartbeat_records[task_id] = TaskHeartbeatRecord(task_id, heartbeat)
@@ -184,6 +203,12 @@ class TaskStore:
         with self._store_lock:
             if task_id in self.running_task_heartbeat_records:
                 self.running_task_heartbeat_records[task_id].append_heartbeat(heartbeat)
+
+    def update_task_status(self, task_id: str, status: str) -> None:
+        """Update status for a monitored task."""
+        with self._store_lock:
+            if task_id in self.running_task_heartbeat_records:
+                self.running_task_heartbeat_records[task_id].set_status(status)
 
     def set_task_error(self, task_id: str, error_message: str) -> None:
         """Set error message for a task."""

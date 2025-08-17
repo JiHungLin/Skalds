@@ -175,6 +175,21 @@ export function SSEProvider({ children }: SSEProviderProps) {
       setLastError(connected ? null : sseManager.getLastError())
     })
 
+    // Set up global event handlers for all skald and task events
+    const originalHandleSkaldEvent = sseManager['handleSkaldEvent'].bind(sseManager)
+    const originalHandleTaskEvent = sseManager['handleTaskEvent'].bind(sseManager)
+    
+    // Override the event handlers to also update our context state
+    sseManager['handleSkaldEvent'] = (event: SkaldEvent) => {
+      originalHandleSkaldEvent(event)
+      handleSkaldEvent(event)
+    }
+    
+    sseManager['handleTaskEvent'] = (event: TaskEvent) => {
+      originalHandleTaskEvent(event)
+      handleTaskEvent(event)
+    }
+
     // Connect to SSE
     sseManager.connect()
 
@@ -185,10 +200,13 @@ export function SSEProvider({ children }: SSEProviderProps) {
 
     // Cleanup on unmount
     return () => {
+      // Restore original handlers
+      sseManager['handleSkaldEvent'] = originalHandleSkaldEvent
+      sseManager['handleTaskEvent'] = originalHandleTaskEvent
       unsubscribeConnection()
       sseManager.disconnect()
     }
-  }, [])
+  }, [handleSkaldEvent, handleTaskEvent])
 
   // Update connection state periodically
   useEffect(() => {

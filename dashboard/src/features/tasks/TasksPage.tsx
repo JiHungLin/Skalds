@@ -25,7 +25,15 @@ export default function TasksPage() {
   })
 
   // Get SSE context for real-time updates
-  const { tasks: sseTasks, isConnected, lastError: sseError, updateTask } = useSSE()
+  const { tasks: sseTasks, isConnected, lastError: sseError, updateTask, subscribeToTask } = useSSE()
+
+  // Create a stable dependency for sseTasks changes
+  const sseTasksVersion = useMemo(() => {
+    // Create a hash of all task data to detect changes
+    return Array.from(sseTasks.entries())
+      .map(([id, task]) => `${id}:${task.heartbeat}:${task.lifecycleStatus}:${task.updateDateTime}`)
+      .join('|')
+  }, [sseTasks])
 
   // Merge API data with SSE updates
   const mergedTasks = useMemo(() => {
@@ -45,7 +53,7 @@ export default function TasksPage() {
       }
       return task
     })
-  }, [tasks?.items, sseTasks])
+  }, [tasks?.items, sseTasksVersion])
 
   // Subscribe to SSE events for all tasks
   useEffect(() => {
@@ -58,26 +66,34 @@ export default function TasksPage() {
       if (!sseTasks.has(task.id)) {
         updateTask(task.id, task)
       }
+      
+      // Subscribe to task events for real-time updates
+      // const unsubscribe = subscribeToTask(task.id, (event) => {
+      //   console.log(`Received event for task ${task.id}:`, event)
+      //   // The event will be automatically handled by the SSE context
+      //   // which will update the tasks Map and trigger re-renders
+      // })
+      // unsubscribers.push(unsubscribe)
     })
 
     return () => {
       unsubscribers.forEach(unsub => unsub())
     }
-  }, [tasks?.items, sseTasks, updateTask])
+  }, [tasks?.items, sseTasks, updateTask, subscribeToTask])
 
   // Log API call status and SSE connection for debugging
-  useEffect(() => {
-    console.log('TasksPage status:', {
-      isLoading,
-      error,
-      tasks: tasks?.items?.length || 0,
-      sseConnected: isConnected,
-      sseError,
-      sseTasks: sseTasks.size,
-      page,
-      statusFilter
-    })
-  }, [isLoading, error, tasks, isConnected, sseError, sseTasks, page, statusFilter])
+  // useEffect(() => {
+  //   console.log('TasksPage status:', {
+  //     isLoading,
+  //     error,
+  //     tasks: tasks?.items?.length || 0,
+  //     sseConnected: isConnected,
+  //     sseError,
+  //     sseTasks: sseTasks.size,
+  //     page,
+  //     statusFilter
+  //   })
+  // }, [isLoading, error, tasks, isConnected, sseError, sseTasks, page, statusFilter])
 
   if (error) {
     console.error('Tasks API error:', error)

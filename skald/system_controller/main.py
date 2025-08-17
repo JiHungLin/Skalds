@@ -318,13 +318,24 @@ class SystemController:
         logger.info(f"Starting FastAPI server on {self.host}:{self.port}")
         
         # Configure uvicorn
+        import os
+        # 強制 workers=1，避免多進程 in-memory 狀態不同步
         config = uvicorn.Config(
             app=self.app,
             host=self.host,
             port=self.port,
             log_level="info" if self.config.log_level == "INFO" else "debug",
-            access_log=True
+            access_log=True,
+            workers=1
         )
+        # 啟動時檢查外部環境變數，若有多 worker 設定則報錯
+        if (
+            int(os.environ.get("UVICORN_WORKERS", "1")) > 1 or
+            int(os.environ.get("WEB_CONCURRENCY", "1")) > 1 or
+            "gunicorn" in sys.argv[0].lower()
+        ):
+            logger.error("多進程模式會導致 in-memory 狀態不同步，請將 worker 數量設為 1！")
+            raise RuntimeError("請勿以多 worker 模式啟動 SystemController，否則 /api/events/tasks 會無法取得正確資料。")
         
         server = uvicorn.Server(config)
         

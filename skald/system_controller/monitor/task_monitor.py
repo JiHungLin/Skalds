@@ -49,6 +49,7 @@ class TaskMonitor:
             self.kafka_proxy = kafka_proxy
             self.duration = duration
             self.task_store = TaskStore()
+            print("storeID: ", id(self.task_store))
             self.task_repository = TaskRepository(mongo_proxy)
             
             self._running = False
@@ -319,7 +320,7 @@ class TaskMonitor:
                 self.task_store.del_task(task_id)
                 logger.info(f"Cleaned up orphaned task: {task_id}")
 
-    async def _process_task_status_changes(self) -> None:
+    async def _process_task_status_changes(self) -> None: # TODO: Need To strictly test.
         """Process tasks that need status updates."""
         stored_tasks = self.task_store.get_all_tasks()
         for task_id, record in stored_tasks.items():
@@ -330,19 +331,21 @@ class TaskMonitor:
                 if record.is_completed_status():
                     # Task has completed
                     await self._handle_completed_task(task_id)
-                elif record.is_failed_status() or not record.task_is_alive():
-                    # Task has failed
-                    await self._handle_failed_task(task_id)
                 elif record.is_canceled_status():
                     # Task was canceled
                     await self._handle_canceled_task(task_id)
+                elif record.is_failed_status() or not record.task_is_alive():
+                    # Task has failed
+                    await self._handle_failed_task(task_id)
                 elif record.task_is_assigning():
                     # Task is still assigning
                     await self._update_task_status(task_id, TaskLifecycleStatus.ASSIGNING)
                 elif current_status == "Running":
                     # Task is running normally
                     await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
-                    
+                else:
+                    await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
+
             except Exception as e:
                 logger.error(f"Error processing status for task {task_id}: {e}")
 
@@ -377,6 +380,9 @@ class TaskMonitor:
     async def _update_task_status(self, task_id: str, status: TaskLifecycleStatus) -> None:
         """Update task status in MongoDB."""
         try:
+
+            self.task_store.update_task_status(task_id, status)
+            
             collection = self.mongo_proxy.db.tasks
             
             # First check if the task exists and if status actually needs updating

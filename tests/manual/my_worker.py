@@ -26,7 +26,7 @@ class MyWorker(BaseTaskWorker[MyDataModel]):
 
     @run_main_handler
     def main_run(self) -> None:
-        for _ in range(300):
+        for _ in range(300*10):
             logger.info(f"Running main logic for MyWorker")
             time.sleep(1)
 
