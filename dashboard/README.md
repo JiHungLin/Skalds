@@ -46,15 +46,45 @@ dashboard/
 
 The dashboard implements Server-Sent Events (SSE) for real-time monitoring:
 
-1. Skald Status Updates
-   - Connection status
-   - Heartbeat monitoring
-   - Current task execution status
+1. **Skald Status Updates**
+   - Connection status (online/offline)
+   - Heartbeat monitoring with visual indicators
+   - Current task assignments
+   - Real-time status changes
 
-2. Task Status Updates
-   - Task state changes
-   - Heartbeat monitoring
-   - Error/Exception reporting
+2. **Task Status Updates**
+   - Task lifecycle status changes
+   - Heartbeat monitoring with live counters
+   - Error and exception reporting
+   - Real-time progress updates
+
+**SSE Integration Features:**
+- ✅ Automatic connection management with reconnection
+- ✅ Global state management via React Context
+- ✅ Component-level event subscriptions
+- ✅ Visual connection status indicators
+- ✅ Mock events for development
+- ✅ TypeScript support with full type safety
+- ✅ Memory leak prevention with automatic cleanup
+
+**Usage Example:**
+```tsx
+import { useSSE } from './contexts/SSEContext'
+
+function MyComponent() {
+  const { skalds, tasks, isConnected } = useSSE()
+  
+  return (
+    <div>
+      <p>Live Updates: {isConnected ? '🟢 Connected' : '🔴 Disconnected'}</p>
+      <p>Skalds: {skalds.size}</p>
+      <p>Tasks: {tasks.size}</p>
+    </div>
+  )
+}
+```
+
+For detailed SSE documentation, see [`src/lib/sse/README.md`](src/lib/sse/README.md).
 
 ### Core Features
 

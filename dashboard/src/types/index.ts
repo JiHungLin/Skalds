@@ -54,6 +54,34 @@ export interface TaskEvent {
   };
 }
 
+// SSE Context Types
+export interface SSEContextType {
+  // Connection state
+  isConnected: boolean
+  lastError: Error | null
+  
+  // Skald state
+  skalds: Map<string, Skald>
+  updateSkald: (skaldId: string, updates: Partial<Skald>) => void
+  
+  // Task state
+  tasks: Map<string, Task>
+  updateTask: (taskId: string, updates: Partial<Task>) => void
+  
+  // Subscription methods
+  subscribeToSkald: (skaldId: string, callback: (event: SkaldEvent) => void) => () => void
+  subscribeToTask: (taskId: string, callback: (event: TaskEvent) => void) => () => void
+  
+  // Connection management
+  connect: () => void
+  disconnect: () => void
+}
+
+// SSE Event Callback Types
+export type SkaldEventCallback = (event: SkaldEvent) => void
+export type TaskEventCallback = (event: TaskEvent) => void
+export type ConnectionStateCallback = (connected: boolean) => void
+
 // API Response Types
 export interface GetSkaldsResponse {
   items: Skald[];

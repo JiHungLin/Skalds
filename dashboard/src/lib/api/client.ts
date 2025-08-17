@@ -109,7 +109,7 @@ class ApiClient {
 
   constructor() {
     // Use current origin as base URL for API calls
-    this.baseUrl = window.location.origin
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin    
     
     // Enable mock data only in development if API is not available
     this.useMockData = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_DATA === 'true'

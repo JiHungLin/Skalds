@@ -1,23 +1,72 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api/client'
 import DataGrid from '../../components/ui/DataGrid'
 import StatusIndicator from '../../components/ui/StatusIndicator'
 import { Skald, DataGridColumn } from '../../types'
-import { XCircleIcon } from '@heroicons/react/24/outline'
+import { XCircleIcon, WifiIcon } from '@heroicons/react/24/outline'
+import { useSSE } from '../../contexts/SSEContext'
 
 export default function SkaldsPage() {
-  const { data: skalds, isLoading, error } = useQuery({
+  const { data: skalds, isLoading, error, refetch } = useQuery({
     queryKey: ['skalds'],
     queryFn: () => apiClient.getSkalds(),
     retry: 2,
     retryDelay: 1000,
   })
 
-  // Log API call status for debugging
+  // Get SSE context for real-time updates
+  const { skalds: sseSkalds, isConnected, lastError: sseError, updateSkald } = useSSE()
+
+  // Merge API data with SSE updates
+  const mergedSkalds = useMemo(() => {
+    if (!skalds?.items) return []
+    
+    return skalds.items.map(skald => {
+      const sseSkald = sseSkalds.get(skald.id)
+      if (sseSkald) {
+        // Merge API data with SSE updates, prioritizing SSE for real-time fields
+        return {
+          ...skald,
+          ...sseSkald,
+          // Keep original API data for fields that SSE doesn't update
+          supportedTasks: skald.supportedTasks,
+          type: skald.type
+        }
+      }
+      return skald
+    })
+  }, [skalds?.items, sseSkalds])
+
+  // Subscribe to SSE events for all skalds
   useEffect(() => {
-    console.log('SkaldsPage component mounted - API call status:', { isLoading, error, skalds })
-  }, [isLoading, error, skalds])
+    if (!skalds?.items) return
+
+    const unsubscribers: (() => void)[] = []
+
+    skalds.items.forEach(skald => {
+      // Initialize skald in SSE context if not already present
+      if (!sseSkalds.has(skald.id)) {
+        updateSkald(skald.id, skald)
+      }
+    })
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub())
+    }
+  }, [skalds?.items, sseSkalds, updateSkald])
+
+  // Log API call status and SSE connection for debugging
+  useEffect(() => {
+    console.log('SkaldsPage status:', {
+      isLoading,
+      error,
+      skalds: skalds?.items?.length || 0,
+      sseConnected: isConnected,
+      sseError,
+      sseSkalds: sseSkalds.size
+    })
+  }, [isLoading, error, skalds, isConnected, sseError, sseSkalds])
 
   if (error) {
     console.error('Skalds API error:', error)
@@ -115,15 +164,32 @@ export default function SkaldsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Skalds</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Monitor and manage your Skald workers
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Skalds</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Monitor and manage your Skald workers
+          </p>
+        </div>
+        
+        {/* SSE Connection Status */}
+        <div className="flex items-center space-x-2">
+          <WifiIcon
+            className={`h-5 w-5 ${isConnected ? 'text-green-500' : 'text-red-500'}`}
+          />
+          <span className={`text-sm font-medium ${isConnected ? 'text-green-700' : 'text-red-700'}`}>
+            {isConnected ? 'Live Updates' : 'Disconnected'}
+          </span>
+          {sseError && (
+            <span className="text-xs text-red-500" title={sseError.message}>
+              (Error)
+            </span>
+          )}
+        </div>
       </div>
 
       <DataGrid
-        data={skalds?.items || []}
+        data={mergedSkalds}
         columns={columns}
         loading={isLoading}
       />

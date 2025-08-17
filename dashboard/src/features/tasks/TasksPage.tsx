@@ -1,18 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api/client'
 import DataGrid from '../../components/ui/DataGrid'
 import StatusIndicator from '../../components/ui/StatusIndicator'
 import { Task, DataGridColumn, TaskStatus } from '../../types'
 import { format } from 'date-fns'
-import { XCircleIcon } from '@heroicons/react/24/outline'
+import { XCircleIcon, WifiIcon } from '@heroicons/react/24/outline'
+import { useSSE } from '../../contexts/SSEContext'
 
 export default function TasksPage() {
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<TaskStatus | undefined>()
   const pageSize = 10
 
-  const { data: tasks, isLoading, error } = useQuery({
+  const { data: tasks, isLoading, error, refetch } = useQuery({
     queryKey: ['tasks', page, statusFilter],
     queryFn: () => apiClient.getTasks({
       page,
@@ -23,10 +24,60 @@ export default function TasksPage() {
     retryDelay: 1000,
   })
 
-  // Log API call status for debugging
+  // Get SSE context for real-time updates
+  const { tasks: sseTasks, isConnected, lastError: sseError, updateTask } = useSSE()
+
+  // Merge API data with SSE updates
+  const mergedTasks = useMemo(() => {
+    if (!tasks?.items) return []
+    
+    return tasks.items.map(task => {
+      const sseTask = sseTasks.get(task.id)
+      if (sseTask) {
+        // Merge API data with SSE updates, prioritizing SSE for real-time fields
+        return {
+          ...task,
+          ...sseTask,
+          // Keep original API data for fields that SSE doesn't update
+          className: task.className,
+          createDateTime: task.createDateTime
+        }
+      }
+      return task
+    })
+  }, [tasks?.items, sseTasks])
+
+  // Subscribe to SSE events for all tasks
   useEffect(() => {
-    console.log('TasksPage component mounted - API call status:', { isLoading, error, tasks, page, statusFilter })
-  }, [isLoading, error, tasks, page, statusFilter])
+    if (!tasks?.items) return
+
+    const unsubscribers: (() => void)[] = []
+
+    tasks.items.forEach(task => {
+      // Initialize task in SSE context if not already present
+      if (!sseTasks.has(task.id)) {
+        updateTask(task.id, task)
+      }
+    })
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub())
+    }
+  }, [tasks?.items, sseTasks, updateTask])
+
+  // Log API call status and SSE connection for debugging
+  useEffect(() => {
+    console.log('TasksPage status:', {
+      isLoading,
+      error,
+      tasks: tasks?.items?.length || 0,
+      sseConnected: isConnected,
+      sseError,
+      sseTasks: sseTasks.size,
+      page,
+      statusFilter
+    })
+  }, [isLoading, error, tasks, isConnected, sseError, sseTasks, page, statusFilter])
 
   if (error) {
     console.error('Tasks API error:', error)
@@ -107,6 +158,20 @@ export default function TasksPage() {
       )
     },
     {
+      key: 'heartbeat',
+      header: 'Heartbeat',
+      sortable: true,
+      render: (value, row) => {
+        const sseTask = sseTasks.get(row.id)
+        const heartbeat = sseTask?.heartbeat ?? value ?? 0
+        return (
+          <span className={`text-sm font-mono ${heartbeat > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+            {heartbeat}
+          </span>
+        )
+      }
+    },
+    {
       key: 'createDateTime',
       header: 'Created',
       sortable: true,
@@ -172,6 +237,21 @@ export default function TasksPage() {
         </div>
         
         <div className="flex items-center space-x-4">
+          {/* SSE Connection Status */}
+          <div className="flex items-center space-x-2">
+            <WifiIcon
+              className={`h-5 w-5 ${isConnected ? 'text-green-500' : 'text-red-500'}`}
+            />
+            <span className={`text-sm font-medium ${isConnected ? 'text-green-700' : 'text-red-700'}`}>
+              {isConnected ? 'Live Updates' : 'Disconnected'}
+            </span>
+            {sseError && (
+              <span className="text-xs text-red-500" title={sseError.message}>
+                (Error)
+              </span>
+            )}
+          </div>
+          
           <select
             value={statusFilter || ''}
             onChange={(e) => setStatusFilter(e.target.value as TaskStatus || undefined)}
@@ -187,7 +267,7 @@ export default function TasksPage() {
       </div>
 
       <DataGrid
-        data={tasks?.items || []}
+        data={mergedTasks}
         columns={columns}
         loading={isLoading}
         pagination={{

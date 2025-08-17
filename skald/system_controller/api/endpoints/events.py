@@ -162,8 +162,9 @@ async def generate_task_events(
         
         while True:
             try:
+                print("Checking for task updates...")
                 current_tasks = task_store.get_all_tasks()
-                
+                print(current_tasks)
                 for task_id_key, task_record in current_tasks.items():
                     # Filter by specific Task ID if provided
                     if task_id and task_id_key != task_id:
@@ -176,7 +177,7 @@ async def generate_task_events(
                         'exception': task_record.exception_message,
                         'lastUpdate': task_record.last_update
                     }
-                    
+                    print(current_state)
                     previous_task_state = previous_state.get(task_id_key, {})
                     
                     # Check for heartbeat changes

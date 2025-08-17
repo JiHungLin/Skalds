@@ -1,13 +1,39 @@
-import { SkaldEvent, TaskEvent } from '../../types'
+import { SkaldEvent, TaskEvent, SkaldEventCallback, TaskEventCallback, ConnectionStateCallback } from '../../types'
 
-type EventCallback<T> = (event: T) => void
-type ConnectionStateCallback = (connected: boolean) => void
-
+/**
+ * SSE Manager for handling Server-Sent Events connections
+ *
+ * This class manages EventSource connections to the backend SSE endpoints
+ * and provides subscription mechanisms for real-time updates.
+ *
+ * Features:
+ * - Automatic reconnection with exponential backoff
+ * - Event subscription by Skald/Task ID
+ * - Connection state monitoring
+ * - Mock events for development
+ *
+ * @example
+ * ```typescript
+ * import { sseManager } from './lib/sse/manager'
+ *
+ * // Connect to SSE
+ * sseManager.connect()
+ *
+ * // Subscribe to skald events
+ * const unsubscribe = sseManager.subscribeToSkald('skald-001', (event) => {
+ *   console.log('Skald event:', event)
+ * })
+ *
+ * // Cleanup
+ * unsubscribe()
+ * sseManager.disconnect()
+ * ```
+ */
 class SSEManager {
   private skaldEventSource: EventSource | null = null
   private taskEventSource: EventSource | null = null
-  private skaldCallbacks = new Map<string, EventCallback<SkaldEvent>[]>()
-  private taskCallbacks = new Map<string, EventCallback<TaskEvent>[]>()
+  private skaldCallbacks = new Map<string, SkaldEventCallback[]>()
+  private taskCallbacks = new Map<string, TaskEventCallback[]>()
   private connectionCallbacks: ConnectionStateCallback[] = []
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
@@ -15,14 +41,24 @@ class SSEManager {
   private connected = false
   private lastError: Error | null = null
 
+  /**
+   * Create a new SSE Manager instance
+   * @param baseUrl - Base URL for SSE endpoints (default: '/api/events')
+   */
   constructor(private baseUrl: string = '/api/events') {}
 
   // Connection management
+  /**
+   * Connect to both Skald and Task SSE endpoints
+   */
   connect(): void {
     this.connectSkaldEvents()
     this.connectTaskEvents()
   }
 
+  /**
+   * Disconnect from all SSE endpoints and clean up resources
+   */
   disconnect(): void {
     this.disconnectSkaldEvents()
     this.disconnectTaskEvents()
@@ -30,6 +66,10 @@ class SSEManager {
     this.notifyConnectionState(false)
   }
 
+  /**
+   * Attempt to reconnect with exponential backoff
+   * Will retry up to maxReconnectAttempts times
+   */
   reconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('Max reconnection attempts reached')
@@ -132,7 +172,13 @@ class SSEManager {
   }
 
   // Event subscriptions
-  subscribeToSkald(skaldId: string, callback: EventCallback<SkaldEvent>): () => void {
+  /**
+   * Subscribe to events for a specific Skald
+   * @param skaldId - The ID of the Skald to subscribe to
+   * @param callback - Function to call when events are received
+   * @returns Unsubscribe function
+   */
+  subscribeToSkald(skaldId: string, callback: SkaldEventCallback): () => void {
     if (!this.skaldCallbacks.has(skaldId)) {
       this.skaldCallbacks.set(skaldId, [])
     }
@@ -153,7 +199,13 @@ class SSEManager {
     }
   }
 
-  subscribeToTask(taskId: string, callback: EventCallback<TaskEvent>): () => void {
+  /**
+   * Subscribe to events for a specific Task
+   * @param taskId - The ID of the Task to subscribe to
+   * @param callback - Function to call when events are received
+   * @returns Unsubscribe function
+   */
+  subscribeToTask(taskId: string, callback: TaskEventCallback): () => void {
     if (!this.taskCallbacks.has(taskId)) {
       this.taskCallbacks.set(taskId, [])
     }
@@ -174,6 +226,11 @@ class SSEManager {
     }
   }
 
+  /**
+   * Subscribe to connection state changes
+   * @param callback - Function to call when connection state changes
+   * @returns Unsubscribe function
+   */
   subscribeToConnection(callback: ConnectionStateCallback): () => void {
     this.connectionCallbacks.push(callback)
     
@@ -224,15 +281,27 @@ class SSEManager {
   }
 
   // Connection state
+  /**
+   * Check if SSE connections are active
+   * @returns True if connected, false otherwise
+   */
   isConnected(): boolean {
     return this.connected
   }
 
+  /**
+   * Get the last error that occurred
+   * @returns Last error or null if no error
+   */
   getLastError(): Error | null {
     return this.lastError
   }
 
   // Mock events for development
+  /**
+   * Start generating mock events for development/testing
+   * Only works in development mode
+   */
   startMockEvents(): void {
     if (import.meta.env.DEV) {
       this.startMockSkaldEvents()
@@ -273,4 +342,14 @@ class SSEManager {
   }
 }
 
-export const sseManager = new SSEManager()
+/**
+ * Global SSE Manager instance
+ * Use this singleton instance throughout the application
+ */
+/**
+ * 全域 SSE baseUrl，支援 .env 設定
+ */
+const sseBaseUrl =
+  (import.meta.env.VITE_API_BASE_URL || window.location.origin) + '/api/events'
+
+export const sseManager = new SSEManager(sseBaseUrl)
