@@ -49,7 +49,6 @@ class TaskMonitor:
             self.kafka_proxy = kafka_proxy
             self.duration = duration
             self.task_store = TaskStore()
-            print("storeID: ", id(self.task_store))
             self.task_repository = TaskRepository(mongo_proxy)
             
             self._running = False
@@ -202,8 +201,8 @@ class TaskMonitor:
             
             # Add new tasks to monitoring
             for task in running_tasks:
-                self.task_store.add_task(task.id, 0)
-            
+                self.task_store.add_task(task.id, task.lifecycleStatus, 0)
+
             # Update heartbeats and check for status changes
             await self._update_task_heartbeats(running_task_ids)
             
@@ -326,7 +325,6 @@ class TaskMonitor:
         for task_id, record in stored_tasks.items():
             try:
                 current_status = record.get_status()
-
                 # Handle different status transitions
                 if record.is_completed_status():
                     # Task has completed
@@ -337,12 +335,12 @@ class TaskMonitor:
                 elif record.is_failed_status() or not record.task_is_alive():
                     # Task has failed
                     await self._handle_failed_task(task_id)
+                elif current_status == TaskLifecycleStatus.RUNNING and record.task_is_alive():
+                    # Task is running normally
+                    await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
                 elif record.task_is_assigning():
                     # Task is still assigning
                     await self._update_task_status(task_id, TaskLifecycleStatus.ASSIGNING)
-                elif current_status == "Running":
-                    # Task is running normally
-                    await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
                 else:
                     await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
 

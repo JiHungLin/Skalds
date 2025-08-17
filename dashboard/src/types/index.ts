@@ -14,7 +14,7 @@ export interface Skald {
 export interface Task {
   id: string;
   className: string;
-  lifecycleStatus: TaskStatus;
+  lifecycleStatus: TaskLifecycleStatus;
   executor?: string;
   createDateTime: string;
   updateDateTime: string;
@@ -24,7 +24,7 @@ export interface Task {
   exception?: string;
 }
 
-export type TaskStatus =
+export type TaskLifecycleStatus =
   | 'Created'
   | 'Assigning'
   | 'Running'
@@ -51,6 +51,7 @@ export interface TaskEvent {
     heartbeat?: number;
     error?: string;
     exception?: string;
+    lifecycleStatus?: TaskLifecycleStatus;
   };
 }
 
@@ -91,7 +92,7 @@ export interface GetSkaldsResponse {
 export interface GetTasksRequest {
   page: number;
   pageSize: number;
-  status?: TaskStatus;
+  lifecycleStatus?: TaskLifecycleStatus;
   className?: string;
   executor?: string;
 }
@@ -104,7 +105,7 @@ export interface GetTasksResponse {
 }
 
 export interface UpdateTaskStatusRequest {
-  status: 'Created' | 'Cancelled';
+  lifecycleStatus: 'Created' | 'Cancelled';
 }
 
 export interface UpdateTaskAttachmentsRequest {
@@ -123,7 +124,7 @@ export interface DashboardSummary {
 
 // UI Component Types
 export interface StatusIndicatorProps {
-  status: 'online' | 'offline' | TaskStatus;
+  status: 'online' | 'offline' | TaskLifecycleStatus;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
   animated?: boolean;

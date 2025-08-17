@@ -3,14 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api/client'
 import DataGrid from '../../components/ui/DataGrid'
 import StatusIndicator from '../../components/ui/StatusIndicator'
-import { Task, DataGridColumn, TaskStatus } from '../../types'
+import { Task, DataGridColumn, TaskLifecycleStatus } from '../../types'
 import { format } from 'date-fns'
 import { XCircleIcon, WifiIcon } from '@heroicons/react/24/outline'
 import { useSSE } from '../../contexts/SSEContext'
 
 export default function TasksPage() {
   const [page, setPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | undefined>()
+  const [statusFilter, setStatusFilter] = useState<TaskLifecycleStatus | undefined>()
   const pageSize = 10
 
   const { data: tasks, isLoading, error, refetch } = useQuery({
@@ -18,7 +18,7 @@ export default function TasksPage() {
     queryFn: () => apiClient.getTasks({
       page,
       pageSize,
-      status: statusFilter
+      lifecycleStatus: statusFilter
     }),
     retry: 2,
     retryDelay: 1000,
@@ -179,7 +179,11 @@ export default function TasksPage() {
       sortable: true,
       render: (value, row) => {
         const sseTask = sseTasks.get(row.id)
-        const heartbeat = sseTask?.heartbeat ?? value ?? 0
+        let heartbeat = sseTask?.heartbeat ?? value ?? 0
+        // If the task is Finished, display heartbeat as 200
+        if (row.lifecycleStatus === 'Finished') {
+          heartbeat = 200
+        }
         return (
           <span className={`text-sm font-mono ${heartbeat > 0 ? 'text-green-600' : 'text-gray-400'}`}>
             {heartbeat}
@@ -231,7 +235,7 @@ export default function TasksPage() {
     }
   ]
 
-  const statusOptions: (TaskStatus | undefined)[] = [
+  const statusOptions: (TaskLifecycleStatus | undefined)[] = [
     undefined,
     'Created',
     'Assigning',
@@ -270,7 +274,7 @@ export default function TasksPage() {
           
           <select
             value={statusFilter || ''}
-            onChange={(e) => setStatusFilter(e.target.value as TaskStatus || undefined)}
+            onChange={(e) => setStatusFilter(e.target.value as TaskLifecycleStatus || undefined)}
             className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
           >
             {statusOptions.map((status) => (

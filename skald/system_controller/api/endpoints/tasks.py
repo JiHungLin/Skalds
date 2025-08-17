@@ -44,7 +44,6 @@ async def get_tasks(
     """
     Get paginated list of tasks with optional filters.
     """
-    print("asdljaskljdh asld i890pwdj-[=gjwebil iwrjtb srgiof jfg kio0er gimoerf jgop'dnfjkwdf bnjk;fg bikodfkbp'df9g 9hjdfklgsdfog udfio jgvkl;dfgopsdfig imsdfhbngklsd oghjsdkolf jksdopfcvnkl;sd商]")
     try:
         if not task_repository:
             raise HTTPException(status_code=503, detail="Task repository not available")
@@ -66,7 +65,7 @@ async def get_tasks(
         
         # Get total count
         total = collection.count_documents(query)  # Remove await
-        
+
         # Get paginated results
         cursor = collection.find(query).skip(skip).limit(pageSize).sort("createDateTime", -1)
         tasks = []
@@ -110,20 +109,6 @@ async def get_tasks(
     except Exception as e:
         logger.error(f"Error getting tasks: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/all_from_store")
-async def get_all_tasks_from_store():
-    try:
-        all_task = get_task_store().get_all_tasks()
-        return JSONResponse(content={"tasks": [task.model_dump() for task in all_task.values()]})
-    except Exception as e:
-        logger.error(f"Error getting all tasks from store: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
-
 
 @router.get("/{task_id}", response_model=TaskResponse)
 async def get_task(

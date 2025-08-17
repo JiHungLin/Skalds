@@ -122,6 +122,11 @@ export function SSEProvider({ children }: SSEProviderProps) {
     const updates: Partial<Task> = {
       updateDateTime: new Date().toISOString()
     }
+
+    // Always update lifecycleStatus if present in event.data
+    if (event.data.lifecycleStatus !== undefined) {
+      updates.lifecycleStatus = event.data.lifecycleStatus
+    }
     
     switch (event.type) {
       case 'task_heartbeat':

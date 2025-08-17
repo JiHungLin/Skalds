@@ -162,9 +162,7 @@ async def generate_task_events(
         
         while True:
             try:
-                print("Checking for task updates...")
                 current_tasks = task_store.get_all_tasks()
-                print(current_tasks)
                 for task_id_key, task_record in current_tasks.items():
                     # Filter by specific Task ID if provided
                     if task_id and task_id_key != task_id:
@@ -172,12 +170,11 @@ async def generate_task_events(
                     
                     current_state = {
                         'heartbeat': task_record.get_latest_heartbeat(),
-                        'status': task_record.get_status(),
+                        'lifecycleStatus': task_record.get_status(),
                         'error': task_record.error_message,
                         'exception': task_record.exception_message,
                         'lastUpdate': task_record.last_update
                     }
-                    print(current_state)
                     previous_task_state = previous_state.get(task_id_key, {})
                     
                     # Check for heartbeat changes
@@ -187,7 +184,7 @@ async def generate_task_events(
                             taskId=task_id_key,
                             data={
                                 "heartbeat": current_state['heartbeat'],
-                                "status": current_state['status']
+                                "lifecycleStatus": current_state['lifecycleStatus']
                             },
                             timestamp=int(time.time() * 1000)
                         )
@@ -201,7 +198,7 @@ async def generate_task_events(
                             taskId=task_id_key,
                             data={
                                 "error": current_state['error'],
-                                "status": current_state['status']
+                                "lifecycleStatus": current_state['lifecycleStatus']
                             },
                             timestamp=int(time.time() * 1000)
                         )
@@ -215,7 +212,7 @@ async def generate_task_events(
                             taskId=task_id_key,
                             data={
                                 "exception": current_state['exception'],
-                                "status": current_state['status']
+                                "lifecycleStatus": current_state['lifecycleStatus']
                             },
                             timestamp=int(time.time() * 1000)
                         )

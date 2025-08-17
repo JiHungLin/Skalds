@@ -200,9 +200,9 @@ class ApiClient {
       page: params.page.toString(),
       pageSize: params.pageSize.toString(),
     })
-    
-    if (params.status) {
-      searchParams.append('status', params.status)
+
+    if (params.lifecycleStatus) {
+      searchParams.append('lifecycleStatus', params.lifecycleStatus)
     }
     if (params.className) {
       searchParams.append('className', params.className)

@@ -8,6 +8,7 @@ Based on the reference implementation but enhanced for SystemController use.
 from typing import Dict, List, Optional
 import threading
 import time
+from skald.model.task import TaskLifecycleStatus
 from skald.utils.logging import logger
 
 
@@ -17,8 +18,8 @@ class TaskHeartbeatRecord:
     
     Tracks heartbeat history to determine task health and status.
     """
-    
-    def __init__(self, task_id: str, heartbeat: int = 0):
+
+    def __init__(self, task_id: str, lifecycle_status: TaskLifecycleStatus, heartbeat: int = 0):
         self.task_id = task_id
         self.heartbeat_list = [heartbeat]
         self.error_message: Optional[str] = None
@@ -28,7 +29,7 @@ class TaskHeartbeatRecord:
         self._lock = threading.RLock()
         
         # Add explicit status tracking
-        self.current_status: Optional[str] = None  # Explicit status from MongoDB
+        self.current_status: TaskLifecycleStatus = lifecycle_status  # Explicit status from MongoDB
         self.last_status_update = int(time.time() * 1000)
 
     def model_dump(self) -> dict:
@@ -86,7 +87,6 @@ class TaskHeartbeatRecord:
             bool: True if heartbeat shows variation (task is active)
         """
         with self._lock:
-            print(self.task_id, "heartbeat_list:", self.heartbeat_list)
             if len(self.heartbeat_list) <= 2:
                 return True  # Not enough data, assume alive
             
@@ -130,14 +130,10 @@ class TaskHeartbeatRecord:
                 return "Canceled"
             elif latest_heartbeat == 200:
                 return "Completed"
-            elif self.task_is_assigning():
-                return "Assigning"
-            elif self.task_is_alive():
-                return "Running"
             else:
-                return "Failed"  # No heartbeat variation, consider failed
+                return self.current_status  # No heartbeat variation, consider failed
 
-    def set_status(self, status: str) -> None:
+    def set_status(self, status: TaskLifecycleStatus) -> None:
         """Set the current status of the task."""
         with self._lock:
             self.current_status = status
@@ -184,7 +180,7 @@ class TaskStore:
             self._initialized = True
             logger.info("TaskStore initialized")
 
-    def add_task(self, task_id: str, heartbeat: int = 0) -> None:
+    def add_task(self, task_id: str, lifecycle_status: TaskLifecycleStatus, heartbeat: int = 0) -> None:
         """
         Add a task to monitoring if not already present.
         
@@ -192,10 +188,9 @@ class TaskStore:
             task_id: Unique identifier for the task
             heartbeat: Initial heartbeat value
         """
-        print("storeID: ", id(self))
         with self._store_lock:
             if task_id not in self.running_task_heartbeat_records:
-                self.running_task_heartbeat_records[task_id] = TaskHeartbeatRecord(task_id, heartbeat)
+                self.running_task_heartbeat_records[task_id] = TaskHeartbeatRecord(task_id, lifecycle_status, heartbeat)
                 logger.debug(f"Added task to monitoring: {task_id}")
 
     def update_task_heartbeat(self, task_id: str, heartbeat: int) -> None:

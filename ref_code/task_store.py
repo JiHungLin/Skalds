@@ -1,5 +1,7 @@
 from typing import Dict
 
+from skald.model.task import TaskLifecycleStatus
+
 
 class TaskHeartbeatRecord: # Store Task Heartbeat Record
     def __init__(self, task_id:str, heartbeat:int = 0):
@@ -22,9 +24,9 @@ class TaskStore: # Store Running Tasks
     runningTaskHeartbeatRecords: Dict[str, TaskHeartbeatRecord] = {}
 
     @classmethod
-    def addTask(cls, task_id:str, heartbeat:int):
+    def addTask(cls, task_id:str, heartbeat:int, lifecycle_status:TaskLifecycleStatus):
         if task_id not in cls.runningTaskHeartbeatRecords:
-            cls.runningTaskHeartbeatRecords[task_id] = TaskHeartbeatRecord(task_id, heartbeat)
+            cls.runningTaskHeartbeatRecords[task_id] = TaskHeartbeatRecord(task_id, lifecycle_status, heartbeat)
 
     @classmethod
     def updateTaskHeartbeat(cls, task_id:str, heartbeat:int):

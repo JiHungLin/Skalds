@@ -19,7 +19,7 @@ interface Skald {
 interface Task {
   id: string;
   type: string;
-  status: TaskStatus;
+  status: TaskLifecycleStatus;
   executor?: string;
   createDateTime: string;
   updateDateTime: string;
@@ -29,7 +29,7 @@ interface Task {
   exception?: string;
 }
 
-type TaskStatus =
+type TaskLifecycleStatus =
   | 'Created'
   | 'Assigning'
   | 'Running'
@@ -82,7 +82,7 @@ type GetSkaldResponse = Skald;
 interface GetTasksRequest {
   page: number;
   pageSize: number;
-  status?: TaskStatus;
+  lifecycleStatus?: TaskLifecycleStatus;
   className?: string;
   executor?: string;
 }
@@ -161,7 +161,7 @@ const useTask = (id: string) => useQuery(['task', id], () => fetchTask(id));
 // SSE State Store
 interface SSEState {
   skaldStatuses: Record<string, SkaldStatus>;
-  taskStatuses: Record<string, TaskStatus>;
+  taskStatuses: Record<string, TaskLifecycleStatus>;
   heartbeats: Record<string, number>;
   errors: Record<string, string>;
 }
