@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Task, UpdateTaskAttachmentsRequest, TaskLifecycleStatus } from '../../types'
+import { useState } from 'react'
+import { Task, TaskLifecycleStatus } from '../../types'
 import { apiClient } from '../../lib/api/client'
 
 interface TaskDetailModalProps {
@@ -19,13 +19,11 @@ export default function TaskDetailModal({ task, onClose, onUpdated }: TaskDetail
   function AttachmentEditor({
     value,
     onChange,
-    path = [],
-    parentType = 'object'
+    path = []
   }: {
     value: any
     onChange: (val: any) => void
     path?: (string | number)[]
-    parentType?: 'object' | 'array'
   }) {
     // Add new key for object
     const handleAddField = () => {
@@ -63,7 +61,6 @@ export default function TaskDetailModal({ task, onClose, onUpdated }: TaskDetail
                 value={item}
                 onChange={v => onChange(value.map((it, i) => (i === idx ? v : it)))}
                 path={[...path, idx]}
-                parentType="array"
               />
               <button
                 className="text-xs text-red-500 hover:text-red-700 px-1"
@@ -96,7 +93,6 @@ export default function TaskDetailModal({ task, onClose, onUpdated }: TaskDetail
                 value={val}
                 onChange={v => onChange({ ...value, [key]: v })}
                 path={[...path, key]}
-                parentType="object"
               />
               <button
                 className="text-xs text-red-500 hover:text-red-700 px-1"
