@@ -30,6 +30,7 @@ from skald.store.taskworker import TaskWorkerStore
 from skald.config.systemconfig import SystemConfig
 from skald.worker.baseclass import BaseTaskWorker
 from skald.worker.factory import TaskWorkerFactory
+from rich.text import Text
 
 class TaskWorkerManager:
     """
@@ -352,23 +353,39 @@ class TaskWorkerManager:
         while True:
             try:
                 for message in self.kafka_proxy.consumer:
-                    logger.info(
-                        # "Received Kafka message: %s:%d:%d: key=%s value=%s",
-                        # message.topic, message.partition, message.offset,
-                        # message.key, message.value.decode('utf-8')
-                        f"Received Kafka message: {message.topic}:{message.partition}:{message.offset}: key={message.key.decode('utf-8')}, value={message.value.decode('utf-8') if message.value else None}"
-                    )
+                    # logger.info(
+                    #     # "Received Kafka message: %s:%d:%d: key=%s value=%s",
+                    #     # message.topic, message.partition, message.offset,
+                    #     # message.key, message.value.decode('utf-8')
+                    #     f"Received Kafka message: {message.topic}:{message.partition}:{message.offset}: key={message.key.decode('utf-8')}, value={message.value.decode('utf-8') if message.value else None}"
+                    # )
                     try:
+                        context = Text()
                         if message.topic == KafkaTopic.TASK_ASSIGN:
+                            context.append("Assign Task", style="bold green")
+                            context.append(f"\n - Topic: {message.topic}:{message.partition}:{message.offset}", style="dim")
+                            context.append(f"\n - Key: {message.key.decode('utf-8')}", style="dim")
+                            context.append(f"\n - value: {message.value.decode('utf-8')}", style="dim")
+                            logger.panel(context, title="Task Assignment", border_style="green", box_style="round", padding=(1, 2))
                             self._create_task_worker(message.value.decode('utf-8'))
                         elif message.topic == KafkaTopic.TASK_CANCEL:
+                            context.append("Cancel Task", style="bold red")
+                            context.append(f"\n - Topic: {message.topic}:{message.partition}:{message.offset}", style="dim")
+                            context.append(f"\n - Key: {message.key.decode('utf-8')}", style="dim")
+                            context.append(f"\n - value: {message.value.decode('utf-8')}", style="dim")
+                            logger.panel(context, title="Task Cancellation", border_style="red", box_style="round", padding=(1, 2))
                             self._cancel_task_worker(message.value.decode('utf-8'))
                         elif message.topic == KafkaTopic.TASK_UPDATE_ATTACHMENT:
+                            context.append("Update TaskWorker", style="bold yellow")
+                            context.append(f"\n - Topic: {message.topic}:{message.partition}:{message.offset}", style="dim")
+                            context.append(f"\n - Key: {message.key.decode('utf-8')}", style="dim")
+                            context.append(f"\n - value: {message.value.decode('utf-8')}", style="dim")
+                            logger.panel(context, title="Update TaskWorker", border_style="yellow", box_style="round", padding=(1, 2))
                             self._update_task_worker(message.value.decode('utf-8'))
                         elif message.topic == KafkaTopic.TESTING_PRODUCER:
                             self._testing_kafka_producer(message.value.decode('utf-8'))
                         else:
-                            logger.warning(f"Unknown Kafka topic: {message.topic}")
+                            logger.warning(f"Unknown Kafka message: {message.topic}:{message.partition}:{message.offset}: key={message.key.decode('utf-8')}, value={message.value.decode('utf-8') if message.value else None}")
                     except Exception as e:
                         logger.error(f"Error processing Kafka message: {e}")
             except TypeError as te:

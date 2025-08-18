@@ -13,6 +13,7 @@ from typing import Dict, List, Optional
 from skald.proxy.redis import RedisProxy
 from skald.proxy.mongo import MongoProxy
 from skald.proxy.kafka import KafkaProxy, KafkaTopic
+from skald.model.event import TaskEvent
 from skald.system_controller.store.skald_store import SkaldStore
 from skald.model.task import TaskLifecycleStatus
 from skald.repository.repository import TaskRepository
@@ -119,18 +120,13 @@ class Dispatcher:
             excluded_statuses = [
                 TaskLifecycleStatus.RUNNING.value,
                 TaskLifecycleStatus.CANCELLED.value,
+                TaskLifecycleStatus.PAUSED.value,
                 TaskLifecycleStatus.ASSIGNING.value,
                 TaskLifecycleStatus.FINISHED.value,
-                TaskLifecycleStatus.FAILED.value
             ]
             
             cursor = collection.find({
                 "lifecycleStatus": {"$nin": excluded_statuses},
-                "$or": [
-                    {"executor": {"$exists": False}},
-                    {"executor": None},
-                    {"executor": ""}
-                ]
             })
             
             tasks = []
@@ -278,20 +274,24 @@ class Dispatcher:
     async def _send_assignment_event(self, task, skald_id: str) -> None:
         """Send task assignment event via Kafka."""
         try:
-            assignment_message = {
-                "taskId": task.id,
-                "skaldId": skald_id,
-                "className": getattr(task, 'className', ''),
-                "action": "assign",
-                "timestamp": int(time.time() * 1000)
-            }
-            
-            self.kafka_proxy.produce(
-                KafkaTopic.TASK_ASSIGN,
-                task.id,
-                json.dumps(assignment_message)
+            event = TaskEvent(
+                id=task.id,
+                title=None,
+                initiator=None,
+                recipient=None,
+                create_date_time=int(time.time() * 1000),
+                update_date_time=int(time.time() * 1000),
+                task_ids=[task.id]
             )
-            
+
+            assignment_message = event.model_dump_json(by_alias=True)
+
+            self.kafka_proxy.produce(
+                topic_name=KafkaTopic.TASK_ASSIGN,
+                key=task.id,
+                value=assignment_message
+            )
+
             logger.debug(f"Sent assignment event for task {task.id} to Skald {skald_id}")
             
         except Exception as e:

@@ -18,6 +18,11 @@ from skald.model.task import TaskLifecycleStatus
 from skald.proxy.mongo import MongoProxy
 from skald.utils.logging import logger
 import time
+import json
+from skald.proxy.kafka import KafkaProxy, KafkaTopic
+from skald.model.event import TaskEvent
+from datetime import datetime
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
@@ -221,6 +226,32 @@ async def update_task_status(
             raise HTTPException(status_code=400, detail="Task status not updated")
 
         logger.info(f"Updated task {task_id} status to {request.lifecycle_status}")
+    
+        # Send Kafka cancel event if status is Cancelled
+        if request.lifecycle_status == TaskLifecycleStatus.CANCELLED:
+            kafka_proxy = None
+            try:
+                from skald.system_controller.main import SystemController
+                kafka_proxy = SystemController._instance.kafka_proxy if SystemController._instance else None
+            except Exception as e:
+                logger.error(f"Failed to get KafkaProxy: {e}")
+            if kafka_proxy:
+                # Compose TaskEvent for cancel
+                now_ms = int(datetime.now().timestamp() * 1000)
+                event = TaskEvent(
+                    id=task_id,
+                    title=None,
+                    initiator=None,
+                    recipient=None,
+                    create_date_time=now_ms,
+                    update_date_time=now_ms,
+                    task_ids=[task_id]
+                )
+                payload = event.model_dump_json(by_alias=True)
+                kafka_proxy.produce(KafkaTopic.TASK_CANCEL, key=task_id, value=payload)
+            else:
+                logger.warning("KafkaProxy not available, cancel event not sent.")
+    
         return SuccessResponse(
             message=f"Task status updated to {request.lifecycle_status}",
             data={"taskId": task_id, "status": request.lifecycle_status}
@@ -269,7 +300,30 @@ async def update_task_attachments(
             raise HTTPException(status_code=400, detail="Task attachments not updated")
         
         logger.info(f"Updated task {task_id} attachments")
-        
+    
+        # Send Kafka update attachment event
+        kafka_proxy = None
+        try:
+            from skald.system_controller.main import SystemController
+            kafka_proxy = SystemController._instance.kafka_proxy if SystemController._instance else None
+        except Exception as e:
+            logger.error(f"Failed to get KafkaProxy: {e}")
+        if kafka_proxy:
+            # Only publish taskId for attachment update event
+            event = TaskEvent(
+                id=task_id,
+                title=None,
+                initiator=None,
+                recipient=None,
+                create_date_time=int(time.time() * 1000),
+                update_date_time=int(time.time() * 1000),
+                task_ids=[task_id]
+            )
+            payload = event.model_dump_json(by_alias=True)
+            kafka_proxy.produce(KafkaTopic.TASK_UPDATE_ATTACHMENT, key=task_id, value=payload)
+        else:
+            logger.warning("KafkaProxy not available, update attachment event not sent.")
+    
         return SuccessResponse(
             message="Task attachments updated successfully",
             data={"taskId": task_id, "attachments": request.attachments}
@@ -315,7 +369,31 @@ async def delete_task(
             raise HTTPException(status_code=400, detail="Task not cancelled")
         
         logger.info(f"Cancelled task {task_id}")
-        
+    
+        # Send Kafka cancel event
+        kafka_proxy = None
+        try:
+            from skald.system_controller.main import SystemController
+            kafka_proxy = SystemController._instance.kafka_proxy if SystemController._instance else None
+        except Exception as e:
+            logger.error(f"Failed to get KafkaProxy: {e}")
+        if kafka_proxy:
+            # Compose TaskEvent for cancel
+            now_ms = int(datetime.now().timestamp() * 1000)
+            event = TaskEvent(
+                id=task_id,
+                title=None,
+                initiator=None,
+                recipient=None,
+                create_date_time=now_ms,
+                update_date_time=now_ms,
+                task_ids=[task_id]
+            )
+            payload = event.model_dump_json(by_alias=True)
+            kafka_proxy.produce(KafkaTopic.TASK_CANCEL, key=task_id, value=payload)
+        else:
+            logger.warning("KafkaProxy not available, cancel event not sent.")
+    
         return SuccessResponse(
             message="Task cancelled successfully",
             data={"taskId": task_id, "status": TaskLifecycleStatus.CANCELLED.value}

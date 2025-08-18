@@ -4,6 +4,7 @@ Skalds API Endpoints
 FastAPI endpoints for Skald management and monitoring.
 """
 
+import time
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, Query
 from skald.system_controller.api.models import (

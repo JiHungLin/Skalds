@@ -5,7 +5,7 @@ import asyncio
 
 
 config = SystemControllerConfig(
-    system_controller_mode=SystemControllerModeEnum.MONITOR,
+    system_controller_mode=SystemControllerModeEnum.DISPATCHER,
     system_controller_host="0.0.0.0",
     system_controller_port=8000,
     redis_host="localhost",

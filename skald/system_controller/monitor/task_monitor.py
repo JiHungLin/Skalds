@@ -327,21 +327,30 @@ class TaskMonitor:
                 current_status = record.get_status()
                 # Handle different status transitions
                 if record.is_completed_status():
+                    logger.debug(f"Task completed: {task_id}")
                     # Task has completed
                     await self._handle_completed_task(task_id)
                 elif record.is_cancelled_status():
+                    logger.debug(f"Task cancelled: {task_id}")
                     # Task was cancelled
                     await self._handle_cancelled_task(task_id)
                 elif record.is_failed_status() or not record.task_is_alive():
+                    logger.debug(f"Task failed: {task_id}")
                     # Task has failed
                     await self._handle_failed_task(task_id)
-                elif current_status == TaskLifecycleStatus.RUNNING and record.task_is_alive():
-                    # Task is running normally
-                    await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
+                elif current_status == TaskLifecycleStatus.ASSIGNING:
+                    if record.task_is_assigning():
+                        continue  # Still assigning, no action needed
+                    elif record.task_is_alive():
+                        logger.debug(f"Task is running normally: {task_id}")
+                        # Task is running normally
+                        await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
                 elif record.task_is_assigning():
+                    logger.debug(f"Task is still assigning: {task_id}")
                     # Task is still assigning
                     await self._update_task_status(task_id, TaskLifecycleStatus.ASSIGNING)
                 else:
+                    logger.debug(f"There are no errors, task is alive, task should be running: {task_id}")
                     await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
 
             except Exception as e:
@@ -413,18 +422,23 @@ class TaskMonitor:
         try:
             # This would use the existing Kafka topic for task cancellation
             from skald.proxy.kafka import KafkaTopic
+            from skald.model.event import TaskEvent
             
-            cancel_message = {
-                "taskId": task_id,
-                "action": "cancel",
-                "timestamp": int(time.time() * 1000)
-            }
             
-            import json
+            cancel_message = TaskEvent(
+                id=task_id,
+                title=None,
+                initiator=None,
+                recipient=None,
+                create_date_time=int(time.time() * 1000),
+                update_date_time=int(time.time() * 1000),
+                task_ids=[task_id]
+            ).model_dump_json(by_alias=True)
+
             self.kafka_proxy.produce(
                 KafkaTopic.TASK_CANCEL,
                 task_id,
-                json.dumps(cancel_message)
+                cancel_message
             )
             
             logger.debug(f"Sent cancel event for task: {task_id}")

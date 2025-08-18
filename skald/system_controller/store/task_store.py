@@ -87,12 +87,12 @@ class TaskHeartbeatRecord:
             bool: True if heartbeat shows variation (task is active)
         """
         with self._lock:
-            if len(self.heartbeat_list) <= 2:
+            if len(self.heartbeat_list) <= 4:
                 return True  # Not enough data, assume alive
             
             # Check for heartbeat variation
             unique_heartbeats = len(set(self.heartbeat_list))
-            return unique_heartbeats > 2
+            return unique_heartbeats > 4
 
     def get_latest_heartbeat(self) -> int:
         """Get the most recent heartbeat value."""
@@ -122,6 +122,7 @@ class TaskHeartbeatRecord:
             str: Task status (Running, Failed, Cancelled, Completed, Assigning)
         """
         with self._lock:
+            logger.warning(self.heartbeat_list)
             latest_heartbeat = self.get_latest_heartbeat()
             
             if latest_heartbeat == -1:
