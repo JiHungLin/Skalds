@@ -31,7 +31,7 @@ export type TaskLifecycleStatus =
   | 'Paused'
   | 'Finished'
   | 'Failed'
-  | 'Canceled';
+  | 'Cancelled';
 
 // SSE Event Types
 export interface SkaldEvent {
@@ -105,7 +105,7 @@ export interface GetTasksResponse {
 }
 
 export interface UpdateTaskStatusRequest {
-  lifecycleStatus: 'Created' | 'Canceled';
+  lifecycleStatus: 'Created' | 'Cancelled';
 }
 
 export interface UpdateTaskAttachmentsRequest {

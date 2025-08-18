@@ -48,7 +48,7 @@ class SummaryService:
                 "assigningTasks": store_summary["assigningTasks"],
                 "failedTasks": mongo_counts["failed"],
                 "completedTasks": mongo_counts["completed"],
-                "canceledTasks": mongo_counts["canceled"],
+                "cancelledTasks": mongo_counts["cancelled"],
                 "createdTasks": mongo_counts["created"],
                 "pausedTasks": mongo_counts["paused"]
             }
@@ -85,7 +85,7 @@ class SummaryService:
                 "assigningTasks": task_summary["assigningTasks"],
                 "failedTasks": task_summary["failedTasks"],
                 "completedTasks": task_summary["completedTasks"],
-                "canceledTasks": task_summary["canceledTasks"],
+                "cancelledTasks": task_summary["cancelledTasks"],
                 "createdTasks": task_summary["createdTasks"],
                 "pausedTasks": task_summary["pausedTasks"]
             }
@@ -125,7 +125,7 @@ class SummaryService:
                 "paused": 0,
                 "completed": 0,
                 "failed": 0,
-                "canceled": 0
+                "cancelled": 0
             }
             
             # Map MongoDB results to our counts
@@ -136,7 +136,7 @@ class SummaryService:
                 TaskLifecycleStatus.PAUSED.value: "paused",
                 TaskLifecycleStatus.FINISHED.value: "completed",
                 TaskLifecycleStatus.FAILED.value: "failed",
-                TaskLifecycleStatus.CANCELLED.value: "canceled"
+                TaskLifecycleStatus.CANCELLED.value: "cancelled"
             }
             
             for result in results:
@@ -162,7 +162,7 @@ class SummaryService:
                 "paused": 0,
                 "completed": 0,
                 "failed": 0,
-                "canceled": 0
+                "cancelled": 0
             }
     
     def get_task_status_distribution(self) -> List[Dict]:
@@ -187,7 +187,7 @@ class SummaryService:
                 "paused": "Paused",
                 "completed": "Completed",
                 "failed": "Failed",
-                "canceled": "Canceled"
+                "cancelled": "Cancelled"
             }
             
             for status_key, label in status_labels.items():

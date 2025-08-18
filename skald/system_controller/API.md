@@ -109,7 +109,7 @@ Get dashboard summary statistics.
   "completedTasks": 3,
   "failedTasks": 1,
   "assigningTasks": 0,
-  "canceledTasks": 0,
+  "cancelledTasks": 0,
   "nodeSkalds": 3,
   "edgeSkalds": 2
 }
@@ -137,7 +137,7 @@ Get detailed system metrics.
     "running": 8,
     "failed": 1,
     "completed": 3,
-    "canceled": 0,
+    "cancelled": 0,
     "assigning": 0,
     "totalAssigned": 8
   },
@@ -216,12 +216,12 @@ Get specific task by ID.
 ```
 
 #### PUT /api/tasks/{task_id}/status
-Update task status (only Created or Canceled allowed).
+Update task status (only Created or Cancelled allowed).
 
 **Request Body:**
 ```json
 {
-  "status": "Canceled"
+  "status": "Cancelled"
 }
 ```
 
@@ -229,10 +229,10 @@ Update task status (only Created or Canceled allowed).
 ```json
 {
   "success": true,
-  "message": "Task status updated to Canceled",
+  "message": "Task status updated to Cancelled",
   "data": {
     "taskId": "task-001",
-    "status": "Canceled"
+    "status": "Cancelled"
   }
 }
 ```
@@ -551,7 +551,7 @@ tasks = response.json()
 # Update task status
 response = requests.put(
     'http://localhost:8000/api/tasks/task-001/status',
-    json={'status': 'Canceled'}
+    json={'status': 'Cancelled'}
 )
 ```
 

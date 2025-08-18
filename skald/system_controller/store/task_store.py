@@ -104,8 +104,8 @@ class TaskHeartbeatRecord:
         with self._lock:
             return self.get_latest_heartbeat() == -1
 
-    def is_canceled_status(self) -> bool:
-        """Check if task has canceled status (heartbeat -2)."""
+    def is_cancelled_status(self) -> bool:
+        """Check if task has cancelled status (heartbeat -2)."""
         with self._lock:
             return self.get_latest_heartbeat() == -2
 
@@ -119,7 +119,7 @@ class TaskHeartbeatRecord:
         Determine task status based on heartbeat and other indicators.
         
         Returns:
-            str: Task status (Running, Failed, Canceled, Completed, Assigning)
+            str: Task status (Running, Failed, Cancelled, Completed, Assigning)
         """
         with self._lock:
             latest_heartbeat = self.get_latest_heartbeat()
@@ -127,7 +127,7 @@ class TaskHeartbeatRecord:
             if latest_heartbeat == -1:
                 return "Failed"
             elif latest_heartbeat == -2:
-                return "Canceled"
+                return "Cancelled"
             elif latest_heartbeat == 200:
                 return "Completed"
             else:
@@ -255,12 +255,12 @@ class TaskStore:
                 if record.is_completed_status()
             ]
 
-    def get_canceled_tasks(self) -> List[str]:
-        """Get list of task IDs that have been canceled."""
+    def get_cancelled_tasks(self) -> List[str]:
+        """Get list of task IDs that have been cancelled."""
         with self._store_lock:
             return [
                 task_id for task_id, record in self.running_task_heartbeat_records.items()
-                if record.is_canceled_status()
+                if record.is_cancelled_status()
             ]
 
     def get_running_tasks(self) -> List[str]:
@@ -299,7 +299,7 @@ class TaskStore:
             running_tasks = len(self.get_running_tasks())
             failed_tasks = len(self.get_failed_tasks())
             completed_tasks = len(self.get_completed_tasks())
-            canceled_tasks = len(self.get_canceled_tasks())
+            cancelled_tasks = len(self.get_cancelled_tasks())
             assigning_tasks = len(self.get_assigning_tasks())
             
             return {
@@ -307,7 +307,7 @@ class TaskStore:
                 "runningTasks": running_tasks,
                 "failedTasks": failed_tasks,
                 "completedTasks": completed_tasks,
-                "canceledTasks": canceled_tasks,
+                "cancelledTasks": cancelled_tasks,
                 "assigningTasks": assigning_tasks
             }
 

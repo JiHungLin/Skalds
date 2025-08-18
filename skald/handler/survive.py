@@ -64,8 +64,8 @@ class SurviveHandler:
         """Push a failed heartbeat value to Redis."""
         self.redis_proxy.set_message(self.key, HeartBeat.FAILED,0, SystemConfig.REDIS_KEY_TTL)
 
-    def push_canceled_heartbeat(self):
-        """Push a canceled heartbeat value to Redis."""
+    def push_cancelled_heartbeat(self):
+        """Push a cancelled heartbeat value to Redis."""
         self.redis_proxy.set_message(self.key, HeartBeat.CANCELED,0, SystemConfig.REDIS_KEY_TTL)
 
     def start_heartbeat_update(self):

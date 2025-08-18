@@ -188,7 +188,7 @@ async def get_dashboard_summary(
                 completedTasks=summary["completedTasks"],
                 failedTasks=summary["failedTasks"],
                 assigningTasks=summary["assigningTasks"],
-                canceledTasks=summary["canceledTasks"],
+                cancelledTasks=summary["cancelledTasks"],
                 nodeSkalds=summary["nodeSkalds"],
                 edgeSkalds=summary["edgeSkalds"]
             )
@@ -206,7 +206,7 @@ async def get_dashboard_summary(
                 completedTasks=0,  # Cannot get from store
                 failedTasks=0,     # Cannot get from store
                 assigningTasks=task_summary["assigningTasks"],
-                canceledTasks=0,   # Cannot get from store
+                cancelledTasks=0,   # Cannot get from store
                 nodeSkalds=skald_summary["nodeSkalds"],
                 edgeSkalds=skald_summary["edgeSkalds"]
             )
@@ -269,7 +269,7 @@ async def get_system_metrics(
                 "running": task_summary["runningTasks"],
                 "failed": task_summary["failedTasks"],
                 "completed": task_summary["completedTasks"],
-                "canceled": task_summary["canceledTasks"],
+                "cancelled": task_summary["cancelledTasks"],
                 "assigning": task_summary["assigningTasks"],
                 "total": task_summary["totalTasks"]
             }
@@ -283,7 +283,7 @@ async def get_system_metrics(
                 "running": len(running_tasks),
                 "failed": len(failed_tasks),
                 "completed": 0,  # Cannot get from store
-                "canceled": 0,   # Cannot get from store
+                "cancelled": 0,   # Cannot get from store
                 "assigning": len(task_store.get_assigning_tasks()),
                 "total": len(all_tasks)  # Only currently monitored
             }

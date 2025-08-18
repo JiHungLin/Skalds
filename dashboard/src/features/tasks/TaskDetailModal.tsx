@@ -15,20 +15,123 @@ export default function TaskDetailModal({ task, onClose, onUpdated }: TaskDetail
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  // Handle attachment field change
-  const handleAttachmentChange = (key: string, value: any) => {
-    setAttachments(prev => ({ ...prev, [key]: value }))
-  }
+  // Recursive editor for nested attachments
+  function AttachmentEditor({
+    value,
+    onChange,
+    path = [],
+    parentType = 'object'
+  }: {
+    value: any
+    onChange: (val: any) => void
+    path?: (string | number)[]
+    parentType?: 'object' | 'array'
+  }) {
+    // Add new key for object
+    const handleAddField = () => {
+      if (Array.isArray(value)) {
+        onChange([...value, ''])
+      } else if (typeof value === 'object' && value !== null) {
+        onChange({ ...value, '': '' })
+      }
+    }
 
-  // Add new attachment key
-  const handleAddAttachment = () => {
-    setAttachments(prev => ({ ...prev, '': '' }))
-  }
+    // Remove key for object/array
+    const handleRemoveField = (key: string | number) => {
+      if (Array.isArray(value)) {
+        onChange(value.filter((_: any, idx: number) => idx !== key))
+      } else if (typeof value === 'object' && value !== null) {
+        const { [key]: _, ...rest } = value
+        onChange(rest)
+      }
+    }
 
-  // Remove attachment key
-  const handleRemoveAttachment = (key: string) => {
-    const { [key]: _, ...rest } = attachments
-    setAttachments(rest)
+    // Change key for object
+    const handleKeyChange = (oldKey: string, newKey: string) => {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        const { [oldKey]: val, ...rest } = value
+        onChange({ ...rest, [newKey]: val })
+      }
+    }
+
+    if (Array.isArray(value)) {
+      return (
+        <div className="ml-4 border-l-2 border-gray-200 pl-2 space-y-2">
+          {value.map((item, idx) => (
+            <div key={idx} className="flex items-start space-x-2">
+              <AttachmentEditor
+                value={item}
+                onChange={v => onChange(value.map((it, i) => (i === idx ? v : it)))}
+                path={[...path, idx]}
+                parentType="array"
+              />
+              <button
+                className="text-xs text-red-500 hover:text-red-700 px-1"
+                onClick={() => handleRemoveField(idx)}
+                title="Remove"
+                type="button"
+              >×</button>
+            </div>
+          ))}
+          <button
+            className="text-xs text-blue-600 hover:underline mt-1"
+            onClick={handleAddField}
+            type="button"
+          >+ Add Item</button>
+        </div>
+      )
+    } else if (typeof value === 'object' && value !== null) {
+      return (
+        <div className="ml-4 border-l-2 border-gray-200 pl-2 space-y-2">
+          {Object.entries(value).map(([key, val], idx) => (
+            <div key={key + idx} className="flex items-start space-x-2">
+              <input
+                type="text"
+                className="w-1/4 rounded border px-2 py-1 text-xs"
+                value={key}
+                onChange={e => handleKeyChange(key, e.target.value)}
+                placeholder="Key"
+              />
+              <AttachmentEditor
+                value={val}
+                onChange={v => onChange({ ...value, [key]: v })}
+                path={[...path, key]}
+                parentType="object"
+              />
+              <button
+                className="text-xs text-red-500 hover:text-red-700 px-1"
+                onClick={() => handleRemoveField(key)}
+                title="Remove"
+                type="button"
+              >×</button>
+            </div>
+          ))}
+          <button
+            className="text-xs text-blue-600 hover:underline mt-1"
+            onClick={handleAddField}
+            type="button"
+          >+ Add Field</button>
+        </div>
+      )
+    } else {
+      // Primitive value
+      return (
+        <input
+          type="text"
+          className="w-2/3 rounded border px-2 py-1 text-xs"
+          value={value === null || value === undefined ? '' : String(value)}
+          onChange={e => {
+            let v: any = e.target.value
+            // Try to parse as number or boolean
+            if (v === 'true') v = true
+            else if (v === 'false') v = false
+            else if (!isNaN(Number(v)) && v.trim() !== '') v = Number(v)
+            onChange(v)
+          }}
+          placeholder="Value"
+        />
+      )
+    }
   }
 
   // Update attachments API
@@ -48,12 +151,11 @@ export default function TaskDetailModal({ task, onClose, onUpdated }: TaskDetail
   }
 
   // Change status API
-  const handleChangeStatus = async (newStatus: 'Created' | 'Canceled') => {
+  const handleChangeStatus = async (newStatus: 'Created' | 'Cancelled') => {
     setLoading(true)
     setError(null)
     setSuccess(null)
     try {
-      // Note: backend may expect "Canceled" not "Canceled"
       const updated = await apiClient.updateTaskStatus(task.id, { lifecycleStatus: newStatus })
       setStatus(updated.lifecycleStatus)
       setSuccess(`Status changed to ${updated.lifecycleStatus}`)
@@ -66,89 +168,69 @@ export default function TaskDetailModal({ task, onClose, onUpdated }: TaskDetail
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white rounded-xl shadow-2xl p-0 w-full max-w-2xl relative flex flex-col" style={{ maxHeight: '90vh' }}>
         <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
+          className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
           onClick={onClose}
+          style={{ lineHeight: 1 }}
         >
           ×
         </button>
-        <h2 className="text-xl font-bold mb-2">Task Details</h2>
-        <div className="mb-2">
-          <div className="text-xs text-gray-500 mb-1">Task ID: <span className="font-mono">{task.id}</span></div>
-          <div className="text-xs text-gray-500 mb-1">Type: {task.className}</div>
-          <div className="text-xs text-gray-500 mb-1">Executor: {task.executor || 'Unassigned'}</div>
-          <div className="text-xs text-gray-500 mb-1">Status: <span className="font-mono">{status}</span></div>
-        </div>
-        <div className="mb-4">
-          <h3 className="font-semibold text-sm mb-1">Attachments</h3>
-          <div className="space-y-2">
-            {Object.entries(attachments).map(([key, value], idx) => (
-              <div key={key + idx} className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  className="w-1/3 rounded border px-2 py-1 text-xs"
-                  value={key}
-                  onChange={e => {
-                    const newKey = e.target.value
-                    setAttachments(prev => {
-                      const { [key]: oldValue, ...rest } = prev
-                      return { ...rest, [newKey]: value }
-                    })
-                  }}
-                  placeholder="Key"
-                />
-                <input
-                  type="text"
-                  className="w-2/3 rounded border px-2 py-1 text-xs"
-                  value={value}
-                  onChange={e => handleAttachmentChange(key, e.target.value)}
-                  placeholder="Value"
-                />
-                <button
-                  className="btn btn-xs btn-danger"
-                  onClick={() => handleRemoveAttachment(key)}
-                  title="Remove"
-                >×</button>
-              </div>
-            ))}
-            <button
-              className="btn btn-xs btn-secondary"
-              onClick={handleAddAttachment}
-            >+ Add Attachment</button>
+        <div className="px-8 pt-7 pb-2 border-b border-gray-100">
+          <h2 className="text-2xl font-bold mb-1 text-gray-900">Task Details</h2>
+          <div className="flex flex-wrap gap-x-8 gap-y-1 text-xs text-gray-500 mb-1">
+            <div>Task ID: <span className="font-mono">{task.id}</span></div>
+            <div>Type: {task.className}</div>
+            <div>Executor: {task.executor || 'Unassigned'}</div>
+            <div>Status: <span className="font-mono">{status}</span></div>
           </div>
+        </div>
+        <div className="overflow-y-auto px-8 py-4 flex-1" style={{ minHeight: 200 }}>
+          <div className="mb-6">
+            <h3 className="font-semibold text-sm mb-2">Attachments</h3>
+            <AttachmentEditor
+              value={attachments}
+              onChange={setAttachments}
+            />
+            <button
+              className="mt-3 px-4 py-1.5 rounded bg-primary-500 text-white text-sm font-medium shadow hover:bg-primary-600 transition"
+              onClick={handleUpdateAttachments}
+              disabled={loading}
+              type="button"
+            >
+              {loading ? 'Updating...' : 'Update Attachments'}
+            </button>
+          </div>
+          <div className="mb-4">
+            <h3 className="font-semibold text-sm mb-2">Change Status</h3>
+            <div className="flex space-x-2">
+              <button
+                className="px-3 py-1 rounded bg-yellow-400 text-white text-xs font-medium shadow hover:bg-yellow-500 transition"
+                onClick={() => handleChangeStatus('Cancelled')}
+                disabled={loading || status === 'Cancelled'}
+                type="button"
+              >Set Cancelled</button>
+              <button
+                className="px-3 py-1 rounded bg-green-500 text-white text-xs font-medium shadow hover:bg-green-600 transition"
+                onClick={() => handleChangeStatus('Created')}
+                disabled={loading || status === 'Created'}
+                type="button"
+              >Set Created</button>
+            </div>
+          </div>
+          {error && <div className="text-xs text-red-600 mb-2">{error}</div>}
+          {success && <div className="text-xs text-green-600 mb-2">{success}</div>}
+        </div>
+        <div className="px-8 pb-6 pt-2 border-t border-gray-100 flex justify-end">
           <button
-            className="btn btn-sm btn-primary mt-2"
-            onClick={handleUpdateAttachments}
-            disabled={loading}
+            className="px-4 py-1.5 rounded bg-gray-200 text-gray-700 text-sm font-medium shadow hover:bg-gray-300 transition"
+            onClick={onClose}
+            type="button"
           >
-            {loading ? 'Updating...' : 'Update Attachments'}
+            Close
           </button>
         </div>
-        <div className="mb-4">
-          <h3 className="font-semibold text-sm mb-1">Change Status</h3>
-          <div className="flex space-x-2">
-            <button
-              className="btn btn-xs btn-warning"
-              onClick={() => handleChangeStatus('Canceled')}
-              disabled={loading || status === 'Canceled'}
-            >Set Canceled</button>
-            <button
-              className="btn btn-xs btn-success"
-              onClick={() => handleChangeStatus('Created')}
-              disabled={loading || status === 'Created'}
-            >Set Created</button>
-          </div>
-        </div>
-        {error && <div className="text-xs text-red-600 mb-2">{error}</div>}
-        {success && <div className="text-xs text-green-600 mb-2">{success}</div>}
-        <button
-          className="btn btn-sm btn-secondary mt-2"
-          onClick={onClose}
-        >
-          Close
-        </button>
       </div>
     </div>
   )

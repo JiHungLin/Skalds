@@ -329,9 +329,9 @@ class TaskMonitor:
                 if record.is_completed_status():
                     # Task has completed
                     await self._handle_completed_task(task_id)
-                elif record.is_canceled_status():
-                    # Task was canceled
-                    await self._handle_canceled_task(task_id)
+                elif record.is_cancelled_status():
+                    # Task was cancelled
+                    await self._handle_cancelled_task(task_id)
                 elif record.is_failed_status() or not record.task_is_alive():
                     # Task has failed
                     await self._handle_failed_task(task_id)
@@ -357,14 +357,14 @@ class TaskMonitor:
         except Exception as e:
             logger.error(f"Error handling failed task {task_id}: {e}")
 
-    async def _handle_canceled_task(self, task_id: str) -> None:
-        """Handle a task that was canceled."""
+    async def _handle_cancelled_task(self, task_id: str) -> None:
+        """Handle a task that was cancelled."""
         try:
             await self._update_task_status(task_id, TaskLifecycleStatus.CANCELLED)
             self.task_store.del_task(task_id)
-            logger.info(f"Handled canceled task: {task_id}")
+            logger.info(f"Handled cancelled task: {task_id}")
         except Exception as e:
-            logger.error(f"Error handling canceled task {task_id}: {e}")
+            logger.error(f"Error handling cancelled task {task_id}: {e}")
 
     async def _handle_completed_task(self, task_id: str) -> None:
         """Handle a task that completed successfully."""

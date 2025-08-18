@@ -46,15 +46,18 @@ class GetTasksResponse(BaseModel):
 
 
 class UpdateTaskStatusRequest(BaseModel):
-    """Request model for updating task status."""
-    status: str = Field(..., description="New task status (Created or Canceled)")
+    """Request model for updating task lifecycleStatus."""
+    lifecycle_status: str = Field(..., description="New task lifecycleStatus (Created or Cancelled)", alias="lifecycleStatus")
 
     def model_post_init(self, __context: Any) -> None:
-        """Validate that status is one of the allowed values."""
+        """Validate that lifecycleStatus is one of the allowed values."""
         allowed_statuses = [TaskLifecycleStatus.CREATED.value, TaskLifecycleStatus.CANCELLED.value]
-        if self.status not in allowed_statuses:
-            raise ValueError(f"Status must be one of: {allowed_statuses}")
+        if self.lifecycle_status not in allowed_statuses:
+            raise ValueError(f"LifecycleStatus must be one of: {allowed_statuses}")
 
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 class UpdateTaskAttachmentsRequest(BaseModel):
     """Request model for updating task attachments."""
@@ -90,7 +93,7 @@ class DashboardSummary(BaseModel):
     completedTasks: int = 0
     failedTasks: int = 0
     assigningTasks: int = 0
-    canceledTasks: int = 0
+    cancelledTasks: int = 0
     nodeSkalds: int = 0
     edgeSkalds: int = 0
 

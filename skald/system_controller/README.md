@@ -26,14 +26,14 @@ SystemController主要有以下元件：
         - 先從MongoDB中找出所有需要監聽心跳者，狀態為Assigning跟Running者，在逐一獲取心跳。
         - 每3秒會更新一次，拿到5次一樣心跳，視為任務中斷，需要將任務狀態改為Failed。
         - 若拿到 -1 則要將Task狀態改為 Failed
-        - 若拿到 -2 則要將Task狀態改為 Canceled
+        - 若拿到 -2 則要將Task狀態改為 Cancelled
         - 如果存在Store中，但不存在MongoDB中為Assigning跟Running者，直接透過kafka發送取消事件。
     - TaskWorker 錯誤，目前TaskWorker運行的錯誤訊息，不會中斷任務，方便從外部知道目前狀況用。
         - key為task:{TaskId}:has-error
     - TaskWorker 異常，導致TaskWorler中斷的例外訊息，Taskworker本身會直接讓任務中斷，並且心跳改為-1。
         - key為task:{TaskId}:exception
 3. Dispatcher: 分派需要的任務給適合的Skald執行，目前策略先以最少Task數量的Skald為優先。分派流成為，找尋適合Skald，將SkaldId更新到MongoDB Task的excutor中，並將Task的狀態改為Assigning，最後在透過kafka發布指派事件。
-    - 定時從MongoDB中抓取需要分配任務，需要分派判定：狀態非Running、Canceled、Assigning者
+    - 定時從MongoDB中抓取需要分配任務，需要分派判定：狀態非Running、Cancelled、Assigning者
     - 從Store中獲取所有可用Skald，找到能支援Task且最為空閒者分派任務
 4. Store：存放以上功能需要的資訊，並不會進入資料庫，目前可分為Skald跟Task的Store，
 

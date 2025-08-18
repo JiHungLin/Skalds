@@ -293,7 +293,7 @@ class TaskWorkerManager:
         for task_id in task_event.task_ids:
             if task_id in TaskWorkerStore.all_task_worker_task_id():
                 TaskWorkerStore.terminate_task_by_task_id(task_id)
-                logger.success(f"TaskWorker canceled. TaskId: {task_id}")
+                logger.success(f"TaskWorker cancelled. TaskId: {task_id}")
             else:
                 logger.warning(f"TaskId {task_id} does not exist.")
 

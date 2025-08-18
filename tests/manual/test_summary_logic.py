@@ -81,7 +81,7 @@ def test_summary_service_logic():
         "paused": 0,     # Not in mock data
         "completed": 5,
         "failed": 2,
-        "canceled": 1
+        "cancelled": 1
     }
     
     print("Expected counts:", expected_counts)
@@ -143,7 +143,7 @@ def test_summary_service_logic():
     required_fields = [
         "totalSkalds", "onlineSkalds", "nodeSkalds", "edgeSkalds",
         "totalTasks", "runningTasks", "assigningTasks", 
-        "failedTasks", "completedTasks", "canceledTasks"
+        "failedTasks", "completedTasks", "cancelledTasks"
     ]
     
     for field in required_fields:

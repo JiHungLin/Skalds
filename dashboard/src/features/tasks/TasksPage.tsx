@@ -278,7 +278,7 @@ export default function TasksPage() {
     'Paused',
     'Finished',
     'Failed',
-    'Canceled'
+    'Cancelled'
   ]
 
   // Add action column to the end
@@ -291,7 +291,12 @@ export default function TasksPage() {
         <button
           className="inline-flex items-center px-3 py-1 rounded bg-primary-500 text-white text-xs font-medium shadow hover:bg-primary-600 transition"
           style={{ minWidth: 70, minHeight: 28 }}
-          onClick={() => setSelectedTask(row)}
+          onClick={() => {
+            // Debug: log the row object
+            // eslint-disable-next-line no-console
+            console.log('Details button clicked, row:', row)
+            setSelectedTask(row)
+          }}
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0A9 9 0 11 3 12a9 9 0 0118 0z" />
@@ -380,6 +385,13 @@ export default function TasksPage() {
           onPageChange: setPage
         }}
       />
+    {selectedTask && (
+      <TaskDetailModal
+        task={selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onUpdated={() => setSelectedTask(null)}
+      />
+    )}
     </div>
   )
 }

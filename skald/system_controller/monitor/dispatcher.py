@@ -115,7 +115,7 @@ class Dispatcher:
         try:
             collection = self.mongo_proxy.db.tasks
             
-            # Find tasks that are not Running, Canceled, or Assigning
+            # Find tasks that are not Running, Cancelled, or Assigning
             excluded_statuses = [
                 TaskLifecycleStatus.RUNNING.value,
                 TaskLifecycleStatus.CANCELLED.value,

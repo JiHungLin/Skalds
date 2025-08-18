@@ -607,8 +607,8 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
                 signum = args[0]
                 if signum in (SIGINT, SIGTERM) and self._survive_handler:
                     self._survive_handler.stop_heartbeat_update()
-                    self._survive_handler.push_canceled_heartbeat()
-                    logger.info(f"Task Worker {self.task_id} was canceled by signal {signum}")
+                    self._survive_handler.push_cancelled_heartbeat()
+                    logger.info(f"Task Worker {self.task_id} was cancelled by signal {signum}")
         except Exception as exc:
             logger.error(
                 f"Task Worker {self.task_id}:{self.task_type} error handling signal: {exc}"

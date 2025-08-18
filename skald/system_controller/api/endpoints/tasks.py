@@ -192,14 +192,11 @@ async def update_task_status(
     task_repository: TaskRepository = Depends(get_task_repository)
 ):
     """
-    Update task status. Only allows changing to Created or Canceled.
+    Update task status. Only allows changing to Created or Cancelled.
     """
     try:
         if not task_repository:
             raise HTTPException(status_code=503, detail="Task repository not available")
-        
-        # Validate status
-        request.validate_status()
         
         # Check if task exists
         task = task_repository.get_task_by_task_id(task_id)
@@ -212,7 +209,7 @@ async def update_task_status(
             {"id": task_id},
             {
                 "$set": {
-                    "lifecycleStatus": request.status,
+                    "lifecycleStatus": request.lifecycle_status,
                     "updateDateTime": int(time.time() * 1000)
                 }
             }
@@ -220,12 +217,11 @@ async def update_task_status(
         
         if result.modified_count == 0:
             raise HTTPException(status_code=400, detail="Task status not updated")
-        
-        logger.info(f"Updated task {task_id} status to {request.status}")
-        
+
+        logger.info(f"Updated task {task_id} status to {request.lifecycle_status}")
         return SuccessResponse(
-            message=f"Task status updated to {request.status}",
-            data={"taskId": task_id, "status": request.status}
+            message=f"Task status updated to {request.lifecycle_status}",
+            data={"taskId": task_id, "status": request.lifecycle_status}
         )
         
     except HTTPException:
@@ -290,7 +286,7 @@ async def delete_task(
     task_repository: TaskRepository = Depends(get_task_repository)
 ):
     """
-    Delete a task (sets status to Canceled).
+    Delete a task (sets status to Cancelled).
     """
     try:
         if not task_repository:
@@ -301,7 +297,7 @@ async def delete_task(
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         
-        # Update task status to Canceled instead of actual deletion
+        # Update task status to Cancelled instead of actual deletion
         collection = task_repository.mongo_proxy.db.tasks
         result = collection.update_one(  # Remove await
             {"id": task_id},
@@ -314,12 +310,12 @@ async def delete_task(
         )
         
         if result.modified_count == 0:
-            raise HTTPException(status_code=400, detail="Task not canceled")
+            raise HTTPException(status_code=400, detail="Task not cancelled")
         
-        logger.info(f"Canceled task {task_id}")
+        logger.info(f"Cancelled task {task_id}")
         
         return SuccessResponse(
-            message="Task canceled successfully",
+            message="Task cancelled successfully",
             data={"taskId": task_id, "status": TaskLifecycleStatus.CANCELLED.value}
         )
         
