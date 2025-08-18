@@ -156,14 +156,25 @@ export default function TaskDetailModal({ task, onClose, onUpdated }: TaskDetail
     setError(null)
     setSuccess(null)
     try {
-      const updated = await apiClient.updateTaskStatus(task.id, { lifecycleStatus: newStatus })
-      setStatus(updated.lifecycleStatus)
-      setSuccess(`Status changed to ${updated.lifecycleStatus}`)
-      if (onUpdated) onUpdated(updated)
+      // API returns: { success, message, data: { taskId, status } }
+      // Accept any response type to avoid TS error from apiClient
+      const response = await apiClient.updateTaskStatus(task.id, { lifecycleStatus: newStatus }) as any;
+
+      // Merge updated status into the existing task object, cast status to TaskLifecycleStatus
+      const updatedTask = {
+        ...task,
+        id: response.data.taskId,
+        lifecycleStatus: response.data.status as TaskLifecycleStatus,
+        updateDateTime: new Date().toISOString(),
+      };
+
+      setStatus(response.data.status as TaskLifecycleStatus);
+      setSuccess(response.message || `Status changed to ${response.data.status}`);
+      if (onUpdated) onUpdated(updatedTask);
     } catch (e: any) {
-      setError(e.message || 'Failed to update status')
+      setError(e.message || 'Failed to update status');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -206,17 +217,33 @@ export default function TaskDetailModal({ task, onClose, onUpdated }: TaskDetail
             <h3 className="font-semibold text-sm mb-2">Change Status</h3>
             <div className="flex space-x-2">
               <button
-                className="px-3 py-1 rounded bg-yellow-400 text-white text-xs font-medium shadow hover:bg-yellow-500 transition"
+                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-base font-semibold shadow transition
+                  ${status === 'Cancelled' ? 'bg-yellow-200 text-yellow-600 cursor-not-allowed opacity-60' : 'bg-yellow-400 text-white hover:bg-yellow-500 scale-105 border-2 border-yellow-500'}
+                `}
                 onClick={() => handleChangeStatus('Cancelled')}
                 disabled={loading || status === 'Cancelled'}
                 type="button"
-              >Set Cancelled</button>
+                title={status === 'Cancelled' ? 'Already Cancelled' : 'Set status to Cancelled'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Set Cancelled
+              </button>
               <button
-                className="px-3 py-1 rounded bg-green-500 text-white text-xs font-medium shadow hover:bg-green-600 transition"
+                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-base font-semibold shadow transition
+                  ${status === 'Created' ? 'bg-green-200 text-green-600 cursor-not-allowed opacity-60' : 'bg-green-500 text-white hover:bg-green-600 scale-105 border-2 border-green-600'}
+                `}
                 onClick={() => handleChangeStatus('Created')}
                 disabled={loading || status === 'Created'}
                 type="button"
-              >Set Created</button>
+                title={status === 'Created' ? 'Already Created' : 'Set status to Created'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Set Created
+              </button>
             </div>
           </div>
           {error && <div className="text-xs text-red-600 mb-2">{error}</div>}

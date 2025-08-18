@@ -33,6 +33,12 @@ class SystemControllerConfig:
         redis_password: str = None,
         redis_sync_period: int = None,
         redis_key_ttl: int = None,
+        kafka_host: str = None,
+        kafka_port: int = None,
+        kafka_username: str = None,
+        kafka_password: str = None,
+        kafka_topic_partitions: int = None,
+        kafka_replication_factor: int = None,
         mongo_host: str = None,
         db_name: str = None,
         monitor_skald_interval: int = None,
@@ -64,6 +70,14 @@ class SystemControllerConfig:
         self.redis_password: str = redis_password if redis_password is not None else SystemConfig.REDIS_PASSWORD
         self.redis_sync_period: int = redis_sync_period if redis_sync_period is not None else SystemConfig.REDIS_SYNC_PERIOD
         self.redis_key_ttl: int = redis_key_ttl if redis_key_ttl is not None else SystemConfig.REDIS_KEY_TTL
+
+        # Kafka Config
+        self.kafka_host: str = kafka_host if kafka_host is not None else SystemConfig.KAFKA_HOST
+        self.kafka_port: int = kafka_port if kafka_port is not None else SystemConfig.KAFKA_PORT
+        self.kafka_username: str = kafka_username if kafka_username is not None else SystemConfig.KAFKA_USERNAME
+        self.kafka_password: str = kafka_password if kafka_password is not None else SystemConfig.KAFKA_PASSWORD
+        self.kafka_topic_partitions: int = kafka_topic_partitions if kafka_topic_partitions is not None else SystemConfig.KAFKA_TOPIC_PARTITIONS
+        self.kafka_replication_factor: int = kafka_replication_factor if kafka_replication_factor is not None else SystemConfig.KAFKA_REPLICATION_FACTOR
 
         # Mongo Config
         self.mongo_host: str = mongo_host if mongo_host is not None else SystemConfig.MONGO_HOST
@@ -97,6 +111,12 @@ class SystemControllerConfig:
             "redis_password": self.redis_password,
             "redis_sync_period": self.redis_sync_period,
             "redis_key_ttl": self.redis_key_ttl,
+            "kafka_host": self.kafka_host,
+            "kafka_port": self.kafka_port,
+            "kafka_username": self.kafka_username,
+            "kafka_password": self.kafka_password,
+            "kafka_topic_partitions": self.kafka_topic_partitions,
+            "kafka_replication_factor": self.kafka_replication_factor,
             "mongo_host": self.mongo_host,
             "db_name": self.db_name,
             "monitor_skald_interval": self.monitor_skald_interval,

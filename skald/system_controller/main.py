@@ -220,13 +220,13 @@ class SystemController:
         
         # Kafka proxy (needed for dispatcher mode)
         # Note: Kafka config not included in SystemControllerConfig as it's typically not needed
-        if (self.mode == SystemControllerModeEnum.DISPATCHER and
-            SystemConfig.KAFKA_HOST):
+        if (self.mode in [SystemControllerModeEnum.MONITOR, SystemControllerModeEnum.DISPATCHER] and
+            self.config.kafka_host):
             kafka_config = KafkaConfig(
-                host=SystemConfig.KAFKA_HOST,
-                port=SystemConfig.KAFKA_PORT,
-                username=SystemConfig.KAFKA_USERNAME,
-                password=SystemConfig.KAFKA_PASSWORD
+                host=self.config.kafka_host,
+                port=self.config.kafka_port,
+                username=self.config.kafka_username,
+                password=self.config.kafka_password
             )
             self.kafka_proxy = KafkaProxy(kafka_config, is_block=True)
             logger.info("Kafka proxy initialized")

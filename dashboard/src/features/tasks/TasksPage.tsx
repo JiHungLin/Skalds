@@ -16,6 +16,7 @@ export default function TasksPage() {
   const [typeFilter, setTypeFilter] = useState<string | undefined>()
   const [taskIdFilter, setTaskIdFilter] = useState<string>('')
   const [debouncedTaskId, setDebouncedTaskId] = useState<string>('')
+  const [optimisticTasks, setOptimisticTasks] = useState<{ [id: string]: Partial<Task> }>({})
   const pageSize = 10
 
   // Debounce Task ID filter
@@ -65,6 +66,11 @@ export default function TasksPage() {
     if (!tasks?.items) return []
     
     return tasks.items.map(task => {
+      // If there is an optimistic update for this task, use it
+      const optimistic = optimisticTasks[task.id]
+      if (optimistic) {
+        return { ...task, ...optimistic }
+      }
       const sseTask = sseTasks.get(task.id)
       if (sseTask) {
         // Merge API data with SSE updates, prioritizing SSE for real-time fields
@@ -77,11 +83,8 @@ export default function TasksPage() {
         }
       }
       return task
-    }, {
-      staleTime: 0,
-      cacheTime: 0,
     })
-  }, [tasks?.items, sseTasksVersion])
+  }, [tasks?.items, sseTasksVersion, optimisticTasks])
 
   // Subscribe to SSE events for all tasks
   useEffect(() => {
@@ -391,11 +394,22 @@ export default function TasksPage() {
         task={selectedTask}
         onClose={() => setSelectedTask(null)}
         onUpdated={updatedTask => {
+          console.log(updatedTask);
+          console.log('Task updated id:', updatedTask.id);
           if (updatedTask && updatedTask.id) {
-            // Update SSE context immediately
-            updateTask(updatedTask.id, updatedTask);
-            
-            // Update React Query cache directly with the new task data
+            // Optimistically update the task in the local state (do not rely on SSE)
+            setOptimisticTasks(prev => ({
+              ...prev,
+              [updatedTask.id]: {
+                ...prev[updatedTask.id],
+                ...updatedTask,
+                // Always update lifecycleStatus and updateDateTime
+                lifecycleStatus: updatedTask.lifecycleStatus,
+                updateDateTime: updatedTask.updateDateTime,
+              }
+            }));
+
+            // Optionally, still update React Query cache for consistency
             queryClient.setQueryData(['tasks', page, statusFilter, typeFilter, debouncedTaskId], (oldData: any) => {
               if (!oldData?.items) return oldData;
               
@@ -406,11 +420,11 @@ export default function TasksPage() {
                 )
               };
             });
-            
-            // Also invalidate to ensure eventual consistency when SSE updates arrive
-            setTimeout(() => {
-              queryClient.invalidateQueries({ queryKey: ['tasks'] });
-            }, 1000);
+
+            // Optionally, still update SSE context for other consumers
+            updateTask(updatedTask.id, updatedTask);
+
+            // (Removed: No longer invalidate queries to avoid extra GET /api/tasks)
           }
           setSelectedTask(null);
         }}

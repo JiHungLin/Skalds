@@ -145,7 +145,7 @@ async def get_task(
             raise HTTPException(status_code=503, detail="Task repository not available")
         
         # Get task from MongoDB
-        task = task_repository.get_task_by_task_id(task_id)
+        task = task_repository.get_task_by_task_id(task_id, strict_mode=False)
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         
@@ -199,7 +199,9 @@ async def update_task_status(
             raise HTTPException(status_code=503, detail="Task repository not available")
         
         # Check if task exists
-        task = task_repository.get_task_by_task_id(task_id)
+        task = task_repository.get_task_by_task_id(task_id, strict_mode=False)
+        print("*-*-*-*-*-")
+        print(task)
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         
@@ -247,7 +249,7 @@ async def update_task_attachments(
             raise HTTPException(status_code=503, detail="Task repository not available")
         
         # Check if task exists
-        task = task_repository.get_task_by_task_id(task_id)
+        task = task_repository.get_task_by_task_id(task_id, strict_mode=False)
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         
@@ -293,7 +295,7 @@ async def delete_task(
             raise HTTPException(status_code=503, detail="Task repository not available")
         
         # Check if task exists
-        task = task_repository.get_task_by_task_id(task_id)
+        task = task_repository.get_task_by_task_id(task_id, strict_mode=False)
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         

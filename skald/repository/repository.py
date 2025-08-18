@@ -31,7 +31,7 @@ class TaskRepository:
         self.mongo_proxy = mongo_proxy
         logger.info("TaskRepository initialized.")
 
-    def get_task_by_task_id(self, id: str) -> Optional[Task]:
+    def get_task_by_task_id(self, id: str, strict_mode: bool = True) -> Optional[Task]:
         """
         Retrieve a Task by its ID.
 
@@ -49,12 +49,18 @@ class TaskRepository:
             logger.info(f"Found task by id: {id}, task: {task}")
             class_name = task.get("className", None)
             attachments = task.get("attachments", None)
-            attachments = TaskWorkerFactory.create_attachment_with_class_name_and_dict(
-                class_name,
-                attachments
-            )
-            task["attachments"] = attachments
-            return Task.model_validate(task)
+            if strict_mode:
+                attachments = TaskWorkerFactory.create_attachment_with_class_name_and_dict(
+                    class_name,
+                    attachments
+                )
+                task["attachments"] = attachments
+                return Task.model_validate(task)
+            else:
+                task["attachments"] = None
+                return_data = Task.model_validate(task)
+                return_data.attachments = attachments
+                return return_data
         except pymongo.errors.ExecutionTimeout as e:
             logger.error(f"MongoDB execution timeout: {e}")
             raise TimeoutError(f"Timeout getting task by id: {id}")
