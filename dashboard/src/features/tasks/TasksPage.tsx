@@ -13,7 +13,7 @@ export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState<TaskLifecycleStatus | undefined>()
   const pageSize = 10
 
-  const { data: tasks, isLoading, error, refetch } = useQuery({
+  const { data: tasks, isLoading, error } = useQuery({
     queryKey: ['tasks', page, statusFilter],
     queryFn: () => apiClient.getTasks({
       page,

@@ -6,13 +6,6 @@ import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import './index.css'
 
-// Import SSE test utilities in development
-if (import.meta.env.DEV) {
-  import('./lib/sse/test').then(({ testSSEIntegration }) => {
-    console.log('🧪 SSE Test utilities loaded')
-    console.log('💡 Run window.testSSE.integration() to test SSE functionality')
-  })
-}
 
 // Create a client
 const queryClient = new QueryClient({

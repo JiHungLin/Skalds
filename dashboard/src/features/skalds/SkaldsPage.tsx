@@ -8,7 +8,7 @@ import { XCircleIcon, WifiIcon } from '@heroicons/react/24/outline'
 import { useSSE } from '../../contexts/SSEContext'
 
 export default function SkaldsPage() {
-  const { data: skalds, isLoading, error, refetch } = useQuery({
+  const { data: skalds, isLoading, error } = useQuery({
     queryKey: ['skalds'],
     queryFn: () => apiClient.getSkalds(),
     retry: 2,

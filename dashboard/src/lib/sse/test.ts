@@ -115,7 +115,7 @@ export function testSSEPerformance() {
   
   // Create 100 skald subscriptions
   for (let i = 0; i < 100; i++) {
-    const unsubscribe = sseManager.subscribeToSkald(`perf-skald-${i}`, (event) => {
+    const unsubscribe = sseManager.subscribeToSkald(`perf-skald-${i}`, (_event) => {
       // Minimal processing
     })
     subscriptions.push(unsubscribe)
@@ -123,7 +123,7 @@ export function testSSEPerformance() {
   
   // Create 100 task subscriptions
   for (let i = 0; i < 100; i++) {
-    const unsubscribe = sseManager.subscribeToTask(`perf-task-${i}`, (event) => {
+    const unsubscribe = sseManager.subscribeToTask(`perf-task-${i}`, (_event) => {
       // Minimal processing
     })
     subscriptions.push(unsubscribe)

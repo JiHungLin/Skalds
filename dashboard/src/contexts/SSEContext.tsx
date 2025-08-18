@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { sseManager } from '../lib/sse/manager'
 import { Skald, Task, SkaldEvent, TaskEvent } from '../types'
 
