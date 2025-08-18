@@ -7,19 +7,43 @@ import { Task, DataGridColumn, TaskLifecycleStatus } from '../../types'
 import { format } from 'date-fns'
 import { XCircleIcon, WifiIcon } from '@heroicons/react/24/outline'
 import { useSSE } from '../../contexts/SSEContext'
+import TaskDetailModal from './TaskDetailModal'
 
 export default function TasksPage() {
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<TaskLifecycleStatus | undefined>()
+  const [typeFilter, setTypeFilter] = useState<string | undefined>()
+  const [taskIdFilter, setTaskIdFilter] = useState<string>('')
+  const [debouncedTaskId, setDebouncedTaskId] = useState<string>('')
   const pageSize = 10
 
-  const { data: tasks, isLoading, error } = useQuery({
-    queryKey: ['tasks', page, statusFilter],
-    queryFn: () => apiClient.getTasks({
-      page,
-      pageSize,
-      lifecycleStatus: statusFilter
-    }),
+  // Debounce Task ID filter
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedTaskId(taskIdFilter)
+    }, 400)
+    return () => clearTimeout(handler)
+  }, [taskIdFilter])
+
+  // Fetch all available Task class names from backend
+  const { data: classNameOptions = [] } = useQuery({
+    queryKey: ['task-classnames'],
+    queryFn: () => apiClient.getTaskClassNames(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: tasks, isLoading, error } = useQuery<{ items: Task[]; total: number; page: number; pageSize: number }, Error>({
+    queryKey: ['tasks', page, statusFilter, typeFilter, debouncedTaskId],
+    queryFn: async () => {
+      // Use debounced value for TaskId filter
+      return apiClient.getTasks({
+        page,
+        pageSize,
+        lifecycleStatus: statusFilter,
+        className: typeFilter,
+        id: debouncedTaskId.trim() || undefined,
+      })
+    },
     retry: 2,
     retryDelay: 1000,
   })
@@ -52,6 +76,9 @@ export default function TasksPage() {
         }
       }
       return task
+    }, {
+      staleTime: 0,
+      cacheTime: 0,
     })
   }, [tasks?.items, sseTasksVersion])
 
@@ -235,6 +262,14 @@ export default function TasksPage() {
     }
   ]
 
+  // State for Task detail modal
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+
+  // Type guard for Task
+  function isTask(obj: any): obj is Task {
+    return obj && typeof obj === 'object' && typeof obj.id === 'string' && typeof obj.className === 'string'
+  }
+
   const statusOptions: (TaskLifecycleStatus | undefined)[] = [
     undefined,
     'Created',
@@ -243,8 +278,31 @@ export default function TasksPage() {
     'Paused',
     'Finished',
     'Failed',
-    'Cancelled'
+    'Canceled'
   ]
+
+  // Add action column to the end
+  columns.push({
+    key: 'actions' as any,
+    header: 'Actions',
+    sortable: false,
+    render: (_value, row) => (
+      isTask(row) ? (
+        <button
+          className="inline-flex items-center px-3 py-1 rounded bg-primary-500 text-white text-xs font-medium shadow hover:bg-primary-600 transition"
+          style={{ minWidth: 70, minHeight: 28 }}
+          onClick={() => setSelectedTask(row)}
+        >
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0A9 9 0 11 3 12a9 9 0 0118 0z" />
+          </svg>
+          Details
+        </button>
+      ) : (
+        <span className="text-xs text-gray-400">N/A</span>
+      )
+    ),
+  })
 
   return (
     <div className="space-y-6">
@@ -271,7 +329,32 @@ export default function TasksPage() {
               </span>
             )}
           </div>
-          
+
+          {/* TaskId Filter */}
+          <input
+            type="text"
+            value={taskIdFilter}
+            onChange={e => setTaskIdFilter(e.target.value)}
+            placeholder="Filter by Task ID"
+            className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm px-3 py-2"
+            style={{ paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+          />
+
+          {/* Task Type Filter */}
+          <select
+            value={typeFilter || ''}
+            onChange={e => setTypeFilter(e.target.value || undefined)}
+            className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          >
+            <option value="">All Types</option>
+            {classNameOptions.map(type => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+
+          {/* Status Filter */}
           <select
             value={statusFilter || ''}
             onChange={(e) => setStatusFilter(e.target.value as TaskLifecycleStatus || undefined)}

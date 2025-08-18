@@ -36,26 +36,29 @@ def get_task_repository() -> TaskRepository:
 async def get_tasks(
     page: int = Query(1, ge=1, description="Page number"),
     pageSize: int = Query(20, ge=1, le=100, description="Items per page"),
-    lifecycleStatus: Optional[str] = Query(None, description="Filter by lifecycle status"),
-    className: Optional[str] = Query(None, description="Filter by task type"),
+    lifecycleStatus: Optional[str] = Query(None, description="Filter by lifecycle status (partial match allowed)"),
+    className: Optional[str] = Query(None, description="Filter by task type (partial match allowed)"),
     executor: Optional[str] = Query(None, description="Filter by executor"),
+    id: Optional[str] = Query(None, description="Filter by Task ID (partial match allowed)"),
     task_repository: TaskRepository = Depends(get_task_repository)
 ):
     """
-    Get paginated list of tasks with optional filters.
+    Get paginated list of tasks with optional filters (supports partial match for id, className, lifecycleStatus).
     """
     try:
         if not task_repository:
             raise HTTPException(status_code=503, detail="Task repository not available")
         
-        # Build MongoDB query
+        # Build MongoDB query with partial match
         query = {}
         if lifecycleStatus:
-            query["lifecycleStatus"] = lifecycleStatus
+            query["lifecycleStatus"] = {"$regex": lifecycleStatus, "$options": "i"}
         if className:
-            query["className"] = className
+            query["className"] = {"$regex": className, "$options": "i"}
         if executor:
             query["executor"] = executor
+        if id:
+            query["id"] = {"$regex": id, "$options": "i"}
         
         # Calculate pagination
         skip = (page - 1) * pageSize
@@ -64,13 +67,13 @@ async def get_tasks(
         collection = task_repository.mongo_proxy.db.tasks
         
         # Get total count
-        total = collection.count_documents(query)  # Remove await
+        total = collection.count_documents(query)
 
         # Get paginated results
         cursor = collection.find(query).skip(skip).limit(pageSize).sort("createDateTime", -1)
         tasks = []
         
-        for doc in cursor:  # Use regular for loop instead of async for
+        for doc in cursor:
             task_response = TaskResponse(
                 id=doc["id"],
                 className=doc.get("className", ""),
@@ -80,7 +83,7 @@ async def get_tasks(
                 updateDateTime=doc.get("updateDateTime", 0),
                 attachments=doc.get("attachments", {}),
                 priority=doc.get("priority", 0),
-                heartbeat=0,  # Will be populated from TaskStore if available
+                heartbeat=0,
                 error=None,
                 exception=None
             )
@@ -92,7 +95,6 @@ async def get_tasks(
                 task_response.heartbeat = task_record.get_latest_heartbeat()
                 task_response.error = task_record.error_message
                 task_response.exception = task_record.exception_message
-                # Update status from real-time data if more current
                 realtime_status = task_record.get_status()
                 if realtime_status != task_response.lifecycleStatus:
                     task_response.lifecycleStatus = realtime_status
@@ -108,6 +110,26 @@ async def get_tasks(
         
     except Exception as e:
         logger.error(f"Error getting tasks: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/classnames", response_model=List[str])
+async def get_task_classnames(
+    task_repository: TaskRepository = Depends(get_task_repository)
+):
+    """
+    Get all unique Task class names in the system.
+    """
+    try:
+        if not task_repository:
+            raise HTTPException(status_code=503, detail="Task repository not available")
+        collection = task_repository.mongo_proxy.db.tasks
+        classnames = collection.distinct("className")
+        # Remove empty or null class names
+        classnames = [c for c in classnames if c]
+        return sorted(classnames)
+    except Exception as e:
+        logger.error(f"Error getting task classnames: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{task_id}", response_model=TaskResponse)

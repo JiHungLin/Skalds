@@ -195,7 +195,7 @@ class ApiClient {
   }
 
   // Task endpoints
-  async getTasks(params: GetTasksRequest): Promise<GetTasksResponse> {
+  async getTasks(params: GetTasksRequest & { id?: string }): Promise<GetTasksResponse> {
     const searchParams = new URLSearchParams({
       page: params.page.toString(),
       pageSize: params.pageSize.toString(),
@@ -210,8 +210,15 @@ class ApiClient {
     if (params.executor) {
       searchParams.append('executor', params.executor)
     }
+    if (params.id) {
+      searchParams.append('id', params.id)
+    }
     
     return this.fetchApi<GetTasksResponse>(`/api/tasks/?${searchParams.toString()}`)
+  }
+
+  async getTaskClassNames(): Promise<string[]> {
+    return this.fetchApi<string[]>('/api/tasks/classnames')
   }
 
   async getTask(id: string): Promise<Task> {
