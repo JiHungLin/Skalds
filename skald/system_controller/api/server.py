@@ -15,11 +15,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 
-from skald.system_controller.api.endpoints import (
-    tasks_router, skalds_router, events_router, system_router
-)
+# from skald.system_controller.api.endpoints import (
+#     tasks_router, skalds_router, events_router, system_router
+# )
+from skald.system_controller.api.endpoints.events import router as events_router
+from skald.system_controller.api.endpoints.skalds import router as skalds_router
+from skald.system_controller.api.endpoints.tasks import router as tasks_router
+from skald.system_controller.api.endpoints.system import router as system_router
 from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
+from skald.system_controller.main import SystemController
 
 
 def get_dashboard_static_path() -> str:
@@ -74,7 +79,8 @@ def create_app(
     Returns:
         Configured FastAPI application
     """
-    
+    print(SystemController._instance, "server.py")
+
     # Create FastAPI app with lifespan manager
     app = FastAPI(
         title=title,
@@ -144,6 +150,7 @@ def _add_routers(app: FastAPI, enable_dashboard: bool = True) -> None:
     
     # Include all API routers
     app.include_router(tasks_router)
+    print(SystemController._instance, "**********")
     app.include_router(skalds_router)
     app.include_router(events_router)
     app.include_router(system_router)

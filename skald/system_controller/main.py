@@ -104,7 +104,9 @@ class SystemController:
         self._is_shutting_down = False
         
         logger.info(f"SystemController initialized in {self.mode} mode")
+        print(f"SystemController initialized in {self.mode} mode")
         SystemController._instance = self
+        print(f"SystemController instance set: {self._instance is not None}")
 
     async def start(self) -> None:
         """
@@ -281,7 +283,7 @@ class SystemController:
             SystemControllerModeEnum.MONITOR,
             SystemControllerModeEnum.DISPATCHER
         ]
-        
+        print(SystemController._instance, "main.py")
         self.app = create_app(
             title=f"Skald SystemController ({self.mode.title()})",
             description=f"SystemController running in {self.mode} mode",
@@ -486,22 +488,6 @@ class SystemController:
             if startup_failed:
                 logger.error("SystemController failed to start, exiting process")
                 sys.exit(1)
-    
-# Convenience functions for running SystemController
-
-async def run_system_controller(config: SystemControllerConfig = None):
-    """
-    Run SystemController as the main application.
-    
-    Deprecated: Use SystemController(config).run() instead for consistency with Skald.
-    This function is kept for backward compatibility.
-    """
-    if config is None:
-        config = SystemControllerConfig()
-    
-    controller = SystemController(config)
-    controller.run()
-
 
 def main(config: SystemControllerConfig = None):
     """
@@ -525,5 +511,8 @@ def main(config: SystemControllerConfig = None):
 
 if __name__ == "__main__":
     # Create default config when running directly
-    default_config = SystemControllerConfig()
+    default_config = SystemControllerConfig(
+        system_controller_id="",
+        system_controller_mode=SystemControllerModeEnum.MONITOR,
+    )
     main(default_config)
