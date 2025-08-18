@@ -18,9 +18,11 @@ from contextlib import asynccontextmanager
 # from skald.system_controller.api.endpoints import (
 #     tasks_router, skalds_router, events_router, system_router
 # )
+from skald.proxy.kafka import KafkaProxy
+from skald.repository.repository import TaskRepository
 from skald.system_controller.api.endpoints.events import router as events_router
 from skald.system_controller.api.endpoints.skalds import router as skalds_router
-from skald.system_controller.api.endpoints.tasks import router as tasks_router
+from skald.system_controller.api.endpoints.tasks import router as tasks_router, TaskDependencies
 from skald.system_controller.api.endpoints.system import router as system_router
 from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
@@ -61,6 +63,8 @@ async def lifespan(app: FastAPI):
 
 
 def create_app(
+    task_repository: TaskRepository,
+    kafka_proxy: KafkaProxy = None,
     title: str = "Skald SystemController API",
     description: str = "REST API and Dashboard for Skald distributed task system",
     version: str = "1.0.0",
@@ -78,7 +82,8 @@ def create_app(
     Returns:
         Configured FastAPI application
     """
-
+    TaskDependencies.taskRepository = task_repository
+    TaskDependencies.kafkaProxy = kafka_proxy
     # Create FastAPI app with lifespan manager
     app = FastAPI(
         title=title,

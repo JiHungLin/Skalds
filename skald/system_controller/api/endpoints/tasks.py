@@ -25,6 +25,9 @@ from datetime import datetime
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
+class TaskDependencies:
+    taskRepository = None
+    kafkaProxy = None
 
 # Dependency to get TaskStore instance
 def get_task_store() -> TaskStore:
@@ -33,9 +36,7 @@ def get_task_store() -> TaskStore:
 # Dependency to get TaskRepository (would be injected in real implementation)
 def get_task_repository() -> TaskRepository:
     # This would be properly injected in the main application
-    from skald.system_controller.main import SystemController
-    return SystemController._instance.task_repository if SystemController._instance else None
-
+    return TaskDependencies.taskRepository
 
 @router.get("/", response_model=GetTasksResponse)
 async def get_tasks(
@@ -231,8 +232,7 @@ async def update_task_status(
         if request.lifecycle_status == TaskLifecycleStatus.CANCELLED:
             kafka_proxy = None
             try:
-                from skald.system_controller.main import SystemController
-                kafka_proxy = SystemController._instance.kafka_proxy if SystemController._instance else None
+                kafka_proxy = TaskDependencies.kafkaProxy
             except Exception as e:
                 logger.error(f"Failed to get KafkaProxy: {e}")
             if kafka_proxy:
@@ -304,8 +304,7 @@ async def update_task_attachments(
         # Send Kafka update attachment event
         kafka_proxy = None
         try:
-            from skald.system_controller.main import SystemController
-            kafka_proxy = SystemController._instance.kafka_proxy if SystemController._instance else None
+            kafka_proxy = TaskDependencies.kafkaProxy
         except Exception as e:
             logger.error(f"Failed to get KafkaProxy: {e}")
         if kafka_proxy:
@@ -373,8 +372,7 @@ async def delete_task(
         # Send Kafka cancel event
         kafka_proxy = None
         try:
-            from skald.system_controller.main import SystemController
-            kafka_proxy = SystemController._instance.kafka_proxy if SystemController._instance else None
+            kafka_proxy = TaskDependencies.kafkaProxy
         except Exception as e:
             logger.error(f"Failed to get KafkaProxy: {e}")
         if kafka_proxy:

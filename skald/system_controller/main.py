@@ -285,6 +285,8 @@ class SystemController:
         ]
         print(SystemController._instance, "main.py")
         self.app = create_app(
+            task_repository=self.task_repository,
+            kafka_proxy=self.kafka_proxy,
             title=f"Skald SystemController ({self.mode.title()})",
             description=f"SystemController running in {self.mode} mode",
             version="1.0.0",
