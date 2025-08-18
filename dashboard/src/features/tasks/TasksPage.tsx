@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api/client'
 import DataGrid from '../../components/ui/DataGrid'
 import StatusIndicator from '../../components/ui/StatusIndicator'
@@ -10,6 +10,7 @@ import { useSSE } from '../../contexts/SSEContext'
 import TaskDetailModal from './TaskDetailModal'
 
 export default function TasksPage() {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<TaskLifecycleStatus | undefined>()
   const [typeFilter, setTypeFilter] = useState<string | undefined>()
@@ -389,7 +390,30 @@ export default function TasksPage() {
       <TaskDetailModal
         task={selectedTask}
         onClose={() => setSelectedTask(null)}
-        onUpdated={() => setSelectedTask(null)}
+        onUpdated={updatedTask => {
+          if (updatedTask && updatedTask.id) {
+            // Update SSE context immediately
+            updateTask(updatedTask.id, updatedTask);
+            
+            // Update React Query cache directly with the new task data
+            queryClient.setQueryData(['tasks', page, statusFilter, typeFilter, debouncedTaskId], (oldData: any) => {
+              if (!oldData?.items) return oldData;
+              
+              return {
+                ...oldData,
+                items: oldData.items.map((task: Task) =>
+                  task.id === updatedTask.id ? { ...task, ...updatedTask } : task
+                )
+              };
+            });
+            
+            // Also invalidate to ensure eventual consistency when SSE updates arrive
+            setTimeout(() => {
+              queryClient.invalidateQueries({ queryKey: ['tasks'] });
+            }, 1000);
+          }
+          setSelectedTask(null);
+        }}
       />
     )}
     </div>

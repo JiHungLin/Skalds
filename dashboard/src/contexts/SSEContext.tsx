@@ -122,30 +122,35 @@ export function SSEProvider({ children }: SSEProviderProps) {
     const updates: Partial<Task> = {
       updateDateTime: new Date().toISOString()
     }
-
-    // Always update lifecycleStatus if present in event.data
-    if (event.data.lifecycleStatus !== undefined) {
-      updates.lifecycleStatus = event.data.lifecycleStatus
-    }
     
     switch (event.type) {
       case 'task_heartbeat':
+        // Extract heartbeat and lifecycleStatus from heartbeat events
         if (event.data.heartbeat !== undefined) {
           updates.heartbeat = event.data.heartbeat
+        }
+        if (event.data.lifecycleStatus !== undefined) {
+          updates.lifecycleStatus = event.data.lifecycleStatus
         }
         break
         
       case 'task_error':
+        // Extract error and lifecycleStatus from error events
         if (event.data.error) {
           updates.error = event.data.error
-          updates.lifecycleStatus = 'Failed'
+        }
+        if (event.data.lifecycleStatus !== undefined) {
+          updates.lifecycleStatus = event.data.lifecycleStatus
         }
         break
         
       case 'task_exception':
+        // Extract exception and lifecycleStatus from exception events
         if (event.data.exception) {
           updates.exception = event.data.exception
-          updates.lifecycleStatus = 'Failed'
+        }
+        if (event.data.lifecycleStatus !== undefined) {
+          updates.lifecycleStatus = event.data.lifecycleStatus
         }
         break
     }
@@ -199,9 +204,9 @@ export function SSEProvider({ children }: SSEProviderProps) {
     sseManager.connect()
 
     // Start mock events in development
-    if (import.meta.env.DEV) {
-      sseManager.startMockEvents()
-    }
+    // if (import.meta.env.DEV) {
+    //   sseManager.startMockEvents()
+    // }
 
     // Cleanup on unmount
     return () => {

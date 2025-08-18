@@ -142,6 +142,7 @@ class SSEManager {
       }
 
       this.taskEventSource.onmessage = (event) => {
+        console.log('Received Task event:', event)
         try {
           const taskEvent: TaskEvent = JSON.parse(event.data)
           this.handleTaskEvent(taskEvent)
