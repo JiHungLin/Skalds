@@ -85,7 +85,6 @@ export function SSEProvider({ children }: SSEProviderProps) {
 
   // Handle skald events
   const handleSkaldEvent = useCallback((event: SkaldEvent) => {
-    console.log('Received Skald event:', event)
     
     const updates: Partial<Skald> = {}
     
@@ -117,7 +116,6 @@ export function SSEProvider({ children }: SSEProviderProps) {
 
   // Handle task events
   const handleTaskEvent = useCallback((event: TaskEvent) => {
-    console.log('Received Task event:', event)
     
     const updates: Partial<Task> = {
       updateDateTime: new Date().toISOString()

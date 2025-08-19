@@ -21,6 +21,7 @@ Decorators:
     update_event_handler: Register a custom handler for update events with type T.
 """
 
+import json
 import multiprocessing as mp
 import sys
 import threading
@@ -442,7 +443,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
                 return
                 
             # Parse the update event
-            event_data = UpdateTaskWorkerEvent.model_validate_json(message.value.decode('utf-8'))
+            event_dic = json.loads(message.value.decode('utf-8'))
             
             # Call custom handler if registered
             custom_handler = getattr(self, "_custom_update_event", None)
@@ -450,11 +451,11 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
                 try:
                     # The custom handler expects data of type T, but we have UpdateTaskWorkerEvent
                     # The attachments field should contain the actual T-typed data
-                    if event_data.attachments is not None:
+                    if event_dic.get("attachments") is not None:
                         # Get the expected model type for validation
                         model_type = self.get_data_model()
                         # Validate the attachments data against the expected model type
-                        typed_data = model_type.model_validate(event_data.attachments)
+                        typed_data = model_type.model_validate(event_dic["attachments"])
                         custom_handler(typed_data)
                     else:
                         logger.warning("Update event has no attachments data")

@@ -330,7 +330,7 @@ class TaskWorkerManager:
             update_task_event = UpdateTaskWorkerEvent(attachments=task.attachments)
             if update_task_event is not None:
                 self.kafka_proxy.producer.send(
-                    KafkaTopic.TaskWorkerUpdate,
+                    KafkaTopic.TASK_WORKER_UPDATE,
                     value=update_task_event.model_dump_json().encode('utf-8'),
                     key=task.id
                 )

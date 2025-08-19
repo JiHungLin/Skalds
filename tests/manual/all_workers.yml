@@ -1,7 +1,7 @@
 TaskWorkers:
   TaskWorker1:
     attachments:
-      fix_frame: 30
+      fix_frame: 10
       rtsp_url: rtsp://192.168.1.1/camera1
     className: MyWorker
   TaskWorker2:

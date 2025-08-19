@@ -203,8 +203,6 @@ async def update_task_status(
         
         # Check if task exists
         task = task_repository.get_task_by_task_id(task_id, strict_mode=False)
-        print("*-*-*-*-*-")
-        print(task)
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         

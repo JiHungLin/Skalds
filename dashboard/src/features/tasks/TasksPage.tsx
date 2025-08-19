@@ -412,8 +412,7 @@ export default function TasksPage() {
         task={selectedTask}
         onClose={() => setSelectedTask(null)}
         onUpdated={updatedTask => {
-          console.log(updatedTask);
-          console.log('Task updated id:', updatedTask.id);
+          console.log("Task updated:", updatedTask);
           if (updatedTask && updatedTask.id) {
             // Optimistically update the task in the local state (do not rely on SSE)
             setOptimisticTasks(prev => ({
@@ -424,6 +423,7 @@ export default function TasksPage() {
                 // Always update lifecycleStatus and updateDateTime
                 lifecycleStatus: updatedTask.lifecycleStatus,
                 updateDateTime: updatedTask.updateDateTime,
+                attachments: updatedTask.attachments
               }
             }));
 
