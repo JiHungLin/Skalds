@@ -79,7 +79,8 @@ export default function TasksPage() {
           ...sseTask,
           // Keep original API data for fields that SSE doesn't update
           className: task.className,
-          createDateTime: task.createDateTime
+          createDateTime: task.createDateTime,
+          attachments: task.attachments
         }
       }
       return task
