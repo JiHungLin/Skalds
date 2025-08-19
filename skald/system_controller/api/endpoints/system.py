@@ -19,6 +19,8 @@ from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
 
 router = APIRouter(prefix="/api/system", tags=["system"])
+class SystemDependencies:
+    mongo_proxy = None
 
 # Dependencies
 def get_skald_store() -> SkaldStore:
@@ -29,15 +31,7 @@ def get_task_store() -> TaskStore:
 
 def get_mongo_proxy() -> Optional[MongoProxy]:
     """Get MongoDB proxy from SystemController instance."""
-    try:
-        from skald.system_controller.main import SystemController
-        system_controller = SystemController._instance if hasattr(SystemController, '_instance') else None
-        if system_controller and hasattr(system_controller, 'mongo_proxy'):
-            return system_controller.mongo_proxy
-        return None
-    except Exception as e:
-        logger.warning(f"Could not get MongoDB proxy: {e}")
-        return None
+    return SystemDependencies.mongo_proxy
 
 def get_summary_service(
     mongo_proxy: Optional[MongoProxy] = Depends(get_mongo_proxy),

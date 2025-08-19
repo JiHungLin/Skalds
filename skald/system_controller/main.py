@@ -55,10 +55,10 @@ class SystemController:
         
         # Initialize logger with config values
         init_logger(
-            logger_name=self.config.system_controller_id,
+            logger_name="SystemController",
             level=self.config.log_level,
             log_path=self.config.log_path,
-            process_id=self.config.system_controller_id,
+            process_id="SystemController",
             rotation=self.config.log_rotation_mb
         )
         
@@ -514,7 +514,7 @@ def main(config: SystemControllerConfig = None):
 if __name__ == "__main__":
     # Create default config when running directly
     default_config = SystemControllerConfig(
-        system_controller_id="",
         system_controller_mode=SystemControllerModeEnum.MONITOR,
+        log_path=""
     )
     main(default_config)

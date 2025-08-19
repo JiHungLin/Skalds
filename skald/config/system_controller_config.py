@@ -19,7 +19,6 @@ class SystemControllerConfig:
 
     def __init__(
         self,
-        system_controller_id: str = None,
         system_controller_mode: SystemControllerModeEnum = None,
         system_controller_host: str = None,
         system_controller_port: int = None,
@@ -52,7 +51,6 @@ class SystemControllerConfig:
         Variable names follow Python snake_case convention.
         """
         # General Config
-        self.system_controller_id: str = system_controller_id if system_controller_id is not None else "SystemController"
         self.system_controller_mode: SystemControllerModeEnum = system_controller_mode if system_controller_mode is not None else SystemConfig.SYSTEM_CONTROLLER_MODE
         self.system_controller_host: str = system_controller_host if system_controller_host is not None else SystemConfig.SYSTEM_CONTROLLER_HOST
         self.system_controller_port: int = system_controller_port if system_controller_port is not None else SystemConfig.SYSTEM_CONTROLLER_PORT
@@ -97,7 +95,6 @@ class SystemControllerConfig:
         Convert the configuration to a dictionary.
         """
         return {
-            "system_controller_id": self.system_controller_id,
             "system_controller_mode": self.system_controller_mode,
             "system_controller_host": self.system_controller_host,
             "system_controller_port": self.system_controller_port,

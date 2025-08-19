@@ -5,7 +5,6 @@ from skald.config.system_controller_config import SystemControllerConfig
 
 if __name__ == "__main__":
     default_config = SystemControllerConfig(
-            system_controller_id="",
             system_controller_mode=SystemControllerModeEnum.MONITOR,
             system_controller_host="0.0.0.0",
             system_controller_port=8000,

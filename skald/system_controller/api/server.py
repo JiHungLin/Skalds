@@ -23,7 +23,7 @@ from skald.repository.repository import TaskRepository
 from skald.system_controller.api.endpoints.events import router as events_router
 from skald.system_controller.api.endpoints.skalds import router as skalds_router
 from skald.system_controller.api.endpoints.tasks import router as tasks_router, TaskDependencies
-from skald.system_controller.api.endpoints.system import router as system_router
+from skald.system_controller.api.endpoints.system import router as system_router, SystemDependencies
 from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
 
@@ -84,6 +84,7 @@ def create_app(
     """
     TaskDependencies.taskRepository = task_repository
     TaskDependencies.kafkaProxy = kafka_proxy
+    SystemDependencies.mongo_proxy = task_repository.mongo_proxy
     # Create FastAPI app with lifespan manager
     app = FastAPI(
         title=title,
