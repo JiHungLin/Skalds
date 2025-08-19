@@ -240,13 +240,21 @@ class SystemController:
         logger.info(f"Initializing components for {self.mode} mode...")
         
         # Always initialize stores
-        from skald.system_controller.api.endpoints import system as system_endpoints
         self.skald_store = SkaldStore()
         self.task_store = TaskStore()
-        # Set shared instances for FastAPI dependencies
-        system_endpoints.shared_skald_store = self.skald_store
-        system_endpoints.shared_task_store = self.task_store
         
+        # Set shared instances for FastAPI dependencies
+        from skald.system_controller.api.endpoints.system import SystemDependencies
+        SystemDependencies.shared_skald_store = self.skald_store
+        SystemDependencies.shared_task_store = self.task_store
+        
+        from skald.system_controller.api.endpoints.skalds import SkaldDependencies
+        SkaldDependencies.shared_skald_store = self.skald_store
+
+        from skald.system_controller.api.endpoints.events import EventDependencies
+        EventDependencies.shared_skald_store = self.skald_store
+        EventDependencies.shared_task_store = self.task_store
+
         # Initialize monitoring components for monitor and dispatcher modes
         if self.mode in [SystemControllerModeEnum.MONITOR, SystemControllerModeEnum.DISPATCHER]:
             if not self.redis_proxy:
@@ -255,12 +263,14 @@ class SystemController:
             # Initialize SkaldMonitor
             self.skald_monitor = SkaldMonitor(
                 self.redis_proxy,
+                self.skald_store,
                 self.config.monitor_skald_interval
             )
             
             # Initialize TaskMonitor
             if self.mongo_proxy:
                 self.task_monitor = TaskMonitor(
+                    self.task_store,
                     self.redis_proxy,
                     self.mongo_proxy,
                     self.kafka_proxy,

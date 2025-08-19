@@ -17,12 +17,16 @@ from skald.utils.logging import logger
 
 router = APIRouter(prefix="/api/events", tags=["events"])
 
+class EventDependencies:
+    shared_skald_store: SkaldStore
+    shared_task_store: TaskStore
+
 # Dependencies
 def get_skald_store() -> SkaldStore:
-    return SkaldStore()
+    return EventDependencies.shared_skald_store
 
 def get_task_store() -> TaskStore:
-    return TaskStore()
+    return EventDependencies.shared_task_store
 
 
 class SSEManager:

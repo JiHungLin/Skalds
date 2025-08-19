@@ -21,17 +21,17 @@ from skald.utils.logging import logger
 router = APIRouter(prefix="/api/system", tags=["system"])
 class SystemDependencies:
     mongo_proxy = None
+    shared_skald_store: SkaldStore = None
+    shared_task_store: TaskStore = None
 
 # Dependencies
 # These will be set by the application at startup
-shared_skald_store: SkaldStore = None
-shared_task_store: TaskStore = None
 
 def get_skald_store() -> SkaldStore:
-    return shared_skald_store
+    return SystemDependencies.shared_skald_store
 
 def get_task_store() -> TaskStore:
-    return shared_task_store
+    return SystemDependencies.shared_task_store
 
 def get_mongo_proxy() -> Optional[MongoProxy]:
     """Get MongoDB proxy from SystemController instance."""

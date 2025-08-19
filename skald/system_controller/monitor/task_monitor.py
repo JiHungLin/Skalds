@@ -30,13 +30,13 @@ class TaskMonitor:
     - Task lifecycle status updates
     - Automatic task failure detection
     """
-    
-    def __init__(self, redis_proxy: RedisProxy, mongo_proxy: MongoProxy, kafka_proxy: KafkaProxy, duration: int = 3):
+
+    def __init__(self, task_store: TaskStore, redis_proxy: RedisProxy, mongo_proxy: MongoProxy, kafka_proxy: KafkaProxy, duration: int = 3):
         self.redis_proxy = redis_proxy
         self.mongo_proxy = mongo_proxy
         self.kafka_proxy = kafka_proxy
         self.duration = duration
-        self.task_store = TaskStore()
+        self.task_store = task_store
         self.task_repository = TaskRepository(mongo_proxy)
         
         self._running = False

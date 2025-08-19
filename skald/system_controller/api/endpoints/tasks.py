@@ -6,23 +6,19 @@ FastAPI endpoints for task management operations.
 
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, Query
-from fastapi.responses import JSONResponse
 from skald.system_controller.api.models import (
     TaskResponse, GetTasksRequest, GetTasksResponse,
     UpdateTaskStatusRequest, UpdateTaskAttachmentsRequest,
     ErrorResponse, SuccessResponse, PaginationParams
 )
-from skald.system_controller.store.task_store import TaskStore
 from skald.repository.repository import TaskRepository
 from skald.model.task import TaskLifecycleStatus
-from skald.proxy.mongo import MongoProxy
 from skald.utils.logging import logger
 import time
 import json
-from skald.proxy.kafka import KafkaProxy, KafkaTopic
+from skald.proxy.kafka import KafkaTopic
 from skald.model.event import TaskEvent
 from datetime import datetime
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 class TaskDependencies:
