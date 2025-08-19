@@ -86,6 +86,7 @@ async def get_tasks(
                 executor=doc.get("executor"),
                 createDateTime=doc.get("createDateTime", 0),
                 updateDateTime=doc.get("updateDateTime", 0),
+                mode=doc.get("mode", "Passive"),  # Default to "Passive" if not set
                 attachments=doc.get("attachments", {}),
                 priority=doc.get("priority", 0),
                 heartbeat=0,
@@ -162,6 +163,7 @@ async def get_task(
             executor=task.executor,
             createDateTime=task.create_date_time,
             updateDateTime=task.update_date_time,
+            mode=task.mode,
             attachments=task.attachments.model_dump() if task.attachments else {},
             priority=task.priority,
             heartbeat=0,

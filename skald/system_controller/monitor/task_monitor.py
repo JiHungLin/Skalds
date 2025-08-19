@@ -363,7 +363,10 @@ class TaskMonitor:
                 elif record.task_is_assigning():
                     logger.debug(f"Task is still assigning: {task_id}")
                     # Task is still assigning
-                    await self._update_task_status(task_id, TaskLifecycleStatus.ASSIGNING)
+                    if record.mode == ModeEnum.PASSIVE:
+                        await self._update_task_status(task_id, TaskLifecycleStatus.ASSIGNING)
+                    elif record.mode == ModeEnum.ACTIVE:
+                        await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
                 else:
                     logger.debug(f"There are no errors, task is alive, task should be running: {task_id}")
                     await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)

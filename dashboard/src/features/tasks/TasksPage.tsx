@@ -189,6 +189,20 @@ export default function TasksPage() {
       )
     },
     {
+      key: 'mode',
+      header: 'Mode',
+      sortable: true,
+      render: (value) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          value === 'Active'
+            ? 'bg-green-100 text-green-800'
+            : 'bg-blue-100 text-blue-800'
+        }`}>
+          {value}
+        </span>
+      )
+    },
+    {
       key: 'lifecycleStatus',
       header: 'Status',
       sortable: true,
@@ -314,7 +328,7 @@ export default function TasksPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
@@ -323,9 +337,9 @@ export default function TasksPage() {
           </p>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 flex-nowrap">
           {/* SSE Connection Status */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-shrink-0 min-w-max">
             <WifiIcon
               className={`h-5 w-5 ${isConnected ? 'text-green-500' : 'text-red-500'}`}
             />
@@ -339,42 +353,45 @@ export default function TasksPage() {
             )}
           </div>
 
-          {/* TaskId Filter */}
-          <input
-            type="text"
-            value={taskIdFilter}
-            onChange={e => setTaskIdFilter(e.target.value)}
-            placeholder="Filter by Task ID"
-            className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm px-3 py-2"
-            style={{ paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
-          />
+          {/* Filter Controls */}
+          <div className="flex flex-1 items-center space-x-2">
+            {/* TaskId Filter */}
+            <input
+              type="text"
+              value={taskIdFilter}
+              onChange={e => setTaskIdFilter(e.target.value)}
+              placeholder="Filter by Task ID"
+              className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm px-3 py-2 w-full"
+              style={{ paddingLeft: '0.75rem', paddingRight: '0.75rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+            />
 
-          {/* Task Type Filter */}
-          <select
-            value={typeFilter || ''}
-            onChange={e => setTypeFilter(e.target.value || undefined)}
-            className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-          >
-            <option value="">All Types</option>
-            {classNameOptions.map(type => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
+            {/* Task Type Filter */}
+            <select
+              value={typeFilter || ''}
+              onChange={e => setTypeFilter(e.target.value || undefined)}
+              className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm w-full"
+            >
+              <option value="">All Types</option>
+              {classNameOptions.map(type => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
 
-          {/* Status Filter */}
-          <select
-            value={statusFilter || ''}
-            onChange={(e) => setStatusFilter(e.target.value as TaskLifecycleStatus || undefined)}
-            className="block w-40 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-          >
-            {statusOptions.map((status) => (
-              <option key={status || 'all'} value={status || ''}>
-                {status || 'All Status'}
-              </option>
-            ))}
-          </select>
+            {/* Status Filter */}
+            <select
+              value={statusFilter || ''}
+              onChange={(e) => setStatusFilter(e.target.value as TaskLifecycleStatus || undefined)}
+              className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm w-full"
+            >
+              {statusOptions.map((status) => (
+                <option key={status || 'all'} value={status || ''}>
+                  {status || 'All Status'}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

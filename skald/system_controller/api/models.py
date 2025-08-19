@@ -21,6 +21,7 @@ class TaskResponse(BaseModel):
     executor: Optional[str] = None
     createDateTime: int = Field(alias="createDateTime")
     updateDateTime: int = Field(alias="updateDateTime")
+    mode: str = Field(..., description="Task mode (e.g., 'Active', 'Passive')")
     attachments: Dict[str, Any] = {}
     heartbeat: int = 0
     error: Optional[str] = None
