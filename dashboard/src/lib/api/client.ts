@@ -40,6 +40,7 @@ const mockSkalds: Skald[] = [
 const mockTasks: Task[] = [
   {
     id: 'task-001',
+    mode: 'Active',
     className: 'data_processing',
     lifecycleStatus: 'Running',
     executor: 'skald-node-001',
@@ -52,6 +53,7 @@ const mockTasks: Task[] = [
   },
   {
     id: 'task-002',
+    mode: 'Active',
     className: 'ml_training',
     lifecycleStatus: 'Running',
     executor: 'skald-node-002',
@@ -64,6 +66,7 @@ const mockTasks: Task[] = [
   },
   {
     id: 'task-003',
+    mode: 'Active',
     className: 'file_conversion',
     lifecycleStatus: 'Finished',
     executor: 'skald-node-001',
@@ -76,6 +79,7 @@ const mockTasks: Task[] = [
   },
   {
     id: 'task-004',
+    mode: 'Active',
     className: 'data_processing',
     lifecycleStatus: 'Failed',
     executor: 'skald-node-002',
@@ -88,6 +92,7 @@ const mockTasks: Task[] = [
   },
   {
     id: 'task-005',
+    mode: 'Active',
     className: 'image_processing',
     lifecycleStatus: 'Created',
     executor: undefined,

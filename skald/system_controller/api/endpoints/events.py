@@ -135,7 +135,7 @@ async def generate_skald_events(
                         del previous_state[old_skald_id]
                 
                 # Wait before next check
-                await asyncio.sleep(2)
+                await asyncio.sleep(5)
                 
             except Exception as e:
                 logger.error(f"Error in Skald SSE generation: {e}")
@@ -231,7 +231,7 @@ async def generate_task_events(
                         del previous_state[old_task_id]
                 
                 # Wait before next check
-                await asyncio.sleep(1)
+                await asyncio.sleep(5)
                 
             except Exception as e:
                 logger.error(f"Error in Task SSE generation: {e}")

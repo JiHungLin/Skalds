@@ -5,7 +5,7 @@ Provides comprehensive task and system summary statistics by combining
 in-memory TaskStore data with historical MongoDB data.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 from skald.proxy.mongo import MongoProxy
 from skald.system_controller.store.task_store import TaskStore
 from skald.system_controller.store.skald_store import SkaldStore
@@ -23,10 +23,9 @@ class SummaryService:
     
     def __init__(self, mongo_proxy: MongoProxy, task_store: TaskStore, skald_store: SkaldStore):
         # Always use the shared instances for stores
-        from skald.system_controller.api.endpoints import system as system_endpoints
         self.mongo_proxy = mongo_proxy
-        self.task_store = system_endpoints.shared_task_store if system_endpoints.shared_task_store else task_store
-        self.skald_store = system_endpoints.shared_skald_store if system_endpoints.shared_skald_store else skald_store
+        self.task_store = task_store
+        self.skald_store = skald_store
         logger.info("SummaryService initialized")
     
     def get_task_summary(self) -> Dict:
