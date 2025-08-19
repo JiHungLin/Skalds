@@ -17,12 +17,16 @@ from skald.utils.logging import logger
 
 router = APIRouter(prefix="/api/events", tags=["events"])
 
+class EventDependencies:
+    shared_skald_store: SkaldStore
+    shared_task_store: TaskStore
+
 # Dependencies
 def get_skald_store() -> SkaldStore:
-    return SkaldStore()
+    return EventDependencies.shared_skald_store
 
 def get_task_store() -> TaskStore:
-    return TaskStore()
+    return EventDependencies.shared_task_store
 
 
 class SSEManager:
@@ -131,7 +135,7 @@ async def generate_skald_events(
                         del previous_state[old_skald_id]
                 
                 # Wait before next check
-                await asyncio.sleep(2)
+                await asyncio.sleep(5)
                 
             except Exception as e:
                 logger.error(f"Error in Skald SSE generation: {e}")
@@ -227,7 +231,7 @@ async def generate_task_events(
                         del previous_state[old_task_id]
                 
                 # Wait before next check
-                await asyncio.sleep(1)
+                await asyncio.sleep(5)
                 
             except Exception as e:
                 logger.error(f"Error in Task SSE generation: {e}")

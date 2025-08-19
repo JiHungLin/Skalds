@@ -14,12 +14,14 @@ from skald.system_controller.api.models import (
 from skald.system_controller.store.skald_store import SkaldStore
 from skald.utils.logging import logger
 
-router = APIRouter(prefix="/api/skalds", tags=["skalds"])
 
-# Dependency to get SkaldStore instance
+class SkaldDependencies:
+    shared_skald_store: SkaldStore = None
+
 def get_skald_store() -> SkaldStore:
-    return SkaldStore()
+    return SkaldDependencies.shared_skald_store
 
+router = APIRouter(prefix="/api/skalds", tags=["skalds"])
 
 @router.get("/", response_model=GetSkaldsResponse)
 async def get_skalds(

@@ -40,7 +40,7 @@ async def test_task_monitor_initialization():
         # Test the initialization method directly
         print("\n--- Testing initialization method ---")
         await task_monitor._initialize_task_sync(page_size=10)
-        print("✓ Initialization method completed successfully")
+        print("✓ Initialization method finished successfully")
         
         # Test heartbeat mapping
         print("\n--- Testing heartbeat mapping ---")
@@ -66,7 +66,7 @@ async def test_task_monitor_initialization():
         print(f"✓ Page 0: {len(tasks_page_0)} tasks")
         print(f"✓ Page 1: {len(tasks_page_1)} tasks")
         
-        print("\n=== Test completed successfully ===")
+        print("\n=== Test finished successfully ===")
         
     except Exception as e:
         print(f"✗ Test failed with error: {e}")

@@ -19,25 +19,23 @@ from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
 
 router = APIRouter(prefix="/api/system", tags=["system"])
+class SystemDependencies:
+    mongo_proxy = None
+    shared_skald_store: SkaldStore = None
+    shared_task_store: TaskStore = None
 
 # Dependencies
+# These will be set by the application at startup
+
 def get_skald_store() -> SkaldStore:
-    return SkaldStore()
+    return SystemDependencies.shared_skald_store
 
 def get_task_store() -> TaskStore:
-    return TaskStore()
+    return SystemDependencies.shared_task_store
 
 def get_mongo_proxy() -> Optional[MongoProxy]:
     """Get MongoDB proxy from SystemController instance."""
-    try:
-        from skald.system_controller.main import SystemController
-        system_controller = SystemController._instance if hasattr(SystemController, '_instance') else None
-        if system_controller and hasattr(system_controller, 'mongo_proxy'):
-            return system_controller.mongo_proxy
-        return None
-    except Exception as e:
-        logger.warning(f"Could not get MongoDB proxy: {e}")
-        return None
+    return SystemDependencies.mongo_proxy
 
 def get_summary_service(
     mongo_proxy: Optional[MongoProxy] = Depends(get_mongo_proxy),
@@ -185,7 +183,7 @@ async def get_dashboard_summary(
                 onlineSkalds=summary["onlineSkalds"],
                 totalTasks=summary["totalTasks"],
                 runningTasks=summary["runningTasks"],
-                completedTasks=summary["completedTasks"],
+                finishedTasks=summary["finishedTasks"],
                 failedTasks=summary["failedTasks"],
                 assigningTasks=summary["assigningTasks"],
                 cancelledTasks=summary["cancelledTasks"],
@@ -203,7 +201,7 @@ async def get_dashboard_summary(
                 onlineSkalds=skald_summary["onlineSkalds"],
                 totalTasks=task_summary["totalTasks"],
                 runningTasks=task_summary["runningTasks"],
-                completedTasks=0,  # Cannot get from store
+                finishedTasks=0,  # Cannot get from store
                 failedTasks=0,     # Cannot get from store
                 assigningTasks=task_summary["assigningTasks"],
                 cancelledTasks=0,   # Cannot get from store
@@ -268,7 +266,7 @@ async def get_system_metrics(
                 "monitored": len(task_store.get_all_tasks()),  # Currently monitored
                 "running": task_summary["runningTasks"],
                 "failed": task_summary["failedTasks"],
-                "completed": task_summary["completedTasks"],
+                "finished": task_summary["finishedTasks"],
                 "cancelled": task_summary["cancelledTasks"],
                 "assigning": task_summary["assigningTasks"],
                 "total": task_summary["totalTasks"]
@@ -282,7 +280,7 @@ async def get_system_metrics(
                 "monitored": len(all_tasks),
                 "running": len(running_tasks),
                 "failed": len(failed_tasks),
-                "completed": 0,  # Cannot get from store
+                "finished": 0,  # Cannot get from store
                 "cancelled": 0,   # Cannot get from store
                 "assigning": len(task_store.get_assigning_tasks()),
                 "total": len(all_tasks)  # Only currently monitored
@@ -340,10 +338,10 @@ async def cleanup_system(
         # Cleanup old task records
         task_store.cleanup_old_records()
         
-        logger.info("System cleanup completed")
+        logger.info("System cleanup finished")
         
         return SuccessResponse(
-            message="System cleanup completed successfully",
+            message="System cleanup finished successfully",
             data={
                 "timestamp": int(time.time() * 1000),
                 "operations": ["task_store_cleanup"]

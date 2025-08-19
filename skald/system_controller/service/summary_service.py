@@ -5,7 +5,7 @@ Provides comprehensive task and system summary statistics by combining
 in-memory TaskStore data with historical MongoDB data.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 from skald.proxy.mongo import MongoProxy
 from skald.system_controller.store.task_store import TaskStore
 from skald.system_controller.store.skald_store import SkaldStore
@@ -22,6 +22,7 @@ class SummaryService:
     """
     
     def __init__(self, mongo_proxy: MongoProxy, task_store: TaskStore, skald_store: SkaldStore):
+        # Always use the shared instances for stores
         self.mongo_proxy = mongo_proxy
         self.task_store = task_store
         self.skald_store = skald_store
@@ -47,7 +48,7 @@ class SummaryService:
                 "runningTasks": store_summary["runningTasks"],
                 "assigningTasks": store_summary["assigningTasks"],
                 "failedTasks": mongo_counts["failed"],
-                "completedTasks": mongo_counts["completed"],
+                "finishedTasks": mongo_counts["finished"],
                 "cancelledTasks": mongo_counts["cancelled"],
                 "createdTasks": mongo_counts["created"],
                 "pausedTasks": mongo_counts["paused"]
@@ -84,7 +85,7 @@ class SummaryService:
                 "runningTasks": task_summary["runningTasks"],
                 "assigningTasks": task_summary["assigningTasks"],
                 "failedTasks": task_summary["failedTasks"],
-                "completedTasks": task_summary["completedTasks"],
+                "finishedTasks": task_summary["finishedTasks"],
                 "cancelledTasks": task_summary["cancelledTasks"],
                 "createdTasks": task_summary["createdTasks"],
                 "pausedTasks": task_summary["pausedTasks"]
@@ -123,7 +124,7 @@ class SummaryService:
                 "assigning": 0,
                 "running": 0,
                 "paused": 0,
-                "completed": 0,
+                "finished": 0,
                 "failed": 0,
                 "cancelled": 0
             }
@@ -134,7 +135,7 @@ class SummaryService:
                 TaskLifecycleStatus.ASSIGNING.value: "assigning",
                 TaskLifecycleStatus.RUNNING.value: "running",
                 TaskLifecycleStatus.PAUSED.value: "paused",
-                TaskLifecycleStatus.FINISHED.value: "completed",
+                TaskLifecycleStatus.FINISHED.value: "finished",
                 TaskLifecycleStatus.FAILED.value: "failed",
                 TaskLifecycleStatus.CANCELLED.value: "cancelled"
             }
@@ -160,7 +161,7 @@ class SummaryService:
                 "assigning": 0,
                 "running": 0,
                 "paused": 0,
-                "completed": 0,
+                "finished": 0,
                 "failed": 0,
                 "cancelled": 0
             }
@@ -185,7 +186,7 @@ class SummaryService:
                 "assigning": "Assigning", 
                 "running": "Running",
                 "paused": "Paused",
-                "completed": "Completed",
+                "finished": "Finished",
                 "failed": "Failed",
                 "cancelled": "Cancelled"
             }
@@ -231,8 +232,8 @@ class SummaryService:
                 "updateDateTime": {"$gte": cutoff_time}
             })
             
-            # Count completed tasks in the time period
-            completed_count = collection.count_documents({
+            # Count finished tasks in the time period
+            finished_count = collection.count_documents({
                 "lifecycleStatus": TaskLifecycleStatus.FINISHED.value,
                 "updateDateTime": {"$gte": cutoff_time}
             })
@@ -247,9 +248,9 @@ class SummaryService:
                 "timeframe": f"Last {hours} hours",
                 "tasksCreated": created_count,
                 "tasksUpdated": updated_count,
-                "tasksCompleted": completed_count,
+                "tasksFinished": finished_count,
                 "tasksFailed": failed_count,
-                "successRate": round((completed_count / max(completed_count + failed_count, 1)) * 100, 2)
+                "successRate": round((finished_count / max(finished_count + failed_count, 1)) * 100, 2)
             }
             
         except Exception as e:
@@ -258,7 +259,7 @@ class SummaryService:
                 "timeframe": f"Last {hours} hours",
                 "tasksCreated": 0,
                 "tasksUpdated": 0,
-                "tasksCompleted": 0,
+                "tasksFinished": 0,
                 "tasksFailed": 0,
                 "successRate": 0.0
             }

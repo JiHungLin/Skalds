@@ -28,20 +28,20 @@ class SkaldMonitor:
     
     _instance = None
     _lock = threading.RLock()
-    
-    def __new__(cls, redis_proxy: RedisProxy, duration: int = 5):
+
+    def __new__(cls, redis_proxy: RedisProxy, skald_store: SkaldStore, duration: int = 5):
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
                     cls._instance = super().__new__(cls)
                     cls._instance._initialized = False
         return cls._instance
-    
-    def __init__(self, redis_proxy: RedisProxy, duration: int = 5):
+
+    def __init__(self, redis_proxy: RedisProxy, skald_store: SkaldStore, duration: int = 5):
         if not getattr(self, '_initialized', False):
             self.redis_proxy = redis_proxy
             self.duration = duration
-            self.skald_store = SkaldStore()
+            self.skald_store = skald_store
             self._running = False
             self._thread: Optional[threading.Thread] = None
             self._initialized = True

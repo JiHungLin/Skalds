@@ -55,10 +55,10 @@ class SystemController:
         
         # Initialize logger with config values
         init_logger(
-            logger_name=self.config.system_controller_id,
+            logger_name="SystemController",
             level=self.config.log_level,
             log_path=self.config.log_path,
-            process_id=self.config.system_controller_id,
+            process_id="SystemController",
             rotation=self.config.log_rotation_mb
         )
         
@@ -104,7 +104,9 @@ class SystemController:
         self._is_shutting_down = False
         
         logger.info(f"SystemController initialized in {self.mode} mode")
+        print(f"SystemController initialized in {self.mode} mode")
         SystemController._instance = self
+        print(f"SystemController instance set: {self._instance is not None}")
 
     async def start(self) -> None:
         """
@@ -241,6 +243,18 @@ class SystemController:
         self.skald_store = SkaldStore()
         self.task_store = TaskStore()
         
+        # Set shared instances for FastAPI dependencies
+        from skald.system_controller.api.endpoints.system import SystemDependencies
+        SystemDependencies.shared_skald_store = self.skald_store
+        SystemDependencies.shared_task_store = self.task_store
+        
+        from skald.system_controller.api.endpoints.skalds import SkaldDependencies
+        SkaldDependencies.shared_skald_store = self.skald_store
+
+        from skald.system_controller.api.endpoints.events import EventDependencies
+        EventDependencies.shared_skald_store = self.skald_store
+        EventDependencies.shared_task_store = self.task_store
+
         # Initialize monitoring components for monitor and dispatcher modes
         if self.mode in [SystemControllerModeEnum.MONITOR, SystemControllerModeEnum.DISPATCHER]:
             if not self.redis_proxy:
@@ -249,12 +263,14 @@ class SystemController:
             # Initialize SkaldMonitor
             self.skald_monitor = SkaldMonitor(
                 self.redis_proxy,
+                self.skald_store,
                 self.config.monitor_skald_interval
             )
             
             # Initialize TaskMonitor
             if self.mongo_proxy:
                 self.task_monitor = TaskMonitor(
+                    self.task_store,
                     self.redis_proxy,
                     self.mongo_proxy,
                     self.kafka_proxy,
@@ -281,8 +297,10 @@ class SystemController:
             SystemControllerModeEnum.MONITOR,
             SystemControllerModeEnum.DISPATCHER
         ]
-        
+        print(SystemController._instance, "main.py")
         self.app = create_app(
+            task_repository=self.task_repository,
+            kafka_proxy=self.kafka_proxy,
             title=f"Skald SystemController ({self.mode.title()})",
             description=f"SystemController running in {self.mode} mode",
             version="1.0.0",
@@ -415,7 +433,7 @@ class SystemController:
         except Exception as e:
             logger.error(f"Error during graceful shutdown: {e}")
         
-        logger.info("Graceful shutdown completed")
+        logger.info("Graceful shutdown finished")
 
     async def _run_async(self):
         """Async run main program"""
@@ -486,22 +504,6 @@ class SystemController:
             if startup_failed:
                 logger.error("SystemController failed to start, exiting process")
                 sys.exit(1)
-    
-# Convenience functions for running SystemController
-
-async def run_system_controller(config: SystemControllerConfig = None):
-    """
-    Run SystemController as the main application.
-    
-    Deprecated: Use SystemController(config).run() instead for consistency with Skald.
-    This function is kept for backward compatibility.
-    """
-    if config is None:
-        config = SystemControllerConfig()
-    
-    controller = SystemController(config)
-    controller.run()
-
 
 def main(config: SystemControllerConfig = None):
     """
@@ -525,5 +527,8 @@ def main(config: SystemControllerConfig = None):
 
 if __name__ == "__main__":
     # Create default config when running directly
-    default_config = SystemControllerConfig()
+    default_config = SystemControllerConfig(
+        system_controller_mode=SystemControllerModeEnum.MONITOR,
+        log_path=""
+    )
     main(default_config)

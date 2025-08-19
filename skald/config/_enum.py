@@ -19,9 +19,9 @@ class SkaldModeEnum(str, Enum):
 
 class SystemControllerModeEnum(str, Enum):
     """Enumeration for SystemController operational modes."""
-    CONTROLLER = "controller"      # API only
-    MONITOR = "monitor"           # API + monitoring + dashboard
-    DISPATCHER = "dispatcher"     # Full system (API + monitoring + dispatching)
+    CONTROLLER = "CONTROLLER"      # API only
+    MONITOR = "MONITOR"           # API + monitoring + dashboard
+    DISPATCHER = "DISPATCHER"     # Full system (API + monitoring + dispatching)
 
     @classmethod
     def list(cls) -> list[str]:

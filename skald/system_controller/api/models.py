@@ -21,6 +21,7 @@ class TaskResponse(BaseModel):
     executor: Optional[str] = None
     createDateTime: int = Field(alias="createDateTime")
     updateDateTime: int = Field(alias="updateDateTime")
+    mode: str = Field(..., description="Task mode (e.g., 'Active', 'Passive')")
     attachments: Dict[str, Any] = {}
     heartbeat: int = 0
     error: Optional[str] = None
@@ -90,7 +91,7 @@ class DashboardSummary(BaseModel):
     onlineSkalds: int = 0
     totalTasks: int = 0
     runningTasks: int = 0
-    completedTasks: int = 0
+    finishedTasks: int = 0
     failedTasks: int = 0
     assigningTasks: int = 0
     cancelledTasks: int = 0
@@ -174,7 +175,7 @@ class PaginationParams(BaseModel):
 class SuccessResponse(BaseModel):
     """Generic success response."""
     success: bool = True
-    message: str = "Operation completed successfully"
+    message: str = "Operation finished successfully"
     data: Optional[Dict[str, Any]] = None
 
 

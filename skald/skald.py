@@ -150,7 +150,7 @@ class Skald:
         except Exception as e:
             logger.error(f"Error during resource cleanup: {e}")
         
-        logger.info("Resource cleanup completed")
+        logger.info("Resource cleanup finished")
 
     async def _run_async(self):
         """Async run main program"""

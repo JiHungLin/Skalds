@@ -14,7 +14,7 @@ from skald.proxy.redis import RedisProxy, RedisKey
 from skald.proxy.mongo import MongoProxy
 from skald.proxy.kafka import KafkaProxy
 from skald.system_controller.store.task_store import TaskStore
-from skald.model.task import TaskLifecycleStatus
+from skald.model.task import ModeEnum, TaskLifecycleStatus
 from skald.repository.repository import TaskRepository
 from skald.config.systemconfig import SystemConfig
 from skald.utils.logging import logger
@@ -30,32 +30,19 @@ class TaskMonitor:
     - Task lifecycle status updates
     - Automatic task failure detection
     """
-    
-    _instance = None
-    _lock = threading.RLock()
-    
-    def __new__(cls, redis_proxy: RedisProxy, mongo_proxy: MongoProxy, kafka_proxy: KafkaProxy, duration: int = 3):
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = super().__new__(cls)
-                    cls._instance._initialized = False
-        return cls._instance
-    
-    def __init__(self, redis_proxy: RedisProxy, mongo_proxy: MongoProxy, kafka_proxy: KafkaProxy, duration: int = 3):
-        if not getattr(self, '_initialized', False):
-            self.redis_proxy = redis_proxy
-            self.mongo_proxy = mongo_proxy
-            self.kafka_proxy = kafka_proxy
-            self.duration = duration
-            self.task_store = TaskStore()
-            self.task_repository = TaskRepository(mongo_proxy)
-            
-            self._running = False
-            self._thread: Optional[threading.Thread] = None
-            self._event_loop: Optional[asyncio.AbstractEventLoop] = None
-            self._initialized = True
-            logger.info(f"TaskMonitor initialized with {duration}s interval")
+
+    def __init__(self, task_store: TaskStore, redis_proxy: RedisProxy, mongo_proxy: MongoProxy, kafka_proxy: KafkaProxy, duration: int = 3):
+        self.redis_proxy = redis_proxy
+        self.mongo_proxy = mongo_proxy
+        self.kafka_proxy = kafka_proxy
+        self.duration = duration
+        self.task_store = task_store
+        self.task_repository = TaskRepository(mongo_proxy)
+        
+        self._running = False
+        self._thread: Optional[threading.Thread] = None
+        self._event_loop: Optional[asyncio.AbstractEventLoop] = None
+        logger.info(f"TaskMonitor initialized with {duration}s interval")
 
     async def _initialize_task_sync(self, page_size: int = 100) -> None:
         """
@@ -93,7 +80,7 @@ class TaskMonitor:
                 if len(tasks) < page_size:
                     break
             
-            logger.info(f"Task synchronization completed. Synced {total_synced} tasks")
+            logger.info(f"Task synchronization finished. Synced {total_synced} tasks")
             
         except Exception as e:
             logger.error(f"Error during task synchronization initialization: {e}")
@@ -196,24 +183,47 @@ class TaskMonitor:
         """Monitor all task-related Redis keys and update store."""
         try:
             # Get all tasks that should be monitored (Assigning and Running)
-            running_tasks = await self._get_all_running_and_assigning_tasks()
-            running_task_ids = {task.id for task in running_tasks}
-            
+            running_passive_tasks = await self._get_all_running_and_assigning_tasks()
+            running_passive_tasks = {task.id for task in running_passive_tasks}
+
             # Add new tasks to monitoring
-            for task in running_tasks:
+            for task in running_passive_tasks:
                 self.task_store.add_task(task.id, task.lifecycleStatus, 0)
 
+            running_active_tasks = await self._get_all_active_tasks()
+            running_active_task_ids = {task.id for task in running_active_tasks}
+            for task in running_active_tasks:
+                self.task_store.add_task(task.id, task.lifecycleStatus, 0, task.mode)
+
             # Update heartbeats and check for status changes
-            await self._update_task_heartbeats(running_task_ids)
+            await self._update_task_heartbeats(running_passive_tasks)
+            await self._update_task_heartbeats(running_active_task_ids)
             
             # Handle tasks that are no longer in MongoDB but still in store
-            await self._cleanup_orphaned_tasks(running_task_ids)
+            await self._cleanup_orphaned_tasks(running_passive_tasks.union(running_active_task_ids))
             
             # Process task status changes
             await self._process_task_status_changes()
             
         except Exception as e:
             logger.error(f"Error in _monitor_tasks: {e}")
+
+    async def _get_all_active_tasks(self) -> List:
+        """Get all tasks from MongoDB that are in Active status."""
+        try:
+            # This would be implemented in TaskRepository
+            collection = self.mongo_proxy.db.tasks
+            cursor = collection.find({
+                "mode": "Active"
+            })
+            tasks = []
+            for doc in cursor:  # Use regular for loop instead of async for
+                # Convert MongoDB document to Task object
+                tasks.append(type('Task', (), {'id': doc['id'], 'lifecycleStatus': doc['lifecycleStatus'], 'mode': doc['mode']})())
+            return tasks
+        except Exception as e:
+            logger.error(f"Error getting active tasks: {e}")
+            return []
 
     async def _get_all_running_and_assigning_tasks(self) -> List:
         """Get all tasks from MongoDB that are in Assigning or Running status."""
@@ -224,14 +234,15 @@ class TaskMonitor:
             cursor = collection.find({
                 "lifecycleStatus": {
                     "$in": [TaskLifecycleStatus.ASSIGNING.value, TaskLifecycleStatus.RUNNING.value]
-                }
+                },
+                "mode": "Passive"
             })
             
             tasks = []
             for doc in cursor:  # Use regular for loop instead of async for
                 # Convert MongoDB document to Task object
-                tasks.append(type('Task', (), {'id': doc['id'], 'lifecycleStatus': doc['lifecycleStatus']})())
-            
+                tasks.append(type('Task', (), {'id': doc['id'], 'lifecycleStatus': doc['lifecycleStatus'], 'mode': doc['mode']})())
+
             return tasks
         except Exception as e:
             logger.error(f"Error getting running tasks: {e}")
@@ -325,19 +336,23 @@ class TaskMonitor:
         for task_id, record in stored_tasks.items():
             try:
                 current_status = record.get_status()
+                logger.debug(f"Processing task {task_id} with status {current_status}")
                 # Handle different status transitions
-                if record.is_completed_status():
-                    logger.debug(f"Task completed: {task_id}")
-                    # Task has completed
-                    await self._handle_completed_task(task_id)
+                if record.is_finished_status():
+                    logger.debug(f"Task finished: {task_id}")
+                    # Task has finished
+                    if not record.task_is_assigning() and record.task_is_alive():
+                        await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
+                    else:
+                        await self._handle_finished_task(task_id, record.mode)
                 elif record.is_cancelled_status():
                     logger.debug(f"Task cancelled: {task_id}")
                     # Task was cancelled
-                    await self._handle_cancelled_task(task_id)
+                    await self._handle_cancelled_task(task_id, record.mode)
                 elif record.is_failed_status() or not record.task_is_alive():
                     logger.debug(f"Task failed: {task_id}")
                     # Task has failed
-                    await self._handle_failed_task(task_id)
+                    await self._handle_failed_task(task_id, record.mode)
                 elif current_status == TaskLifecycleStatus.ASSIGNING:
                     if record.task_is_assigning():
                         continue  # Still assigning, no action needed
@@ -348,7 +363,10 @@ class TaskMonitor:
                 elif record.task_is_assigning():
                     logger.debug(f"Task is still assigning: {task_id}")
                     # Task is still assigning
-                    await self._update_task_status(task_id, TaskLifecycleStatus.ASSIGNING)
+                    if record.mode == ModeEnum.PASSIVE:
+                        await self._update_task_status(task_id, TaskLifecycleStatus.ASSIGNING)
+                    elif record.mode == ModeEnum.ACTIVE:
+                        await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
                 else:
                     logger.debug(f"There are no errors, task is alive, task should be running: {task_id}")
                     await self._update_task_status(task_id, TaskLifecycleStatus.RUNNING)
@@ -356,33 +374,36 @@ class TaskMonitor:
             except Exception as e:
                 logger.error(f"Error processing status for task {task_id}: {e}")
 
-    async def _handle_failed_task(self, task_id: str) -> None:
+    async def _handle_failed_task(self, task_id: str, mode: ModeEnum) -> None:
         """Handle a task that has failed."""
         try:
-            await self._send_cancel_event(task_id)
             await self._update_task_status(task_id, TaskLifecycleStatus.FAILED)
-            self.task_store.del_task(task_id)
+            if mode == ModeEnum.PASSIVE:
+                await self._send_cancel_event(task_id)
+                self.task_store.del_task(task_id)
             logger.info(f"Handled failed task: {task_id}")
         except Exception as e:
             logger.error(f"Error handling failed task {task_id}: {e}")
 
-    async def _handle_cancelled_task(self, task_id: str) -> None:
+    async def _handle_cancelled_task(self, task_id: str, mode: ModeEnum) -> None:
         """Handle a task that was cancelled."""
         try:
             await self._update_task_status(task_id, TaskLifecycleStatus.CANCELLED)
-            self.task_store.del_task(task_id)
+            if mode == ModeEnum.PASSIVE:
+                self.task_store.del_task(task_id)
             logger.info(f"Handled cancelled task: {task_id}")
         except Exception as e:
             logger.error(f"Error handling cancelled task {task_id}: {e}")
 
-    async def _handle_completed_task(self, task_id: str) -> None:
-        """Handle a task that completed successfully."""
+    async def _handle_finished_task(self, task_id: str, mode: ModeEnum) -> None:
+        """Handle a task that finished successfully."""
         try:
             await self._update_task_status(task_id, TaskLifecycleStatus.FINISHED)
-            self.task_store.del_task(task_id)
-            logger.info(f"Handled completed task: {task_id}")
+            if mode == ModeEnum.PASSIVE:
+                self.task_store.del_task(task_id)
+            logger.info(f"Handled finished task: {task_id}")
         except Exception as e:
-            logger.error(f"Error handling completed task {task_id}: {e}")
+            logger.error(f"Error handling finished task {task_id}: {e}")
 
     async def _update_task_status(self, task_id: str, status: TaskLifecycleStatus) -> None:
         """Update task status in MongoDB."""
@@ -466,7 +487,7 @@ class TaskMonitor:
             # Run initialization first
             logger.info("Running task synchronization before starting monitoring...")
             self._event_loop.run_until_complete(self._initialize_task_sync())
-            logger.info("Task synchronization completed, starting regular monitoring...")
+            logger.info("Task synchronization finished, starting regular monitoring...")
             
             # Start regular monitoring loop
             while self._running:

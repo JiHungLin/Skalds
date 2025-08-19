@@ -10,7 +10,7 @@ import threading
 import time
 from skald.model.task import TaskLifecycleStatus
 from skald.utils.logging import logger
-
+from skald.model.task import ModeEnum
 
 class TaskHeartbeatRecord:
     """
@@ -19,11 +19,12 @@ class TaskHeartbeatRecord:
     Tracks heartbeat history to determine task health and status.
     """
 
-    def __init__(self, task_id: str, lifecycle_status: TaskLifecycleStatus, heartbeat: int = 0):
+    def __init__(self, task_id: str, lifecycle_status: TaskLifecycleStatus, heartbeat: int = 0, mode: ModeEnum = ModeEnum.PASSIVE):
         self.task_id = task_id
         self.heartbeat_list = [heartbeat]
         self.error_message: Optional[str] = None
         self.exception_message: Optional[str] = None
+        self.mode: ModeEnum = mode
         self.last_update = int(time.time() * 1000)
         self._max_record_length = 5
         self._lock = threading.RLock()
@@ -92,7 +93,7 @@ class TaskHeartbeatRecord:
             
             # Check for heartbeat variation
             unique_heartbeats = len(set(self.heartbeat_list))
-            return unique_heartbeats > 4
+            return unique_heartbeats > 3
 
     def get_latest_heartbeat(self) -> int:
         """Get the most recent heartbeat value."""
@@ -109,9 +110,11 @@ class TaskHeartbeatRecord:
         with self._lock:
             return self.get_latest_heartbeat() == -2
 
-    def is_completed_status(self) -> bool:
-        """Check if task has completed status (heartbeat 200)."""
+    def is_finished_status(self) -> bool:
+        """Check if task has finished status (heartbeat 200)."""
         with self._lock:
+            if self.current_status == TaskLifecycleStatus.FINISHED:
+                return True
             return self.get_latest_heartbeat() == 200
 
     def get_status(self) -> str:
@@ -119,10 +122,10 @@ class TaskHeartbeatRecord:
         Determine task status based on heartbeat and other indicators.
         
         Returns:
-            str: Task status (Running, Failed, Cancelled, Completed, Assigning)
+            str: Task status (Running, Failed, Cancelled, Finished, Assigning)
         """
         with self._lock:
-            logger.warning(self.heartbeat_list)
+            logger.debug(f"Heartbeat list for task {self.task_id}: {self.heartbeat_list}")
             latest_heartbeat = self.get_latest_heartbeat()
             
             if latest_heartbeat == -1:
@@ -130,7 +133,7 @@ class TaskHeartbeatRecord:
             elif latest_heartbeat == -2:
                 return "Cancelled"
             elif latest_heartbeat == 200:
-                return "Completed"
+                return "Finished"
             else:
                 return self.current_status  # No heartbeat variation, consider failed
 
@@ -163,25 +166,12 @@ class TaskStore:
     being monitored (Assigning or Running status).
     """
     
-    _instance = None
-    _lock = threading.RLock()
-    
-    def __new__(cls):
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = super().__new__(cls)
-                    cls._instance._initialized = False
-        return cls._instance
-    
     def __init__(self):
-        if not getattr(self, '_initialized', False):
-            self.running_task_heartbeat_records: Dict[str, TaskHeartbeatRecord] = {}
-            self._store_lock = threading.RLock()
-            self._initialized = True
-            logger.info("TaskStore initialized")
+        self.running_task_heartbeat_records: Dict[str, TaskHeartbeatRecord] = {}
+        self._store_lock = threading.RLock()
+        logger.info("TaskStore initialized")
 
-    def add_task(self, task_id: str, lifecycle_status: TaskLifecycleStatus, heartbeat: int = 0) -> None:
+    def add_task(self, task_id: str, lifecycle_status: TaskLifecycleStatus, heartbeat: int = 0, mode: ModeEnum = ModeEnum.PASSIVE) -> None:
         """
         Add a task to monitoring if not already present.
         
@@ -191,7 +181,7 @@ class TaskStore:
         """
         with self._store_lock:
             if task_id not in self.running_task_heartbeat_records:
-                self.running_task_heartbeat_records[task_id] = TaskHeartbeatRecord(task_id, lifecycle_status, heartbeat)
+                self.running_task_heartbeat_records[task_id] = TaskHeartbeatRecord(task_id, lifecycle_status, heartbeat, mode)
                 logger.debug(f"Added task to monitoring: {task_id}")
 
     def update_task_heartbeat(self, task_id: str, heartbeat: int) -> None:
@@ -248,12 +238,12 @@ class TaskStore:
                 if not record.task_is_alive() or record.is_failed_status()
             ]
 
-    def get_completed_tasks(self) -> List[str]:
-        """Get list of task IDs that have completed."""
+    def get_finished_tasks(self) -> List[str]:
+        """Get list of task IDs that have finished."""
         with self._store_lock:
             return [
                 task_id for task_id, record in self.running_task_heartbeat_records.items()
-                if record.is_completed_status()
+                if record.is_finished_status()
             ]
 
     def get_cancelled_tasks(self) -> List[str]:
@@ -299,7 +289,7 @@ class TaskStore:
             total_tasks = len(self.running_task_heartbeat_records)
             running_tasks = len(self.get_running_tasks())
             failed_tasks = len(self.get_failed_tasks())
-            completed_tasks = len(self.get_completed_tasks())
+            finished_tasks = len(self.get_finished_tasks())
             cancelled_tasks = len(self.get_cancelled_tasks())
             assigning_tasks = len(self.get_assigning_tasks())
             
@@ -307,7 +297,7 @@ class TaskStore:
                 "totalTasks": total_tasks,
                 "runningTasks": running_tasks,
                 "failedTasks": failed_tasks,
-                "completedTasks": completed_tasks,
+                "finishedTasks": finished_tasks,
                 "cancelledTasks": cancelled_tasks,
                 "assigningTasks": assigning_tasks
             }

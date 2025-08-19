@@ -270,11 +270,11 @@ class SummaryServiceTester:
             else:
                 print("✅ Task summary includes failed tasks")
             
-            if task_summary.get("completedTasks", 0) == 0:
-                print("❌ Expected completed tasks in summary")
+            if task_summary.get("finishedTasks", 0) == 0:
+                print("❌ Expected finished tasks in summary")
                 success = False
             else:
-                print("✅ Task summary includes completed tasks")
+                print("✅ Task summary includes finished tasks")
             
             if len(distribution) == 0:
                 print("❌ Expected task distribution data")

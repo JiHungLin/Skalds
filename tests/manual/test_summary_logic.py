@@ -79,7 +79,7 @@ def test_summary_service_logic():
         "assigning": 0,  # Not in mock data
         "running": 3,
         "paused": 0,     # Not in mock data
-        "completed": 5,
+        "finished": 5,
         "failed": 2,
         "cancelled": 1
     }
@@ -127,11 +127,11 @@ def test_summary_service_logic():
     else:
         print("✅ failedTasks: 2")
     
-    if task_summary["completedTasks"] != 5:  # From MongoDB
-        print(f"❌ completedTasks: expected 5, got {task_summary['completedTasks']}")
+    if task_summary["finishedTasks"] != 5:  # From MongoDB
+        print(f"❌ finishedTasks: expected 5, got {task_summary['finishedTasks']}")
         success = False
     else:
-        print("✅ completedTasks: 5")
+        print("✅ finishedTasks: 5")
     
     # Test dashboard summary
     print("\n=== Testing Dashboard Summary ===")
@@ -143,7 +143,7 @@ def test_summary_service_logic():
     required_fields = [
         "totalSkalds", "onlineSkalds", "nodeSkalds", "edgeSkalds",
         "totalTasks", "runningTasks", "assigningTasks", 
-        "failedTasks", "completedTasks", "cancelledTasks"
+        "failedTasks", "finishedTasks", "cancelledTasks"
     ]
     
     for field in required_fields:

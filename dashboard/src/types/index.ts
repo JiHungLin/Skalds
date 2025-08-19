@@ -18,6 +18,7 @@ export interface Task {
   executor?: string;
   createDateTime: string;
   updateDateTime: string;
+  mode: 'Active' | 'Passive';
   attachments: Record<string, any>;
   heartbeat: number;
   error?: string;
@@ -118,7 +119,7 @@ export interface DashboardSummary {
   onlineSkalds: number;
   totalTasks: number;
   runningTasks: number;
-  completedTasks: number;
+  finishedTasks: number;
   failedTasks: number;
 }
 
