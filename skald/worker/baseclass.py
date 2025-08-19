@@ -139,7 +139,7 @@ class AbstractTaskWorker(mp.Process, ABC, Generic[T]):
            and update event handling.
     
     Attributes:
-        is_done: Flag indicating whether the worker has completed execution.
+        is_done: Flag indicating whether the worker has finished execution.
     """
 
     def __init__(self) -> None:
@@ -538,7 +538,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
 
     def _run_after(self) -> None:
         """
-        Stop heartbeat and mark task as completed in Redis.
+        Stop heartbeat and mark task as finished in Redis.
         
         This method performs cleanup after successful task completion:
         - Stops the heartbeat monitoring
@@ -549,7 +549,7 @@ class BaseTaskWorker(AbstractTaskWorker[T]):
                 self._survive_handler.stop_heartbeat_update()
                 if not self.is_done:
                     self._survive_handler.push_success_heartbeat()
-            logger.success(f"Task Worker {self.task_id} completed successfully.")
+            logger.success(f"Task Worker {self.task_id} finished successfully.")
         except Exception as exc:
             logger.error(f"Error during post-execution cleanup: {exc}", exc_info=True)
 

@@ -17,8 +17,7 @@ from skald.utils.logging import logger
 router = APIRouter(prefix="/api/skalds", tags=["skalds"])
 
 # Dependency to get SkaldStore instance
-def get_skald_store() -> SkaldStore:
-    return SkaldStore()
+from skald.system_controller.api.endpoints.system import get_skald_store
 
 
 @router.get("/", response_model=GetSkaldsResponse)

@@ -108,7 +108,7 @@ class ComplexWorker(BaseTaskWorker[ComplexDataModel]):
                 try:
                     logger.info(f"[{self.job_id}] Executing sub-task {idx}/{len(self.sub_tasks)}: '{subtask.name}' (Attempt {attempt+1})")
                     self._execute_subtask(subtask)
-                    logger.info(f"[{self.job_id}] Sub-task '{subtask.name}' completed successfully.")
+                    logger.info(f"[{self.job_id}] Sub-task '{subtask.name}' finished successfully.")
                     success = True
                 except Exception as e:
                     attempt += 1
@@ -119,7 +119,7 @@ class ComplexWorker(BaseTaskWorker[ComplexDataModel]):
                     else:
                         logger.info(f"[{self.job_id}] Retrying sub-task '{subtask.name}' after delay...")
                         time.sleep(1)
-        logger.info(f"[{self.job_id}] All sub-tasks completed. Job finished successfully.")
+        logger.info(f"[{self.job_id}] All sub-tasks finished. Job finished successfully.")
 
     def _execute_subtask(self, subtask: SubTaskConfig) -> None:
         """

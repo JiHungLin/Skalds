@@ -30,8 +30,7 @@ class TaskDependencies:
     kafkaProxy = None
 
 # Dependency to get TaskStore instance
-def get_task_store() -> TaskStore:
-    return TaskStore()
+from skald.system_controller.api.endpoints.system import get_task_store
 
 # Dependency to get TaskRepository (would be injected in real implementation)
 def get_task_repository() -> TaskRepository:

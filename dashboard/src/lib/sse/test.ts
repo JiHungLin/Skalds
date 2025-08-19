@@ -67,7 +67,7 @@ export function testSSEIntegration() {
     unsubscribeTask()
     unsubscribeConnection()
     sseManager.disconnect()
-    console.log('✅ Test cleanup completed')
+    console.log('✅ Test cleanup finished')
   }
   
   // Auto cleanup after 30 seconds
@@ -138,7 +138,7 @@ export function testSSEPerformance() {
   const cleanupTime = performance.now() - cleanupStartTime
   
   console.log(`🧹 Cleaned up 200 subscriptions in ${cleanupTime.toFixed(2)}ms`)
-  console.log('✅ Performance test completed')
+  console.log('✅ Performance test finished')
 }
 
 // Export for browser console usage

@@ -102,7 +102,7 @@ export default function Dashboard() {
     },
     {
       name: 'Finished Tasks',
-      value: summary?.completedTasks || 0,
+      value: summary?.finishedTasks || 0,
       subValue: 'Successfully finished',
       icon: CheckCircleIcon,
       color: 'text-success-600',
@@ -211,12 +211,12 @@ export default function Dashboard() {
                 <span className="text-xs text-gray-500">
                   {(() => {
                     const running = summary?.runningTasks || 0;
-                    const completed = summary?.completedTasks || 0;
+                    const finished = summary?.finishedTasks || 0;
                     const failed = summary?.failedTasks || 0;
-                    if (running === 0 && completed === 0 && failed > 0) {
+                    if (running === 0 && finished === 0 && failed > 0) {
                       return `0 running, 0 finished, all failed`;
                     }
-                    return `${running} running, ${completed} finished`;
+                    return `${running} running, ${finished} finished`;
                   })()}
                 </span>
               </div>

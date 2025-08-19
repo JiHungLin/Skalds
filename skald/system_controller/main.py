@@ -240,8 +240,12 @@ class SystemController:
         logger.info(f"Initializing components for {self.mode} mode...")
         
         # Always initialize stores
+        from skald.system_controller.api.endpoints import system as system_endpoints
         self.skald_store = SkaldStore()
         self.task_store = TaskStore()
+        # Set shared instances for FastAPI dependencies
+        system_endpoints.shared_skald_store = self.skald_store
+        system_endpoints.shared_task_store = self.task_store
         
         # Initialize monitoring components for monitor and dispatcher modes
         if self.mode in [SystemControllerModeEnum.MONITOR, SystemControllerModeEnum.DISPATCHER]:
@@ -419,7 +423,7 @@ class SystemController:
         except Exception as e:
             logger.error(f"Error during graceful shutdown: {e}")
         
-        logger.info("Graceful shutdown completed")
+        logger.info("Graceful shutdown finished")
 
     async def _run_async(self):
         """Async run main program"""

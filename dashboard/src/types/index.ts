@@ -118,7 +118,7 @@ export interface DashboardSummary {
   onlineSkalds: number;
   totalTasks: number;
   runningTasks: number;
-  completedTasks: number;
+  finishedTasks: number;
   failedTasks: number;
 }
 

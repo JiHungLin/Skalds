@@ -106,7 +106,7 @@ Get dashboard summary statistics.
   "onlineSkalds": 4,
   "totalTasks": 12,
   "runningTasks": 8,
-  "completedTasks": 3,
+  "finishedTasks": 3,
   "failedTasks": 1,
   "assigningTasks": 0,
   "cancelledTasks": 0,
@@ -136,7 +136,7 @@ Get detailed system metrics.
     "monitored": 12,
     "running": 8,
     "failed": 1,
-    "completed": 3,
+    "finished": 3,
     "cancelled": 0,
     "assigning": 0,
     "totalAssigned": 8

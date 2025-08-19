@@ -177,7 +177,7 @@ class ApiClient {
         onlineSkalds: mockSkalds.filter(s => s.status === 'online').length,
         totalTasks: mockTasks.length,
         runningTasks: mockTasks.filter(t => t.lifecycleStatus === 'Running').length,
-        completedTasks: mockTasks.filter(t => t.lifecycleStatus === 'Finished').length,
+        finishedTasks: mockTasks.filter(t => t.lifecycleStatus === 'Finished').length,
         failedTasks: mockTasks.filter(t => t.lifecycleStatus === 'Failed').length
       } as T
     }

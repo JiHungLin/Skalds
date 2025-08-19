@@ -127,6 +127,7 @@ class Dispatcher:
             
             cursor = collection.find({
                 "lifecycleStatus": {"$nin": excluded_statuses},
+                "mode": "Passive"
             })
             
             tasks = []
