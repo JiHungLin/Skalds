@@ -1,6 +1,6 @@
 import pytest
 from pydantic import BaseModel, ValidationError
-from skald.model.task import Task
+from skalds.model.task import Task
 
 # 1. 簡單自訂 BaseModel
 class SimpleAttachment(BaseModel):
@@ -21,7 +21,7 @@ def test_task_with_simple_attachment():
     att = SimpleAttachment(foo="abc", bar=123)
     task = Task(
         id="t1",
-        className="TestTask",
+        class_name="TestTask",
         source="unit",
         attachments=att
     )
@@ -33,7 +33,7 @@ def test_task_with_nested_attachment():
     att = NestedAttachment(inner=SimpleAttachment(foo="xyz", bar=456), note="nested")
     task = Task(
         id="t2",
-        className="TestTask",
+        class_name="TestTask",
         source="unit",
         attachments=att
     )
@@ -46,7 +46,7 @@ def test_task_with_list_attachment():
     att = ListAttachment(items=[1,2,3], desc="list test")
     task = Task(
         id="t3",
-        className="TestTask",
+        class_name="TestTask",
         source="unit",
         attachments=att
     )
@@ -57,7 +57,7 @@ def test_task_with_list_attachment():
 def test_task_with_none_attachment():
     task = Task(
         id="t4",
-        className="TestTask",
+        class_name="TestTask",
         source="unit",
         attachments=None
     )
@@ -67,7 +67,7 @@ def test_task_with_invalid_attachment_type():
     with pytest.raises(ValueError, match="attachments must be a Pydantic BaseModel instance"):
         Task(
             id="t5",
-            className="TestTask",
+            class_name="TestTask",
             source="unit",
             attachments={"foo": "bar"}
         )

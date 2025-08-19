@@ -1,0 +1,41 @@
+
+
+** Main **
+
+# set redis, kafka, mongo
+config = Configuration(redis=xxxx, kafka=xxxx, mongo=xxxx)
+config.x = 456
+skalds = Skalds(config=config, mode=edge)
+
+skalds.register(TaskWorker1Class, limit=5)
+skalds.register(TaskWorker2Class)
+
+skalds.run()
+
+
+** TaskWorker **
+
+class MyTaskWorker(BaseTaskWorker):
+    def __init__(self, m_p1, m_p2):
+        self.m_p1 = m_p1
+        self.m_p2 = m_p2
+
+    @run_before_handler
+    def run_before(self):
+        ...
+
+    @run_main_handler
+    def main(self):
+        ...
+    
+    @release_handler:
+    def release(self):
+        ...
+
+// OR
+
+my_task_worker = BaseTaskWorker():
+
+@my_task_worker.run_before
+def run_before():
+    ...

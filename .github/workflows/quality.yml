@@ -16,4 +16,4 @@ jobs:
       - name: Install black
         run: pip install black
       - name: Run black
-        run: black --check skald
+        run: black --check skalds

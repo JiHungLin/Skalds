@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
 from pydantic import BaseModel, ValidationError
-from skald.model.task import (
+from skalds.model.task import (
     ModeEnum,
     TaskLifecycleStatus,
     Task,
@@ -13,8 +13,8 @@ class DummyAttachment(BaseModel):
     foo: str
 
 def test_mode_enum_values():
-    assert ModeEnum.ACTIVE.value == "Active"
-    assert ModeEnum.PASSIVE.value == "Passive"
+    assert ModeEnum.ACTIVE == "Active"
+    assert ModeEnum.PASSIVE == "Passive"
     assert set(ModeEnum.list()) == {"Active", "Passive"}
 
 def test_task_lifecycle_status_values():
@@ -25,7 +25,7 @@ def test_task_model_defaults_and_validation():
     now = datetime.now()
     task = Task(
         id="1",
-        className="TestClass",
+        class_name="TestClass",
         source="unit-test",
     )
     assert task.id == "1"
@@ -55,7 +55,7 @@ def test_task_model_defaults_and_validation():
     with pytest.raises(ValidationError):
         Task(
             id="3",
-            className="TestClass",
+            class_name="TestClass",
             source="unit-test",
             attachments={"foo": "bar"},
         )

@@ -1,0 +1,152 @@
+import { ReactNode } from 'react';
+
+// Core Skalds Types
+export interface Skalds {
+  id: string;
+  type: 'node' | 'edge';
+  status: 'online' | 'offline';
+  lastHeartbeat: string;
+  supportedTasks: string[];
+  currentTasks: string[];
+}
+
+// Task Types
+export interface Task {
+  id: string;
+  className: string;
+  lifecycleStatus: TaskLifecycleStatus;
+  executor?: string;
+  createDateTime: string;
+  updateDateTime: string;
+  mode: 'Active' | 'Passive';
+  attachments: Record<string, any>;
+  heartbeat: number;
+  error?: string;
+  exception?: string;
+}
+
+export type TaskLifecycleStatus =
+  | 'Created'
+  | 'Assigning'
+  | 'Running'
+  | 'Paused'
+  | 'Finished'
+  | 'Failed'
+  | 'Cancelled';
+
+// SSE Event Types
+export interface SkaldEvent {
+  type: 'skald_status' | 'skald_heartbeat';
+  skaldId: string;
+  data: {
+    status?: string;
+    heartbeat?: number;
+    tasks?: string[];
+  };
+}
+
+export interface TaskEvent {
+  type: 'task_heartbeat' | 'task_error' | 'task_exception';
+  taskId: string;
+  data: {
+    heartbeat?: number;
+    error?: string;
+    exception?: string;
+    lifecycleStatus?: TaskLifecycleStatus;
+  };
+}
+
+// SSE Context Types
+export interface SSEContextType {
+  // Connection state
+  isConnected: boolean
+  lastError: Error | null
+  
+  // Skalds state
+  skalds: Map<string, Skalds>
+  updateSkald: (skaldId: string, updates: Partial<Skalds>) => void
+  
+  // Task state
+  tasks: Map<string, Task>
+  updateTask: (taskId: string, updates: Partial<Task>) => void
+  
+  // Subscription methods
+  subscribeToSkald: (skaldId: string, callback: (event: SkaldEvent) => void) => () => void
+  subscribeToTask: (taskId: string, callback: (event: TaskEvent) => void) => () => void
+  
+  // Connection management
+  connect: () => void
+  disconnect: () => void
+}
+
+// SSE Event Callback Types
+export type SkaldEventCallback = (event: SkaldEvent) => void
+export type TaskEventCallback = (event: TaskEvent) => void
+export type ConnectionStateCallback = (connected: boolean) => void
+
+// API Response Types
+export interface GetSkaldsResponse {
+  items: Skalds[];
+  total: number;
+}
+
+export interface GetTasksRequest {
+  page: number;
+  pageSize: number;
+  lifecycleStatus?: TaskLifecycleStatus;
+  className?: string;
+  executor?: string;
+}
+
+export interface GetTasksResponse {
+  items: Task[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface UpdateTaskStatusRequest {
+  lifecycleStatus: 'Created' | 'Cancelled';
+}
+
+export interface UpdateTaskAttachmentsRequest {
+  attachments: Record<string, any>;
+}
+
+// Dashboard Summary Types
+export interface DashboardSummary {
+  totalSkalds: number;
+  onlineSkalds: number;
+  totalTasks: number;
+  runningTasks: number;
+  finishedTasks: number;
+  failedTasks: number;
+}
+
+// UI Component Types
+export interface StatusIndicatorProps {
+  status: 'online' | 'offline' | TaskLifecycleStatus;
+  size?: 'sm' | 'md' | 'lg';
+  showLabel?: boolean;
+  animated?: boolean;
+}
+
+export interface DataGridColumn<T> {
+  key: keyof T;
+  header: string;
+  sortable?: boolean;
+  render?: (value: any, row: T) => ReactNode;
+}
+
+export interface DataGridProps<T> {
+  data: T[];
+  columns: DataGridColumn<T>[];
+  loading?: boolean;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    onPageChange: (page: number) => void;
+  };
+  onRowClick?: (row: T) => void;
+}

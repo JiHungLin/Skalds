@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!dashboard/src/lib
 lib64/
 parts/
 sdist/
@@ -205,5 +206,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-tests/manual/mongodb
-logs
+
+**/mongodb
+**/node_modules
+dashboard/.env.local
+ref_website
