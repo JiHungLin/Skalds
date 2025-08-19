@@ -40,7 +40,7 @@ const sidebars: SidebarsConfig = {
       link: {
         type: "generated-index",
         slug: '/documents/all', // 這裡自訂 URL slug，避免中文出現在 URL
-        description: "在這裡，你可以找到所有的 Documents。 \nDocuments 是 Skald 的重要組件，負責處理和管理不同的文檔和資源。每個 Document 都有其特定的功能和用途，並且可以根據需要進行配置和擴展。\n你可以在這裡瀏覽各種 Documents 的定義和使用方式，並了解它們如何協同工作來實現更高效的資源管理和服務提供。"
+        description: "在這裡，你可以找到所有的 Documents。 \nDocuments 是 Skalds 的重要組件，負責處理和管理不同的文檔和資源。每個 Document 都有其特定的功能和用途，並且可以根據需要進行配置和擴展。\n你可以在這裡瀏覽各種 Documents 的定義和使用方式，並了解它們如何協同工作來實現更高效的資源管理和服務提供。"
       },
       // This is the index page for the documents category
       items: [

@@ -28,14 +28,14 @@ export function testSSEIntegration() {
     }
   }, 2000)
   
-  // Test Skald event subscription
-  console.log('👥 Testing Skald event subscription...')
-  const testSkaldId = 'test-skald-001'
+  // Test Skalds event subscription
+  console.log('👥 Testing Skalds event subscription...')
+  const testSkaldId = 'test-skalds-001'
   let skaldEventCount = 0
   
   const unsubscribeSkald = sseManager.subscribeToSkald(testSkaldId, (event: SkaldEvent) => {
     skaldEventCount++
-    console.log(`📨 Skald Event #${skaldEventCount}:`, event)
+    console.log(`📨 Skalds Event #${skaldEventCount}:`, event)
   })
   
   // Test Task event subscription
@@ -113,9 +113,9 @@ export function testSSEPerformance() {
   const startTime = performance.now()
   const subscriptions: (() => void)[] = []
   
-  // Create 100 skald subscriptions
+  // Create 100 skalds subscriptions
   for (let i = 0; i < 100; i++) {
-    const unsubscribe = sseManager.subscribeToSkald(`perf-skald-${i}`, (_event) => {
+    const unsubscribe = sseManager.subscribeToSkald(`perf-skalds-${i}`, (_event) => {
       // Minimal processing
     })
     subscriptions.push(unsubscribe)

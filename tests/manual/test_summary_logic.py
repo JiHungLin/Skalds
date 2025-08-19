@@ -14,10 +14,10 @@ from typing import Dict, Any
 # Add the project root to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from skald.system_controller.service.summary_service import SummaryService
-from skald.system_controller.store.task_store import TaskStore
-from skald.system_controller.store.skald_store import SkaldStore
-from skald.model.task import TaskLifecycleStatus
+from skalds.system_controller.service.summary_service import SummaryService
+from skalds.system_controller.store.task_store import TaskStore
+from skalds.system_controller.store.skald_store import SkaldStore
+from skalds.model.task import TaskLifecycleStatus
 
 
 def test_summary_service_logic():
@@ -61,10 +61,10 @@ def test_summary_service_logic():
     
     task_store.add_task("assigning-task-1", 0)  # This will stay in "Assigning"
     
-    # Add some test data to skald store
+    # Add some test data to skalds store
     import time
     current_time = int(time.time() * 1000)
-    skald_store.add_skald("test-skald-1", current_time, "node")
+    skald_store.add_skald("test-skalds-1", current_time, "node")
     
     # Create summary service
     summary_service = SummaryService(mock_mongo, task_store, skald_store)

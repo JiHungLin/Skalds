@@ -11,12 +11,12 @@ function HomepageHeader() {
       <div className="container">
         <img
           src="img/logo.svg"
-          alt="Skald Logo"
+          alt="Skalds Logo"
           className={styles.heroLogo}
           style={{ maxWidth: '100px' }}
         />
         <Heading as="h1" className="hero__title">
-          Skald
+          Skalds
         </Heading>
         <p className="hero__subtitle">
           一個事件驅動的模組化分散式任務調度與執行系統。
@@ -56,8 +56,8 @@ export default function Home() {
 
   return (
     <Layout
-      title="Skald - 事件驅動的模組化分散式任務調度與執行系統"
-      description="Skald 是一個專為高併發後端任務管理設計的事件驅動模組化分散式任務調度與執行系統。"
+      title="Skalds - 事件驅動的模組化分散式任務調度與執行系統"
+      description="Skalds 是一個專為高併發後端任務管理設計的事件驅動模組化分散式任務調度與執行系統。"
     >
       <HomepageHeader />
       <main>
@@ -74,7 +74,7 @@ export default function Home() {
             <Heading as="h2" style={{marginTop: '2rem'}}>系統模組總覽</Heading>
             <p>系統三大核心模組（Skald、Monitor、Dispatcher）協同運作，構建完整的任務生命週期：</p>
             <ul>
-              <li>⚙️ <b>Skald (Task Generator)</b>：負責任務的初始化與生成，管理工作者註冊與配置，透過事件佇列與其他模組通訊。</li>
+              <li>⚙️ <b>Skalds (Task Generator)</b>：負責任務的初始化與生成，管理工作者註冊與配置，透過事件佇列與其他模組通訊。</li>
               <li>👁️ <b>Monitor</b>：持續監控系統狀態與效能，收集並分析資源使用情況，觸發必要的警報與通知。</li>
               <li>🚦 <b>Dispatcher</b>：基於 Monitor 提供的系統資訊進行智能調度，實現動態負載平衡，處理緊急任務優先級。</li>
             </ul>

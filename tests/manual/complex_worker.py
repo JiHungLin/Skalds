@@ -1,16 +1,16 @@
-"""Complex TaskWorker Example for Skald Framework.
+"""Complex TaskWorker Example for Skalds Framework.
 
 This module demonstrates a more advanced implementation of a TaskWorker,
 including a rich Pydantic data model, multi-phase execution, robust logging,
 and error handling. It is intended as a reference for building sophisticated
-workers in the Skald system.
+workers in the Skalds system.
 
 Author: (Your Name)
 """
 
 from typing import Optional, List
-from skald.worker.baseclass import BaseTaskWorker, run_before_handler, run_main_handler
-from skald.utils.logging import logger
+from skalds.worker.baseclass import BaseTaskWorker, run_before_handler, run_main_handler
+from skalds.utils.logging import logger
 from pydantic import BaseModel, Field, ConfigDict, ValidationError, model_validator
 import time
 import random

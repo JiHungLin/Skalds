@@ -29,20 +29,20 @@ class SkaldMonitor:
                     else:
                         SkaldStore.addSkald(id, int(update_time))
                 except Exception as e:
-                    logger.error(f"update skald {id} error: {e}")
+                    logger.error(f"update skalds {id} error: {e}")
 
             need_delete_skald = []
             for id in SkaldStore.allSkalds:
                 if id not in new_all_skald:
                     need_delete_skald.append(id)
             for id in need_delete_skald:
-                RedisService.delKeysByPattern(f"skald:{id}:*")
+                RedisService.delKeysByPattern(f"skalds:{id}:*")
                 SkaldStore.delSkald(id)
 
             time_out_skald = []
             for id, update_time in new_all_skald.items():
                 if int(time.time()*1000) - int(update_time) > 10000:
-                    RedisService.delKeysByPattern(f"skald:{id}:*")
+                    RedisService.delKeysByPattern(f"skalds:{id}:*")
                     SkaldService.delSkald(id)
                     SkaldStore.delSkald(id)
                     time_out_skald.append(id)

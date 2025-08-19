@@ -111,23 +111,23 @@
 </g>
 
 
-  <!-- Title: Skald -->
+  <!-- Title: Skalds -->
   <text x="330" y="200" font-family="Arial, Helvetica, sans-serif" font-size="90" font-weight="bold" fill="url(#title-gradient)">
-    Skald
+    Skalds
   </text>
-  <!-- Tagline 1: Modular Skald application framework -->
+  <!-- Tagline 1: Modular Skalds application framework -->
   <text x="330" y="290" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="bold" fill="#222">
     <tspan fill="#00b894">Modular</tspan>
     <tspan dx="10" fill="#0984e3">event-driven</tspan>
     <tspan dx="10" fill="#222">task</tspan>
     <tspan dx="10" fill="#222">orchestration</tspan>
   </text>
-  <!-- Tagline 2: Build, extend, and compose with Skald -->
+  <!-- Tagline 2: Build, extend, and compose with Skalds -->
   <text x="330" y="350" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="bold" fill="#222">
     Build, dispatch, and scale
   </text>
   <text x="330" y="410" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="bold" fill="#222">
     with
-    <tspan dx="10" fill="#00b894">Skald</tspan>
+    <tspan dx="10" fill="#00b894">Skalds</tspan>
   </text>
 </svg>

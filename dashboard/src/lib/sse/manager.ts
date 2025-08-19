@@ -8,7 +8,7 @@ import { SkaldEvent, TaskEvent, SkaldEventCallback, TaskEventCallback, Connectio
  *
  * Features:
  * - Automatic reconnection with exponential backoff
- * - Event subscription by Skald/Task ID
+ * - Event subscription by Skalds/Task ID
  * - Connection state monitoring
  * - Mock events for development
  *
@@ -19,9 +19,9 @@ import { SkaldEvent, TaskEvent, SkaldEventCallback, TaskEventCallback, Connectio
  * // Connect to SSE
  * sseManager.connect()
  *
- * // Subscribe to skald events
- * const unsubscribe = sseManager.subscribeToSkald('skald-001', (event) => {
- *   console.log('Skald event:', event)
+ * // Subscribe to skalds events
+ * const unsubscribe = sseManager.subscribeToSkald('skalds-001', (event) => {
+ *   console.log('Skalds event:', event)
  * })
  *
  * // Cleanup
@@ -49,7 +49,7 @@ class SSEManager {
 
   // Connection management
   /**
-   * Connect to both Skald and Task SSE endpoints
+   * Connect to both Skalds and Task SSE endpoints
    */
   connect(): void {
     this.connectSkaldEvents()
@@ -87,13 +87,13 @@ class SSEManager {
     }, delay)
   }
 
-  // Skald events
+  // Skalds events
   private connectSkaldEvents(): void {
     try {
       this.skaldEventSource = new EventSource(`${this.baseUrl}/skalds`)
       
       this.skaldEventSource.onopen = () => {
-        console.log('Skald SSE connection opened')
+        console.log('Skalds SSE connection opened')
         this.reconnectAttempts = 0
         this.connected = true
         this.lastError = null
@@ -105,13 +105,13 @@ class SSEManager {
           const skaldEvent: SkaldEvent = JSON.parse(event.data)
           this.handleSkaldEvent(skaldEvent)
         } catch (error) {
-          console.error('Error parsing Skald event:', error)
+          console.error('Error parsing Skalds event:', error)
         }
       }
 
       this.skaldEventSource.onerror = (error) => {
-        console.error('Skald SSE error:', error)
-        this.lastError = new Error('Skald SSE connection error')
+        console.error('Skalds SSE error:', error)
+        this.lastError = new Error('Skalds SSE connection error')
         this.connected = false
         this.notifyConnectionState(false)
         
@@ -120,7 +120,7 @@ class SSEManager {
         }
       }
     } catch (error) {
-      console.error('Failed to connect to Skald events:', error)
+      console.error('Failed to connect to Skalds events:', error)
       this.lastError = error as Error
     }
   }
@@ -173,8 +173,8 @@ class SSEManager {
 
   // Event subscriptions
   /**
-   * Subscribe to events for a specific Skald
-   * @param skaldId - The ID of the Skald to subscribe to
+   * Subscribe to events for a specific Skalds
+   * @param skaldId - The ID of the Skalds to subscribe to
    * @param callback - Function to call when events are received
    * @returns Unsubscribe function
    */
@@ -251,7 +251,7 @@ class SSEManager {
         try {
           callback(event)
         } catch (error) {
-          console.error('Error in Skald event callback:', error)
+          console.error('Error in Skalds event callback:', error)
         }
       })
     }
@@ -310,7 +310,7 @@ class SSEManager {
   }
 
   private startMockSkaldEvents(): void {
-    const mockSkaldIds = ['skald-node-001', 'skald-node-002', 'skald-edge-001']
+    const mockSkaldIds = ['skalds-node-001', 'skalds-node-002', 'skalds-edge-001']
     
     setInterval(() => {
       const skaldId = mockSkaldIds[Math.floor(Math.random() * mockSkaldIds.length)]

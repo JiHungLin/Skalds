@@ -1,11 +1,11 @@
 # Server-Sent Events (SSE) Integration
 
-This directory contains the SSE implementation for real-time updates in the Skald Dashboard.
+This directory contains the SSE implementation for real-time updates in the Skalds Dashboard.
 
 ## Overview
 
 The SSE system provides real-time updates for:
-- **Skald Status**: Connection status, heartbeat, current tasks
+- **Skalds Status**: Connection status, heartbeat, current tasks
 - **Task Status**: Heartbeat, errors, exceptions, lifecycle changes
 
 ## Architecture
@@ -92,7 +92,7 @@ function DetailComponent({ skaldId, taskId }) {
   
   return (
     <div>
-      <h3>Recent Skald Events: {skaldEvents.length}</h3>
+      <h3>Recent Skalds Events: {skaldEvents.length}</h3>
       <h3>Recent Task Events: {taskEvents.length}</h3>
     </div>
   )
@@ -101,7 +101,7 @@ function DetailComponent({ skaldId, taskId }) {
 
 ## Event Types
 
-### Skald Events
+### Skalds Events
 ```typescript
 interface SkaldEvent {
   type: 'skald_status' | 'skald_heartbeat'
@@ -152,14 +152,14 @@ private reconnectDelay = 1000 // ms
 
 ### Mock Events
 In development mode, the SSE manager automatically generates mock events:
-- Skald heartbeat events every 5 seconds
+- Skalds heartbeat events every 5 seconds
 - Task heartbeat events every 3 seconds
 
 ### Debugging
 Enable console logging to see SSE activity:
 ```typescript
 // Events are logged automatically
-console.log('Received Skald event:', event)
+console.log('Received Skalds event:', event)
 console.log('Received Task event:', event)
 ```
 
@@ -207,13 +207,13 @@ if (lastError) {
 ## Backend Integration
 
 ### Expected Endpoints
-- `GET /api/events/skalds` - Skald SSE stream
+- `GET /api/events/skalds` - Skalds SSE stream
 - `GET /api/events/tasks` - Task SSE stream
 
 ### Event Format
 Events should be sent as JSON in SSE format:
 ```
-data: {"type": "skald_heartbeat", "skaldId": "skald-001", "data": {"heartbeat": 42}}
+data: {"type": "skald_heartbeat", "skaldId": "skalds-001", "data": {"heartbeat": 42}}
 
 data: {"type": "task_error", "taskId": "task-123", "data": {"error": "Connection failed"}}
 ```

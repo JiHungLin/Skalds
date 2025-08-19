@@ -1,5 +1,5 @@
-from skald import Skald
-from skald.config.skald_config import SkaldConfig
+from skalds import Skalds
+from skalds.config.skald_config import SkaldConfig
 
 config = SkaldConfig(
     log_level="DEBUG",
@@ -11,7 +11,7 @@ config = SkaldConfig(
     skald_mode="edge"
 )
 
-app = Skald(config)
+app = Skalds(config)
 
 if __name__ == "__main__":
     app.run()

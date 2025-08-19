@@ -1,12 +1,12 @@
-# Skald Dashboard Technical Specification
+# Skalds Dashboard Technical Specification
 
 ## Data Structures
 
 ### Core Types
 
 ```typescript
-// Skald Types
-interface Skald {
+// Skalds Types
+interface Skalds {
   id: string;
   type: 'node' | 'edge';
   status: 'online' | 'offline';
@@ -62,17 +62,17 @@ interface TaskEvent {
 
 ## API Endpoints
 
-### Skald Management
+### Skalds Management
 
 ```typescript
 // GET /api/skalds
 interface GetSkaldsResponse {
-  items: Skald[];
+  items: Skalds[];
   total: number;
 }
 
 // GET /api/skalds/{id}
-type GetSkaldResponse = Skald;
+type GetSkaldResponse = Skalds;
 ```
 
 ### Task Management
@@ -112,7 +112,7 @@ interface UpdateTaskAttachmentsRequest {
 
 ### SSE Channels
 
-1. Skald Events Channel
+1. Skalds Events Channel
    ```typescript
    // GET /api/events/skalds
    // Events: SkaldEvent[]
@@ -177,7 +177,7 @@ interface SSEState {
    - Supports sorting, filtering, and pagination
 
 2. StatusIndicator
-   - Visual indicator for Skald and Task status
+   - Visual indicator for Skalds and Task status
    - Different colors for different states
    - Animated heartbeat indicator
 
@@ -187,7 +187,7 @@ interface SSEState {
    - Action buttons for task control
 
 4. SkaldCard
-   - Visual representation of Skald status
+   - Visual representation of Skalds status
    - Shows current tasks and capabilities
    - Real-time status updates
 
@@ -204,4 +204,4 @@ interface SSEState {
    - Quick action buttons
    - Recent activity feed
 
-This technical specification serves as a foundation for implementing the Skald Dashboard frontend. It defines the core data structures, API interfaces, and component architecture needed to build a robust and maintainable application.
+This technical specification serves as a foundation for implementing the Skalds Dashboard frontend. It defines the core data structures, API interfaces, and component architecture needed to build a robust and maintainable application.

@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Skald',
+  title: 'Skalds',
   staticDirectories: ['static'],
   tagline: '事件驅動的模組化分散式任務調度與執行系統',
   favicon: 'img/favicon.ico',
@@ -15,10 +15,10 @@ const config: Config = {
   },
 
   url: 'https://JiHungLin.github.io',
-  baseUrl: '/Skald/',
+  baseUrl: '/Skalds/',
 
   organizationName: 'JiHungLin',
-  projectName: 'Skald',
+  projectName: 'Skalds',
 
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
@@ -52,9 +52,9 @@ const config: Config = {
       respectPrefersColorScheme: false,
     },
     navbar: {
-      title: 'skald',
+      title: 'skalds',
       logo: {
-        alt: 'skald Logo',
+        alt: 'skalds Logo',
         src: 'img/logo.svg',
       },
       items: [
@@ -79,7 +79,7 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://github.com/JiHungLin/Skald',
+          href: 'https://github.com/JiHungLin/Skalds',
           label: 'GitHub',
           position: 'right',
         },
@@ -110,12 +110,12 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/JiHungLin/Skald',
+              href: 'https://github.com/JiHungLin/Skalds',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Skald. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Skalds. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

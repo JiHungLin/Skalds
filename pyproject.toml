@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "skald"
+name = "skalds"
 version = "0.1.0"
 description = "An event-driven, modular distributed task scheduling and execution system."
 readme = "README.md"
@@ -32,12 +32,12 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["skald*"]
+include = ["skalds*"]
 
 
 [project.urls]
-"Homepage" = "https://github.com/JiHungLin/skald"
-"Bug Tracker" = "https://github.com/JiHungLin/skald/issues"
+"Homepage" = "https://github.com/JiHungLin/skalds"
+"Bug Tracker" = "https://github.com/JiHungLin/skalds/issues"
 
 [project.optional-dependencies]
 dev = [

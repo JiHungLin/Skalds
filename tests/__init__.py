@@ -1,1 +1,1 @@
-"""Test suite for Skald package."""
+"""Test suite for Skalds package."""

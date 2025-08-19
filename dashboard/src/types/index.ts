@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 
-// Core Skald Types
-export interface Skald {
+// Core Skalds Types
+export interface Skalds {
   id: string;
   type: 'node' | 'edge';
   status: 'online' | 'offline';
@@ -62,9 +62,9 @@ export interface SSEContextType {
   isConnected: boolean
   lastError: Error | null
   
-  // Skald state
-  skalds: Map<string, Skald>
-  updateSkald: (skaldId: string, updates: Partial<Skald>) => void
+  // Skalds state
+  skalds: Map<string, Skalds>
+  updateSkald: (skaldId: string, updates: Partial<Skalds>) => void
   
   // Task state
   tasks: Map<string, Task>
@@ -86,7 +86,7 @@ export type ConnectionStateCallback = (connected: boolean) => void
 
 // API Response Types
 export interface GetSkaldsResponse {
-  items: Skald[];
+  items: Skalds[];
   total: number;
 }
 

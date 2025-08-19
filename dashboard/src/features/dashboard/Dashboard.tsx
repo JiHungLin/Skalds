@@ -123,7 +123,7 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Overview of your Skald system status and performance
+          Overview of your Skalds system status and performance
         </p>
       </div>
 
@@ -156,10 +156,10 @@ export default function Dashboard() {
             <h3 className="text-lg font-medium text-gray-900">System Status</h3>
           </div>
           <div className="card-content space-y-4">
-            {/* Skald Connectivity with detailed status */}
+            {/* Skalds Connectivity with detailed status */}
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-sm font-medium text-gray-900">Skald Connectivity</span>
+                <span className="text-sm font-medium text-gray-900">Skalds Connectivity</span>
                 <span className="text-xs text-gray-500">
                   {summary?.onlineSkalds || 0} of {summary?.totalSkalds || 0} skalds online
                 </span>
@@ -169,7 +169,7 @@ export default function Dashboard() {
                   const onlineRatio = summary?.totalSkalds ? (summary.onlineSkalds / summary.totalSkalds) : 0;
                   if (onlineRatio === 1) {
                     return (
-                      <div title="Status: Online - All Skald nodes are connected and operational">
+                      <div title="Status: Online - All Skalds nodes are connected and operational">
                         <StatusIndicator status="online" animated />
                       </div>
                     );
@@ -195,7 +195,7 @@ export default function Dashboard() {
                     );
                   } else {
                     return (
-                      <div title="Status: Offline - No Skald nodes are currently connected">
+                      <div title="Status: Offline - No Skalds nodes are currently connected">
                         <StatusIndicator status="offline" animated />
                       </div>
                     );
@@ -347,10 +347,10 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {/* Skald Connectivity */}
+                {/* Skalds Connectivity */}
                 <tr>
                   <td rowSpan={4} className="py-3 font-medium text-gray-900 align-top border-r border-gray-100">
-                    Skald Connectivity
+                    Skalds Connectivity
                   </td>
                   <td className="py-3">
                     <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs bg-success-100 text-success-800 border-success-200">
@@ -358,7 +358,7 @@ export default function Dashboard() {
                       Online
                     </span>
                   </td>
-                  <td className="py-3 text-gray-600">All Skald nodes are connected and operational (100% online)</td>
+                  <td className="py-3 text-gray-600">All Skalds nodes are connected and operational (100% online)</td>
                 </tr>
                 <tr>
                   <td className="py-3">
@@ -385,7 +385,7 @@ export default function Dashboard() {
                       Offline
                     </span>
                   </td>
-                  <td className="py-3 text-gray-600">No Skald nodes are currently connected (0% online)</td>
+                  <td className="py-3 text-gray-600">No Skalds nodes are currently connected (0% online)</td>
                 </tr>
                 
                 {/* Task Processing */}

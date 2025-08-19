@@ -13,12 +13,12 @@ import os
 # Add the project root to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from skald.proxy.redis import RedisProxy
-from skald.proxy.mongo import MongoProxy
-from skald.proxy.kafka import KafkaProxy
-from skald.system_controller.monitor.task_monitor import TaskMonitor
-from skald.model.task import TaskLifecycleStatus
-from skald.utils.logging import logger
+from skalds.proxy.redis import RedisProxy
+from skalds.proxy.mongo import MongoProxy
+from skalds.proxy.kafka import KafkaProxy
+from skalds.system_controller.monitor.task_monitor import TaskMonitor
+from skalds.model.task import TaskLifecycleStatus
+from skalds.utils.logging import logger
 
 
 async def test_task_monitor_initialization():

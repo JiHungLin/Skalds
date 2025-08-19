@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/dashboard/',
   build: {
-    outDir: '../skald/system_controller/static/dashboard',
+    outDir: '../skalds/system_controller/static/dashboard',
     assetsDir: 'assets',
     sourcemap: true,
     emptyOutDir: true,

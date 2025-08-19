@@ -26,6 +26,6 @@ jobs:
         pip install .[test]
         pip install black
     - name: Lint with black
-      run: black --check skald
+      run: black --check skalds
     - name: Test with pytest
       run: pytest

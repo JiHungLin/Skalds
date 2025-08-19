@@ -1,21 +1,21 @@
-# Skald
+# Skalds
 
 **一個事件驅動的模組化分散式任務調度與執行系統。**
 
-靈感來自北歐神話中的 Skald（吟遊詩人與使者），Skald 專為高併發後端任務管理而設計，透過事件驅動的通訊機制與靈活的資源配置，實現高效能、可擴展的任務調度與執行。
+靈感來自北歐神話中的 Skalds（吟遊詩人與使者），Skalds 專為高併發後端任務管理而設計，透過事件驅動的通訊機制與靈活的資源配置，實現高效能、可擴展的任務調度與執行。
 
 ---
 
 ## 主要特色
 
 - **模組化架構**
-  將系統劃分為三大核心模組（Skald、Monitor、Dispatcher）及其支援模組，各司其職，實現高效能的分散式任務處理。
+  將系統劃分為三大核心模組（Skalds、Monitor、Dispatcher）及其支援模組，各司其職，實現高效能的分散式任務處理。
 
 - **事件驅動通訊**
   採用發佈/訂閱（Pub/Sub）機制的事件佇列，實現模組間的鬆耦合互動，提高系統的彈性與可擴展能力。
 
 - **智能資源調度**
-  結合 Task Generator (Skald) 與 Dispatcher 的優勢，實現基於資源感知的智能任務分配，支援容器化平台的自動擴容。
+  結合 Task Generator (Skalds) 與 Dispatcher 的優勢，實現基於資源感知的智能任務分配，支援容器化平台的自動擴容。
 
 - **完整的監控與管理**
   透過 Monitor 模組提供全方位的系統監控，搭配健全的任務生命週期管理，確保系統穩定運行與資源最佳利用。
@@ -26,7 +26,7 @@
 
 ### 系統架構圖
 
-![Skald Architecture](architecture.jpg)
+![Skalds Architecture](architecture.jpg)
 
 ### 模組說明
 
@@ -35,7 +35,7 @@
 | **System Controller** | 系統核心控制器，整合以下功能：<br>- RESTful API 介面：提供任務建立與控制<br>- 系統監控 (Monitor)：追蹤系統效能與資源使用<br>- 任務調度 (Dispatcher)：智能分配任務與負載平衡<br>- 心跳監控：追蹤 Task Generator 與 Worker 狀態<br>- 狀態管理：統一管理任務狀態與系統配置 |
 | **└─ Monitor**     | System Controller 的監控模組，負責：<br>- 系統效能監控與指標收集<br>- 任務執行狀態追蹤<br>- 資源使用率分析<br>- 警報觸發與通知管理 |
 | **└─ Dispatcher**  | System Controller 的調度模組，負責：<br>- 智能任務分配策略<br>- 動態負載平衡<br>- 資源使用優化<br>- 緊急任務優先處理 |
-| **Task Generator(Skald)**    | 核心任務生成與調度系統。支援邊緣(Edge)與節點(Node)兩種運行模式，通過事件驅動機制實現任務的動態分配與資源管理。特色功能包括：<br>- 彈性配置：支援 YAML 檔案配置工作者(Worker)參數<br>- 自動註冊：簡化的工作者註冊機制，支援多種任務類型<br>- 狀態追蹤：整合 Redis 與 MongoDB 實現任務狀態的可靠追蹤<br>- 錯誤處理：提供任務重試機制與完整的錯誤處理流程 |
+| **Task Generator(Skalds)**    | 核心任務生成與調度系統。支援邊緣(Edge)與節點(Node)兩種運行模式，通過事件驅動機制實現任務的動態分配與資源管理。特色功能包括：<br>- 彈性配置：支援 YAML 檔案配置工作者(Worker)參數<br>- 自動註冊：簡化的工作者註冊機制，支援多種任務類型<br>- 狀態追蹤：整合 Redis 與 MongoDB 實現任務狀態的可靠追蹤<br>- 錯誤處理：提供任務重試機制與完整的錯誤處理流程 |
 | **Task Worker**       | 使用獨立資源（CPU、RAM）執行具體任務，擷取媒體資料來源含 RTSP、快取記憶體(Cache Memory)、磁碟(Storage)，並將結果存入快取或磁碟中。支援：<br>- 多階段任務執行<br>- 自動重試機制<br>- 彈性配置選項 |
 | **Event Queue**       | 基於 Kafka 3.9.0+ 的事件通訊系統，運用 Pub/Sub 機制實現 System Controller、Task Generator 與 Task Worker 間的消息傳遞，具備高吞吐量和可靠性。無需 Zookeeper，簡化部署與維護。                      |
 | **Cache Memory**      | 採用 Redis 8+ 作為快取引擎，儲存高頻率讀寫的數據以提升系統效能。支援進階特性如每個雜湊欄位的 TTL 控制，實現精細的數據生命週期管理。                                                             |
@@ -81,7 +81,7 @@ cp .env.example .env
 安裝好相依套件與設定好 `.env` 後，於專案根目錄執行下列指令啟動服務：
 
 ```bash
-python -m skald.system_controller.main
+python -m skalds.system_controller.main
 ```
 
 服務啟動後，將自動載入 `.env` 設定並啟動 RESTful API、監控與調度等功能。
@@ -90,9 +90,9 @@ python -m skald.system_controller.main
 ---
 ## 模組互動
 
-系統三大核心模組（Skald、Monitor、Dispatcher）協同運作，構建完整的任務生命週期：
+系統三大核心模組（Skalds、Monitor、Dispatcher）協同運作，構建完整的任務生命週期：
 
-1. **Skald (Task Generator)**
+1. **Skalds (Task Generator)**
    - 負責任務的初始化與生成
    - 管理工作者（Worker）的註冊與配置
    - 透過事件佇列與其他模組通訊
@@ -135,8 +135,8 @@ python -m skald.system_controller.main
 
 #### 簡單工作者
 ```python
-from skald.worker.baseclass import BaseTaskWorker, run_before_handler, run_main_handler, update_event_handler
-from skald.utils.logging import logger
+from skalds.worker.baseclass import BaseTaskWorker, run_before_handler, run_main_handler, update_event_handler
+from skalds.utils.logging import logger
 from pydantic import BaseModel, Field, ConfigDict
 import time
 
@@ -231,12 +231,12 @@ TaskWorkers:
     className: ComplexWorker
 ```
 
-### 3. 啟動 Skald 服務
+### 3. 啟動 Skalds 服務
 
 #### Edge 模式（邊緣節點）
 ```python
-from skald import Skald
-from skald.config.skald_config import SkaldConfig
+from skalds import Skalds
+from skalds.config.skald_config import SkaldConfig
 
 config = SkaldConfig(
     skald_mode="edge",
@@ -247,7 +247,7 @@ config = SkaldConfig(
     mongo_host="mongodb://root:root@localhost:27017/"
 )
 
-app = Skald(config)
+app = Skalds(config)
 app.register_task_worker(MyWorker)
 app.register_task_worker(ComplexWorker)
 app.run()
@@ -263,7 +263,7 @@ config = SkaldConfig(
     mongo_host="mongodb://root:root@localhost:27017/"
 )
 
-app = Skald(config)
+app = Skalds(config)
 app.register_task_worker(MyWorker)
 app.run()
 ```
@@ -271,8 +271,8 @@ app.run()
 ### 4. 建立與分配任務
 
 ```python
-from skald.model.task import Task
-from skald.model.event import TaskEvent
+from skalds.model.task import Task
+from skalds.model.event import TaskEvent
 
 # 建立任務
 new_task_attachment = MyDataModel(rtsp_url="rtsp://example.com/stream", fix_frame=30)
@@ -403,11 +403,11 @@ SOFTWARE.
 
 ## 關於名稱（About the Name）
 
-本專案名稱 **Skald** 源自北歐神話中的「吟遊詩人」（Skald）。  
+本專案名稱 **Skalds** 源自北歐神話中的「吟遊詩人」（Skalds）。  
 在古代北歐文化中，Skalds 扮演著故事傳述者與使者的角色，負責保存知識並傳達資訊。
 
 這個命名正好呼應了系統核心的設計理念：  
-透過**事件驅動的通訊機制**，在分散式架構中負責**任務調度與資訊流轉**，如同 Skald 一樣靈活且高效地承載並傳遞任務狀態與資料。
+透過**事件驅動的通訊機制**，在分散式架構中負責**任務調度與資訊流轉**，如同 Skalds 一樣靈活且高效地承載並傳遞任務狀態與資料。
 
 ---
 

@@ -1,6 +1,6 @@
 include README.md
 include LICENSE
 include pyproject.toml
-recursive-include skald *.py
+recursive-include skalds *.py
 recursive-include tests *.py
 recursive-include examples *

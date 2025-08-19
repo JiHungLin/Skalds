@@ -1,4 +1,4 @@
-# Skald Dashboard Build and Deployment Specification
+# Skalds Dashboard Build and Deployment Specification
 
 ## Project Setup
 
@@ -107,7 +107,7 @@ npm run build
 The dashboard build output should be configured to generate files in the FastAPI static files directory:
 
 ```
-skald/system_controller/static/dashboard/
+skalds/system_controller/static/dashboard/
 ├── index.html
 ├── assets/
 │   ├── js/
@@ -168,8 +168,8 @@ jobs:
       
       - name: Copy to FastAPI directory
         run: |
-          mkdir -p skald/system_controller/static/dashboard
-          cp -r dashboard/dist/* skald/system_controller/static/dashboard/
+          mkdir -p skalds/system_controller/static/dashboard
+          cp -r dashboard/dist/* skalds/system_controller/static/dashboard/
 ```
 
 ## Performance Optimization

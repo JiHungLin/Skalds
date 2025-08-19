@@ -1,6 +1,6 @@
 from typing import Dict
 
-from skald.model.task import TaskLifecycleStatus
+from skalds.model.task import TaskLifecycleStatus
 
 
 class TaskHeartbeatRecord: # Store Task Heartbeat Record
