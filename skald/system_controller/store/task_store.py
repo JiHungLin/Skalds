@@ -125,7 +125,7 @@ class TaskHeartbeatRecord:
             str: Task status (Running, Failed, Cancelled, Finished, Assigning)
         """
         with self._lock:
-            logger.warning(self.heartbeat_list)
+            logger.debug(f"Heartbeat list for task {self.task_id}: {self.heartbeat_list}")
             latest_heartbeat = self.get_latest_heartbeat()
             
             if latest_heartbeat == -1:

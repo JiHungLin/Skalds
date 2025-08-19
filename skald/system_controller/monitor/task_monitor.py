@@ -184,7 +184,6 @@ class TaskMonitor:
         try:
             # Get all tasks that should be monitored (Assigning and Running)
             running_passive_tasks = await self._get_all_running_and_assigning_tasks()
-            print(f"Found {len(running_passive_tasks)} running or assigning tasks")
             running_passive_tasks = {task.id for task in running_passive_tasks}
 
             # Add new tasks to monitoring
@@ -192,7 +191,6 @@ class TaskMonitor:
                 self.task_store.add_task(task.id, task.lifecycleStatus, 0)
 
             running_active_tasks = await self._get_all_active_tasks()
-            print(f"Found {len(running_active_tasks)} running active tasks")
             running_active_task_ids = {task.id for task in running_active_tasks}
             for task in running_active_tasks:
                 self.task_store.add_task(task.id, task.lifecycleStatus, 0, task.mode)
@@ -338,7 +336,7 @@ class TaskMonitor:
         for task_id, record in stored_tasks.items():
             try:
                 current_status = record.get_status()
-                logger.warning(f"Processing task {task_id} with status {current_status}")
+                logger.debug(f"Processing task {task_id} with status {current_status}")
                 # Handle different status transitions
                 if record.is_finished_status():
                     logger.debug(f"Task finished: {task_id}")
