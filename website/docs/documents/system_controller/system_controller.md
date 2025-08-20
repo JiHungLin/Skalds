@@ -37,6 +37,14 @@ System Controller 主要包含以下子模組：
 
 ## 4. 啟動與配置
 
+### 4.0 安裝方式
+
+System Controller 需透過下列指令安裝，請務必使用 **pip install skalds[backend]**，這是獨立分割出來的套件，確保所有後端相依元件皆正確安裝：
+
+```bash
+pip install "skalds[backend]"
+```
+
 ### 4.1 環境變數設定
 
 請參考專案根目錄的 [`.env.example (GitHub)`](https://github.com/JiHungLin/skalds/blob/main/.env.example)，複製為 `.env` 並根據需求調整：
