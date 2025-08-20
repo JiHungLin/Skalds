@@ -141,7 +141,6 @@ System Controller 負責任務的**建立、更新、取消**三大核心流程�
 - [EventQueue 事件佇列說明](../event_queue.md)
 - [TaskWorker 詳細說明](../task_worker.md)
 - [YAML 配置說明](../yaml_config.md)
-- [README.md](../../../README.md)
 
 ---
 
