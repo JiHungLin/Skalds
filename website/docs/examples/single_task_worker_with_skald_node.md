@@ -1,4 +1,4 @@
-# 以 Kafka 發送任務給 Node 模式 Skald 範例
+# Skald Node
 
 本範例展示如何在 Skalds 框架下，透過 Kafka 發送任務給以 Node 模式運行的 Skald，並由註冊的 TaskWorker 執行。  
 完整原始碼參考：[GitHub 範例程式](https://github.com/JiHungLin/Skalds/tree/main/examples/single_task_worker_with_skald_node)
