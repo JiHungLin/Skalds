@@ -94,27 +94,8 @@ python -m skalds.system_controller.main
 
 ---
 
-## 6. API 與監控
 
-Dispatcher 運作時，所有分派狀態與統計資訊可透過 System Controller API 查詢：
-
-- **系統狀態查詢**  
-  `GET /api/system/status`  
-  回傳當前模式、各組件運作狀態、Dispatcher 詳細資訊。
-
-- **分派狀態查詢**  
-  `GET /api/system/metrics`  
-  包含 Skalds 狀態、任務分布、分派策略與效能指標。
-
-- **即時事件監控**  
-  `GET /api/events/skalds`、`GET /api/events/tasks`  
-  透過 SSE 監控 Skalds 與任務的即時狀態、心跳、錯誤等。
-
-> API 詳細說明請參考 [`API.md`](../../../../skalds/system_controller/API.md)
-
----
-
-## 7. 典型應用場景
+## 6. 典型應用場景
 
 - **高併發任務分派**：自動將大量任務分配給最合適的 Skald 節點，提升系統吞吐量。
 - **動態負載平衡**：根據 Skald 負載即時調整分派，避免單點過載。
@@ -123,7 +104,7 @@ Dispatcher 運作時，所有分派狀態與統計資訊可透過 System Control
 
 ---
 
-## 8. 效能優化與最佳實踐
+## 7. 效能優化與最佳實踐
 
 - **合理設定分派間隔**：根據任務量與系統規模調整 `DISPATCHER_INTERVAL`，避免過度輪詢或延遲。
 - **策略選擇**：根據實際負載選擇最適合的分派策略，動態切換可提升彈性。
@@ -132,12 +113,11 @@ Dispatcher 運作時，所有分派狀態與統計資訊可透過 System Control
 
 ---
 
-## 9. 常見問題與除錯
+## 8. 常見問題與除錯
 
 - **無可用 Skald 節點**：請確認 Skald node 節點已註冊且線上，並檢查 Redis/MongoDB 連線狀態。
 - **任務未分派**：檢查任務狀態是否正確（非 Running/Assigning/Cancelled），並確認分派策略與條件設定。
 - **Kafka 發布失敗**：確認 Kafka 服務正常運作，並檢查 topic 設定。
-- **分派策略異常**：可透過 API 動態查詢與切換策略，並檢查日誌獲取詳細錯誤資訊。
 
 ---
 
