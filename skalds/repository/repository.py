@@ -29,6 +29,12 @@ class TaskRepository:
             logger.error("MongoProxy is not defined")
             raise ValueError("MongoProxy is not defined")
         self.mongo_proxy = mongo_proxy
+        try:
+            self.mongo_proxy.db.tasks.create_index("id", unique=True)
+        except pymongo.errors.OperationFailure as e:
+            logger.error(f"Failed to create index on 'id': {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error creating index on 'id': {e}")
         logger.info("TaskRepository initialized.")
 
     def get_task_by_task_id(self, id: str, strict_mode: bool = True) -> Optional[Task]:
