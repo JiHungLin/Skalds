@@ -1,5 +1,13 @@
 # Skalds
 
+
+[![Python Version](https://img.shields.io/pypi/pyversions/skalds)](https://www.python.org/downloads/)
+[![PyPI Version](https://img.shields.io/pypi/v/skalds)](https://pypi.org/project/skalds/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/JiHungLin/skalds/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen)](https://jihunglin.github.io/skalds/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/JiHungLin/skalds)
+
+
 **一個事件驅動的模組化分散式任務調度與執行系統。**
 
 靈感來自北歐神話中的 Skalds（吟遊詩人與使者），Skalds 專為高併發後端任務管理而設計，透過事件驅動的通訊機制與靈活的資源配置，實現高效能、可擴展的任務調度與執行。
