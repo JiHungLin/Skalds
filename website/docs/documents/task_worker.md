@@ -88,12 +88,31 @@ TaskWorker 是 Skalds 系統中負責實際執行任務的核心元件。每個 
 
 ### Task 定義（來自 [`skalds/model/task.py`](https://github.com/JiHungLin/skalds/blob/main/skalds/model/task.py)）
 
-- `Task` 主要欄位：
-  - `id`：任務唯一識別碼
-  - `class_name`：對應 TaskWorker 類別名稱
-  - `attachments`：任務參數（Pydantic BaseModel 實例）
-  - `dependencies`：依賴任務列表
-  - `mode`、`lifecycle_status`、`priority` 等
+| 欄位名稱             | 型別                    | 說明                                                         | 範例                                                         |
+|----------------------|-------------------------|--------------------------------------------------------------|--------------------------------------------------------------|
+| id                   | str                     | 任務唯一識別碼                                               | "task_123"                                                   |
+| class_name           | str | 對應 TaskWorker 類別名稱                                     | "MyWorker"                                                   |
+| source               | str                     | 任務來源（如 YAML、MongoDB）                                 | "YAML"                                                       |
+| name                 | Optional[str]           | 任務名稱（可選）                                             | "影像分析任務"                                               |
+| description          | Optional[str]           | 任務描述（可選）                                             | "處理 RTSP 影像流"                                           |
+| executor             | Optional[str]           | 執行者（如 skalds ID，可選）                                 | "skalds-1"                                                   |
+| dependencies         | Optional[List[str]]     | 依賴任務 ID 列表（可選）                                     | ["task_001", "task_002"]                                     |
+| mode                 | ModeEnum                | 執行模式（Active/Passive）                                   | "Active"                                                     |
+| create_date_time     | int | 建立時間（毫秒）                                         | 1724131200000                                                |
+| update_date_time     | int | 最後更新時間（毫秒）                                     | 1724131300000                                                |
+| deadline_date_time   | int | 截止時間（毫秒）                                       | 1724736000000                                                |
+| lifecycle_status     | TaskLifecycleStatus | 任務生命週期狀態 | "Running" |
+| priority             | int                     | 優先權（0~10，預設0）                                        | 5                                                            |
+| attachments          | Optional[BaseModel]     | 任務參數（Pydantic BaseModel 實例，依任務類型自訂）           | MyDataModel(rtsp_url="...", fix_frame=10)                    |
+#### 任務生命週期狀態（TaskLifecycleStatus）列表
+
+- **Created**：任務已建立，尚未分配
+- **Assigning**：任務分配中
+- **Running**：任務執行中
+- **Paused**：任務暫停
+- **Finished**：任務已完成
+- **Failed**：任務執行失敗
+- **Cancelled**：任務已取消
 
 ### TaskWorker 資料流
 
