@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">Skalds 完整技術文件總覽 | Skalds</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://JiHungLin.github.io/Skalds/img/social-card.svg"><meta data-rh="true" name="twitter:image" content="https://JiHungLin.github.io/Skalds/img/social-card.svg"><meta data-rh="true" property="og:url" content="https://JiHungLin.github.io/Skalds/docs/documents"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-intro-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-intro-current"><meta data-rh="true" property="og:title" content="Skalds 完整技術文件總覽 | Skalds"><meta data-rh="true" name="description" content="Skalds 是一套事件驅動的模組化分散式任務調度與執行系統，靈感來自北歐神話中的吟遊詩人（Skalds），專為高併發、可擴展的後端任務管理而設計。系統以鬆耦合架構、彈性資源調度與完整監控為核心，適用於 AI 運算、影像分析、即時資料處理等多種場景。"><meta data-rh="true" property="og:description" content="Skalds 是一套事件驅動的模組化分散式任務調度與執行系統，靈感來自北歐神話中的吟遊詩人（Skalds），專為高併發、可擴展的後端任務管理而設計。系統以鬆耦合架構、彈性資源調度與完整監控為核心，適用於 AI 運算、影像分析、即時資料處理等多種場景。"><link data-rh="true" rel="icon" href="/Skalds/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://JiHungLin.github.io/Skalds/docs/documents"><link data-rh="true" rel="alternate" href="https://JiHungLin.github.io/Skalds/docs/documents" hreflang="en"><link data-rh="true" rel="alternate" href="https://JiHungLin.github.io/Skalds/docs/documents" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Skalds 完整技術文件總覽","item":"https://JiHungLin.github.io/Skalds/docs/documents"}]}</script><link rel="stylesheet" href="/Skalds/assets/css/styles.ac548450.css">
-<script src="/Skalds/assets/js/runtime~main.27dedb51.js" defer="defer"></script>
-<script src="/Skalds/assets/js/main.c0a81b0c.js" defer="defer"></script>
+<script src="/Skalds/assets/js/runtime~main.0708eee7.js" defer="defer"></script>
+<script src="/Skalds/assets/js/main.02031843.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -18,34 +18,39 @@
 <h2 class="anchor anchorWithStickyNavbar_x4gn" id="目錄">目錄<a href="#目錄" class="hash-link" aria-label="Direct link to 目錄" title="Direct link to 目錄">​</a></h2>
 <ul>
 <li>
-<p><a href="/Skalds/docs/documents/cache_memory">快取資料（Cache Memory）</a><br>
-<!-- -->介紹系統中快取引擎（Redis 8+）的設計與應用，包含高頻資料存取、TTL 控制等進階特性。</p>
+<p><a href="/Skalds/docs/documents/cache_memory">快取資料（Cache Memory）</a>
+介紹系統中快取引擎（Redis 8+）的設計與應用，包含高頻資料存取、TTL 控制等進階特性。</p>
 </li>
 <li>
-<p><a href="/Skalds/docs/documents/event_queue">事件佇列（Event Queue）</a><br>
-<!-- -->說明基於 Kafka 3.9.0+ 的事件通訊機制，如何實現模組間的高效 Pub/Sub 訊息傳遞與鬆耦合互動。</p>
+<p><a href="/Skalds/docs/documents/event_queue">事件佇列（Event Queue）</a>
+說明基於 Kafka 3.9.0+ 的事件通訊機制，如何實現模組間的高效 Pub/Sub 訊息傳遞與鬆耦合互動。</p>
 </li>
 <li>
-<p><a href="/Skalds/docs/documents/task_lifecycle">任務生命週期（Task Lifecycle）</a><br>
-<!-- -->詳細描述任務從生成、分配、執行到完成的全流程，以及狀態同步與錯誤處理機制。</p>
+<p><a href="/Skalds/docs/documents/task_lifecycle">任務生命週期（Task Lifecycle）</a>
+詳細描述任務從生成、分配、執行到完成的全流程，以及狀態同步與錯誤處理機制。</p>
 </li>
 <li>
-<p><a href="/Skalds/docs/documents/task_worker">任務工作者（Task Worker）</a><br>
-<!-- -->介紹工作者的設計、執行流程、多階段任務、重試與動態參數更新等功能。</p>
+<p><a href="/Skalds/docs/documents/task_worker">任務工作者（Task Worker）</a>
+介紹工作者的設計、執行流程、多階段任務、重試與動態參數更新等功能。</p>
 </li>
 <li>
-<p><a href="/Skalds/docs/documents/yaml_config">YAML 配置說明（YAML Config）</a><br>
-<!-- -->提供 YAML 格式的工作者與系統配置範例，說明各參數意義與最佳實踐。</p>
+<p><a href="/Skalds/docs/env_setup">環境建置（Env Setup）</a>
+說明如何用 Docker Compose 快速建置 MongoDB、Kafka、Redis 等基礎服務。</p>
 </li>
 <li>
-<p><a href="/Skalds/docs/documents/system_controller/">系統控制器（System Controller）</a><br>
-<!-- -->詳細說明系統核心控制器的架構、API、監控與調度子模組，並包含<a href="/Skalds/docs/documents/system_controller/monitor">Monitor</a>、<a href="/Skalds/docs/documents/system_controller/dispatcher">Dispatcher</a>等子章節。</p>
+<p><a href="/Skalds/docs/documents/yaml_config">YAML 配置說明（YAML Config）</a>
+提供 YAML 格式的工作者與系統配置範例，說明各參數意義與最佳實踐。</p>
+</li>
+<li>
+<p><a href="/Skalds/docs/documents/system_controller/">系統控制器（System Controller）</a>
+詳細說明系統核心控制器的架構、API、監控與調度子模組，並包含<a href="/Skalds/docs/documents/system_controller/monitor">Monitor</a>、<a href="/Skalds/docs/documents/system_controller/dispatcher">Dispatcher</a>等子章節。</p>
 </li>
 </ul>
 <hr>
 <h2 class="anchor anchorWithStickyNavbar_x4gn" id="進階閱讀建議">進階閱讀建議<a href="#進階閱讀建議" class="hash-link" aria-label="Direct link to 進階閱讀建議" title="Direct link to 進階閱讀建議">​</a></h2>
 <ul>
 <li><a href="/Skalds/intro.md">Skalds 框架介紹</a>：快速了解設計理念、架構與應用場景。</li>
+<li><a href="/Skalds/docs/env_setup">環境建置（Env Setup）</a>：如何用 Docker Compose 建立執行環境。</li>
 <li><a href="/README.md">README.md</a>：專案總覽、安裝與啟動說明、使用範例。</li>
 <li><a href="/Skalds/examples/">更多範例</a>：實際任務與工作者的程式碼範例。</li>
 </ul>
