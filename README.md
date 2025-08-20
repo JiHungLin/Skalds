@@ -4,7 +4,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/skalds)](https://www.python.org/downloads/)
 [![PyPI Version](https://img.shields.io/pypi/v/skalds)](https://pypi.org/project/skalds/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/JiHungLin/skalds/blob/main/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen)](https://jihunglin.github.io/skalds/)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen)](https://jihunglin.github.io/Skalds/)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/JiHungLin/skalds)
 
 
