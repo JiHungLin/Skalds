@@ -7,6 +7,12 @@
 
 ## 1. 定義 TaskWorker（建議可獨立運行）
 
+:::tip 重點
+1. **自訂的 DataModel 必須繼承 pydantic 的 `BaseModel`。**
+2. **自訂的 TaskWorker 必須繼承 Skalds 的 `BaseTaskWorker`，並將自訂的 DataModel 作為泛型指定。**
+3. **根據不同生命週期，請使用對應的 Decorator（`run_before_handler`, `run_main_handler`, `run_after_handler`, `update_event_handler`）來自訂邏輯。**
+:::
+
 與 Edge 模式相同，TaskWorker 建議加上 `if __name__ == "__main__"`，方便單獨測試。
 
 **`my_simple_worker.py`**
@@ -16,6 +22,7 @@ from skalds.utils.logging import logger
 from pydantic import BaseModel, Field, ConfigDict
 import time
 
+# 1. 自訂的 DataModel 必須繼承 pydantic 的 BaseModel
 class MySimpleDataModel(BaseModel):
     rtsp_url: str = Field(..., description="RTSP stream URL", alias="rtspUrl")
     fix_frame: int = Field(..., description="Fix frame number", alias="fixFrame")
@@ -24,11 +31,13 @@ class MySimpleDataModel(BaseModel):
         use_enum_values=True
     )
 
+# 2. 自訂的 TaskWorker 必須繼承 BaseTaskWorker，並將 DataModel 作為泛型指定
 class MySimpleWorker(BaseTaskWorker[MySimpleDataModel]):
     def initialize(self, data: MySimpleDataModel) -> None:
         self.rtsp_url = data.rtsp_url
         self.fix_frame = data.fix_frame
 
+    # 3. 依照不同生命週期，使用對應的 Decorator 來自訂邏輯
     @run_before_handler
     def before_run(self) -> None:
         logger.info(f"Starting MyWorker with RTSP URL: {self.rtsp_url}")
@@ -46,6 +55,12 @@ if __name__ == "__main__":
     my_worker.initialize(my_data)
     my_worker.start()
 ```
+
+**補充說明：**
+- 上述範例中，`MySimpleDataModel` 必須繼承自 `BaseModel`，以確保資料驗證與型別提示。
+- `MySimpleWorker` 必須繼承自 `BaseTaskWorker`，並以泛型方式指定對應的 DataModel。
+- 依照不同生命週期，請使用對應的 Decorator（如 `@run_before_handler`, `@run_main_handler`）來自訂執行邏輯。
+
 **說明：**
 - 可直接執行本檔案，單獨測試 Worker 行為。
 - 實際運行時，Skalds 會自動注入任務參數。
