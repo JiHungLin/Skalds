@@ -31,9 +31,9 @@ class SystemControllerModeEnum(str, Enum):
 
 class DispatcherStrategyEnum(str, Enum):
     """Enumeration for task assignment strategies."""
-    LEAST_TASKS = "least_tasks"    # Assign to Skalds with fewest tasks
-    ROUND_ROBIN = "round_robin"    # Round-robin assignment
-    RANDOM = "random"              # Random assignment
+    LEAST_TASKS = "LEAST_TASKS"    # Assign to Skalds with fewest tasks
+    ROUND_ROBIN = "ROUND_ROBIN"    # Round-robin assignment
+    RANDOM = "RANDOM"              # Random assignment
 
     @classmethod
     def list(cls) -> list[str]:
