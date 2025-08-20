@@ -17,13 +17,13 @@
 ## 主要特色
 
 - **模組化架構**
-  將系統劃分為三大核心模組（Skalds、Monitor、Dispatcher）及其支援模組，各司其職，實現高效能的分散式任務處理。
+  將系統劃分為三大核心模組（Skald、Monitor、Dispatcher）及其支援模組，各司其職，實現高效能的分散式任務處理。
 
 - **事件驅動通訊**
   採用發佈/訂閱（Pub/Sub）機制的事件佇列，實現模組間的鬆耦合互動，提高系統的彈性與可擴展能力。
 
 - **智能資源調度**
-  結合 Task Generator (Skalds) 與 Dispatcher 的優勢，實現基於資源感知的智能任務分配，支援容器化平台的自動擴容。
+  結合 Task Generator (Skald) 與 Dispatcher 的優勢，實現基於資源感知的智能任務分配，支援容器化平台的自動擴容。
 
 - **完整的監控與管理**
   透過 Monitor 模組提供全方位的系統監控，搭配健全的任務生命週期管理，確保系統穩定運行與資源最佳利用。
@@ -43,7 +43,7 @@
 | **System Controller** | 系統核心控制器，整合以下功能：<br>- RESTful API 介面：提供任務建立與控制<br>- 系統監控 (Monitor)：追蹤系統效能與資源使用<br>- 任務調度 (Dispatcher)：智能分配任務與負載平衡<br>- 心跳監控：追蹤 Task Generator 與 Worker 狀態<br>- 狀態管理：統一管理任務狀態與系統配置 |
 | **└─ Monitor**     | System Controller 的監控模組，負責：<br>- 系統效能監控與指標收集<br>- 任務執行狀態追蹤<br>- 資源使用率分析<br>- 警報觸發與通知管理 |
 | **└─ Dispatcher**  | System Controller 的調度模組，負責：<br>- 智能任務分配策略<br>- 動態負載平衡<br>- 資源使用優化<br>- 緊急任務優先處理 |
-| **Task Generator(Skalds)**    | 核心任務生成與調度系統。支援邊緣(Edge)與節點(Node)兩種運行模式，通過事件驅動機制實現任務的動態分配與資源管理。特色功能包括：<br>- 彈性配置：支援 YAML 檔案配置工作者(Worker)參數<br>- 自動註冊：簡化的工作者註冊機制，支援多種任務類型<br>- 狀態追蹤：整合 Redis 與 MongoDB 實現任務狀態的可靠追蹤<br>- 錯誤處理：提供任務重試機制與完整的錯誤處理流程 |
+| **Task Generator(Skald)**    | 核心任務生成與調度系統。支援邊緣(Edge)與節點(Node)兩種運行模式，通過事件驅動機制實現任務的動態分配與資源管理。特色功能包括：<br>- 彈性配置：支援 YAML 檔案配置工作者(Worker)參數<br>- 自動註冊：簡化的工作者註冊機制，支援多種任務類型<br>- 狀態追蹤：整合 Redis 與 MongoDB 實現任務狀態的可靠追蹤<br>- 錯誤處理：提供任務重試機制與完整的錯誤處理流程 |
 | **Task Worker**       | 使用獨立資源（CPU、RAM）執行具體任務，擷取媒體資料來源含 RTSP、快取記憶體(Cache Memory)、磁碟(Storage)，並將結果存入快取或磁碟中。支援：<br>- 多階段任務執行<br>- 自動重試機制<br>- 彈性配置選項 |
 | **Event Queue**       | 基於 Kafka 3.9.0+ 的事件通訊系統，運用 Pub/Sub 機制實現 System Controller、Task Generator 與 Task Worker 間的消息傳遞，具備高吞吐量和可靠性。無需 Zookeeper，簡化部署與維護。                      |
 | **Cache Memory**      | 採用 Redis 8+ 作為快取引擎，儲存高頻率讀寫的數據以提升系統效能。支援進階特性如每個雜湊欄位的 TTL 控制，實現精細的數據生命週期管理。                                                             |

@@ -407,7 +407,7 @@ async def get_version():
         "version": "1.0.0",
         "buildDate": "2024-01-01",
         "gitCommit": "unknown",
-        "pythonVersion": "3.8+",
+        "pythonVersion": "3.10+",
         "dependencies": {
             "fastapi": "0.100+",
             "pydantic": "2.0+",

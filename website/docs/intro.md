@@ -24,7 +24,7 @@ Skalds 系統由三大核心模組與多個支援模組組成：
 | **System Controller** | 系統核心控制器，整合 API、監控、調度、心跳與狀態管理 |
 | **Monitor** | 系統效能監控、資源分析、任務狀態追蹤、警報通知 |
 | **Dispatcher** | 智能任務分配、動態負載平衡、資源優化 |
-| **Task Generator (Skalds)** | 任務生成與調度，支援 Edge/Node 模式，彈性配置與自動註冊 |
+| **Task Generator (Skald)** | 任務生成與調度，支援 Edge/Node 模式，彈性配置與自動註冊 |
 | **Task Worker** | 實際執行任務，支援多階段、重試、動態參數更新 |
 | **Event Queue** | 基於 Kafka 的事件佇列，實現高效 Pub/Sub 通訊 |
 | **Cache Memory** | Redis 快取，支援高頻資料與精細 TTL 控制 |
