@@ -8,22 +8,25 @@ Skalds 是一套**事件驅動的模組化分散式任務調度與執行系統**
 
 ## 目錄
 
-- [快取資料（Cache Memory）](./documents/cache_memory.md)  
+- [快取資料（Cache Memory）](./documents/cache_memory.md)
   介紹系統中快取引擎（Redis 8+）的設計與應用，包含高頻資料存取、TTL 控制等進階特性。
 
-- [事件佇列（Event Queue）](./documents/event_queue.md)  
+- [事件佇列（Event Queue）](./documents/event_queue.md)
   說明基於 Kafka 3.9.0+ 的事件通訊機制，如何實現模組間的高效 Pub/Sub 訊息傳遞與鬆耦合互動。
 
-- [任務生命週期（Task Lifecycle）](./documents/task_lifecycle.md)  
+- [任務生命週期（Task Lifecycle）](./documents/task_lifecycle.md)
   詳細描述任務從生成、分配、執行到完成的全流程，以及狀態同步與錯誤處理機制。
 
-- [任務工作者（Task Worker）](./documents/task_worker.md)  
+- [任務工作者（Task Worker）](./documents/task_worker.md)
   介紹工作者的設計、執行流程、多階段任務、重試與動態參數更新等功能。
 
-- [YAML 配置說明（YAML Config）](./documents/yaml_config.md)  
+- [環境建置（Env Setup）](./env_setup.md)
+  說明如何用 Docker Compose 快速建置 MongoDB、Kafka、Redis 等基礎服務。
+
+- [YAML 配置說明（YAML Config）](./documents/yaml_config.md)
   提供 YAML 格式的工作者與系統配置範例，說明各參數意義與最佳實踐。
 
-- [系統控制器（System Controller）](./documents/system_controller/system_controller.md)  
+- [系統控制器（System Controller）](./documents/system_controller/system_controller.md)
   詳細說明系統核心控制器的架構、API、監控與調度子模組，並包含[Monitor](./documents/system_controller/monitor.md)、[Dispatcher](./documents/system_controller/dispatcher.md)等子章節。
 
 ---
@@ -31,6 +34,7 @@ Skalds 是一套**事件驅動的模組化分散式任務調度與執行系統**
 ## 進階閱讀建議
 
 - [Skalds 框架介紹](../intro.md)：快速了解設計理念、架構與應用場景。
+- [環境建置（Env Setup）](./env_setup.md)：如何用 Docker Compose 建立執行環境。
 - [README.md](../../README.md)：專案總覽、安裝與啟動說明、使用範例。
 - [更多範例](../examples/)：實際任務與工作者的程式碼範例。
 

@@ -18,8 +18,9 @@ const sidebars: SidebarsConfig = {
   // Sidebar for quickstart folder
     quickstartSidebar: [
       {type: 'doc', id: 'quickstart'},
+      {type: 'doc', label:"環境建置", id: 'env_setup'},
       {
-        type: 'category', 
+        type: 'category',
         label: '範例',
         link: {
           type: "generated-index",
