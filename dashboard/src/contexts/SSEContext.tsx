@@ -1,15 +1,15 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { sseManager } from '../lib/sse/manager'
-import { Skald, Task, SkaldEvent, TaskEvent } from '../types'
+import { Skalds, Task, SkaldEvent, TaskEvent } from '../types'
 
 interface SSEContextType {
   // Connection state
   isConnected: boolean
   lastError: Error | null
   
-  // Skald state
-  skalds: Map<string, Skald>
-  updateSkald: (skaldId: string, updates: Partial<Skald>) => void
+  // Skalds state
+  skalds: Map<string, Skalds>
+  updateSkald: (skaldId: string, updates: Partial<Skalds>) => void
   
   // Task state  
   tasks: Map<string, Task>
@@ -33,18 +33,18 @@ interface SSEProviderProps {
 export function SSEProvider({ children }: SSEProviderProps) {
   const [isConnected, setIsConnected] = useState(false)
   const [lastError, setLastError] = useState<Error | null>(null)
-  const [skalds, setSkalds] = useState<Map<string, Skald>>(new Map())
+  const [skalds, setSkalds] = useState<Map<string, Skalds>>(new Map())
   const [tasks, setTasks] = useState<Map<string, Task>>(new Map())
 
-  // Update skald state
-  const updateSkald = useCallback((skaldId: string, updates: Partial<Skald>) => {
+  // Update skalds state
+  const updateSkald = useCallback((skaldId: string, updates: Partial<Skalds>) => {
     setSkalds(prev => {
       const newMap = new Map(prev)
       const existing = newMap.get(skaldId)
       if (existing) {
         newMap.set(skaldId, { ...existing, ...updates })
       } else {
-        // Create a new skald entry if it doesn't exist
+        // Create a new skalds entry if it doesn't exist
         newMap.set(skaldId, {
           id: skaldId,
           type: 'node', // Default type, will be updated by events
@@ -53,7 +53,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
           supportedTasks: [],
           currentTasks: [],
           ...updates
-        } as Skald)
+        } as Skalds)
       }
       return newMap
     })
@@ -83,10 +83,10 @@ export function SSEProvider({ children }: SSEProviderProps) {
     })
   }, [])
 
-  // Handle skald events
+  // Handle skalds events
   const handleSkaldEvent = useCallback((event: SkaldEvent) => {
     
-    const updates: Partial<Skald> = {}
+    const updates: Partial<Skalds> = {}
     
     switch (event.type) {
       case 'skald_status':
@@ -156,7 +156,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
     updateTask(event.taskId, updates)
   }, [updateTask])
 
-  // Subscribe to skald events
+  // Subscribe to skalds events
   const subscribeToSkald = useCallback((skaldId: string, callback: (event: SkaldEvent) => void) => {
     return sseManager.subscribeToSkald(skaldId, callback)
   }, [])
@@ -183,7 +183,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
       setLastError(connected ? null : sseManager.getLastError())
     })
 
-    // Set up global event handlers for all skald and task events
+    // Set up global event handlers for all skalds and task events
     const originalHandleSkaldEvent = sseManager['handleSkaldEvent'].bind(sseManager)
     const originalHandleTaskEvent = sseManager['handleTaskEvent'].bind(sseManager)
     
@@ -254,7 +254,7 @@ export function useSSE() {
   return context
 }
 
-// Hook for subscribing to specific skald events
+// Hook for subscribing to specific skalds events
 export function useSkaldEvents(skaldId: string) {
   const { subscribeToSkald } = useSSE()
   const [events, setEvents] = useState<SkaldEvent[]>([])

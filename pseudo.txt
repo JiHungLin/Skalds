@@ -5,12 +5,12 @@
 # set redis, kafka, mongo
 config = Configuration(redis=xxxx, kafka=xxxx, mongo=xxxx)
 config.x = 456
-skald = Skald(config=config, mode=edge)
+skalds = Skalds(config=config, mode=edge)
 
-skald.register(TaskWorker1Class, limit=5)
-skald.register(TaskWorker2Class)
+skalds.register(TaskWorker1Class, limit=5)
+skalds.register(TaskWorker2Class)
 
-skald.run()
+skalds.run()
 
 
 ** TaskWorker **

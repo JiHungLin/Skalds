@@ -78,7 +78,7 @@ class TaskMonitor:
                 for i in all_need_assign_task:
                     all_skald_with_task_num = dict(sorted(all_skald_with_task_num.items(), key=lambda x: x[1]))
                     if len(all_skald_with_task_num) == 0:
-                        logger.error("No skald is available")
+                        logger.error("No skalds is available")
                         break
                     skald_id = list(all_skald_with_task_num.keys())[0]
                     asyncio.run_coroutine_threadsafe(TaskService.updateTaskExecutor(i.id, skald_id), async_loop).result()

@@ -40,7 +40,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
           <div className="h-0 flex-1 overflow-y-auto pt-5 pb-4">
             <div className="flex flex-shrink-0 items-center px-4">
-              <h1 className="text-xl font-bold text-gray-900">Skald Dashboard</h1>
+              <h1 className="text-xl font-bold text-gray-900">Skalds Dashboard</h1>
             </div>
             <nav className="mt-5 space-y-1 px-2">
               {navigation.map((item) => {
@@ -75,7 +75,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-200">
           <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
             <div className="flex flex-shrink-0 items-center px-4">
-              <h1 className="text-xl font-bold text-gray-900">Skald Dashboard</h1>
+              <h1 className="text-xl font-bold text-gray-900">Skalds Dashboard</h1>
             </div>
             <nav className="mt-5 flex-1 space-y-1 px-2">
               {navigation.map((item) => {
@@ -116,7 +116,7 @@ export default function Layout({ children }: LayoutProps) {
             >
               <Bars3Icon className="h-6 w-6" />
             </button>
-            <h1 className="text-lg font-semibold text-gray-900">Skald Dashboard</h1>
+            <h1 className="text-lg font-semibold text-gray-900">Skalds Dashboard</h1>
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
         </div>

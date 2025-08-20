@@ -1,5 +1,5 @@
-from skald.worker.baseclass import BaseTaskWorker, run_before_handler, run_main_handler, update_event_handler
-from skald.utils.logging import logger
+from skalds.worker.baseclass import BaseTaskWorker, run_before_handler, run_main_handler, update_event_handler
+from skalds.utils.logging import logger
 from pydantic import BaseModel, Field, ConfigDict
 import time
 

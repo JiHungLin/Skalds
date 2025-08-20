@@ -1,8 +1,8 @@
-# Skald Dashboard
+# Skalds Dashboard
 
 ## Architecture Overview
 
-The Skald Dashboard is a modern web application built to monitor and manage Skald tasks and workers. This frontend application integrates with the FastAPI backend system and provides real-time monitoring capabilities.
+The Skalds Dashboard is a modern web application built to monitor and manage Skalds tasks and workers. This frontend application integrates with the FastAPI backend system and provides real-time monitoring capabilities.
 
 ### Tech Stack
 
@@ -30,7 +30,7 @@ dashboard/
 ├── src/
 │   ├── components/        # Reusable UI components
 │   ├── features/         # Feature-specific components
-│   │   ├── skalds/      # Skald monitoring
+│   │   ├── skalds/      # Skalds monitoring
 │   │   └── tasks/       # Task management
 │   ├── hooks/           # Custom React hooks
 │   ├── lib/             # Utilities and helpers
@@ -46,7 +46,7 @@ dashboard/
 
 The dashboard implements Server-Sent Events (SSE) for real-time monitoring:
 
-1. **Skald Status Updates**
+1. **Skalds Status Updates**
    - Connection status (online/offline)
    - Heartbeat monitoring with visual indicators
    - Current task assignments
@@ -88,9 +88,9 @@ For detailed SSE documentation, see [`src/lib/sse/README.md`](src/lib/sse/README
 
 ### Core Features
 
-1. **Skald Monitoring**
+1. **Skalds Monitoring**
    - List of all Skalds with status indicators
-   - Detailed view of Skald capabilities
+   - Detailed view of Skalds capabilities
    - Real-time connection status
    - Current task assignments
 
@@ -105,7 +105,7 @@ For detailed SSE documentation, see [`src/lib/sse/README.md`](src/lib/sse/README
    - Dashboard summary statistics
    - System health indicators
    - Active task count
-   - Connected Skald count
+   - Connected Skalds count
 
 ### Development Setup
 
@@ -139,9 +139,9 @@ The built dashboard will be served as static files through the FastAPI server. T
 
 The dashboard will interact with the following API endpoints:
 
-1. Skald Management
+1. Skalds Management
    - GET `/api/skalds` - List all Skalds
-   - GET `/api/skalds/{id}` - Get Skald details
+   - GET `/api/skalds/{id}` - Get Skalds details
 
 2. Task Management
    - GET `/api/tasks` - List tasks (with pagination)
@@ -150,5 +150,5 @@ The dashboard will interact with the following API endpoints:
    - PUT `/api/tasks/{id}/attachments` - Update task attachments
 
 3. SSE Endpoints
-   - GET `/api/events/skalds` - Skald status events
+   - GET `/api/events/skalds` - Skalds status events
    - GET `/api/events/tasks` - Task status events

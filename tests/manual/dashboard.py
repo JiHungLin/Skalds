@@ -1,6 +1,6 @@
-from skald.config._enum import DispatcherStrategyEnum, LogLevelEnum, SystemControllerModeEnum
-from skald.system_controller import SystemController
-from skald.config.system_controller_config import SystemControllerConfig
+from skalds.config._enum import DispatcherStrategyEnum, LogLevelEnum, SystemControllerModeEnum
+from skalds.system_controller import SystemController
+from skalds.config.system_controller_config import SystemControllerConfig
 import asyncio
 
 
@@ -13,7 +13,7 @@ config = SystemControllerConfig(
     kafka_host="127.0.0.1",
     kafka_port=9092,
     mongo_host="mongodb://root:root@localhost:27017",
-    db_name="skald",
+    db_name="skalds",
     monitor_skald_interval=5,
     monitor_task_interval=5,
     monitor_heartbeat_timeout=5,

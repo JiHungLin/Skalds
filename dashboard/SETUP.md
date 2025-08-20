@@ -1,8 +1,8 @@
-# Skald Dashboard 設置指南
+# Skalds Dashboard 設置指南
 
 ## 概述
 
-Skald Dashboard 是一個現代化的 React + TypeScript 網頁應用程式，用於監控和管理 Skald 任務和工作節點。
+Skalds Dashboard 是一個現代化的 React + TypeScript 網頁應用程式，用於監控和管理 Skalds 任務和工作節點。
 
 ## 技術棧
 
@@ -55,7 +55,7 @@ Skald Dashboard 是一個現代化的 React + TypeScript 網頁應用程式，�
 pnpm run build
 ```
 
-構建完成後，靜態文件將自動輸出到 `../skald/system_controller/static/dashboard/` 目錄，可直接被 FastAPI 服務器提供服務。
+構建完成後，靜態文件將自動輸出到 `../skalds/system_controller/static/dashboard/` 目錄，可直接被 FastAPI 服務器提供服務。
 
 ### 構建輸出
 
@@ -74,7 +74,7 @@ dashboard/
 │   │   └── Layout/         # 布局組件
 │   ├── features/           # 功能特定組件
 │   │   ├── dashboard/      # 主儀表板
-│   │   ├── skalds/        # Skald 監控
+│   │   ├── skalds/        # Skalds 監控
 │   │   └── tasks/         # 任務管理
 │   ├── lib/               # 工具和配置
 │   │   ├── api/           # API 客戶端
@@ -89,11 +89,11 @@ dashboard/
 
 ### 1. 儀表板概覽
 - 系統統計摘要
-- Skald 和任務狀態概覽
+- Skalds 和任務狀態概覽
 - 快速操作按鈕
 
-### 2. Skald 監控
-- 實時 Skald 狀態顯示
+### 2. Skalds 監控
+- 實時 Skalds 狀態顯示
 - 支持的任務類型
 - 當前任務分配情況
 - 連接狀態監控
@@ -107,7 +107,7 @@ dashboard/
 ### 4. 實時更新 (SSE)
 - Server-Sent Events 連接管理
 - 自動重連機制
-- Skald 狀態事件
+- Skalds 狀態事件
 - 任務狀態事件
 
 ## API 集成
@@ -121,12 +121,12 @@ dashboard/
 ### 預期的 API 端點
 
 - `GET /api/skalds` - 獲取所有 Skalds
-- `GET /api/skalds/{id}` - 獲取特定 Skald
+- `GET /api/skalds/{id}` - 獲取特定 Skalds
 - `GET /api/tasks` - 獲取任務列表 (支持分頁和篩選)
 - `GET /api/tasks/{id}` - 獲取特定任務
 - `PUT /api/tasks/{id}/status` - 更新任務狀態
 - `PUT /api/tasks/{id}/attachments` - 更新任務附件
-- `GET /api/events/skalds` - Skald SSE 事件流
+- `GET /api/events/skalds` - Skalds SSE 事件流
 - `GET /api/events/tasks` - 任務 SSE 事件流
 
 ## FastAPI 集成
@@ -236,7 +236,7 @@ jobs:
 ### 手動部署
 
 1. 運行構建命令: `pnpm run build`
-2. 確認文件已輸出到 `../skald/system_controller/static/dashboard/`
+2. 確認文件已輸出到 `../skalds/system_controller/static/dashboard/`
 3. 部署 FastAPI 應用程序
 4. 通過 `/dashboard` 路徑訪問
 

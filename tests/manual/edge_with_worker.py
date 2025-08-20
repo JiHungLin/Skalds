@@ -1,5 +1,5 @@
-from skald import Skald
-from skald.config.skald_config import SkaldConfig
+from skalds import Skalds
+from skalds.config.skald_config import SkaldConfig
 from my_worker import MyWorker
 from complex_worker import ComplexWorker
 
@@ -15,7 +15,7 @@ config = SkaldConfig(
     log_split_with_worker_id=True,
 )
 
-app = Skald(config)
+app = Skalds(config)
 
 app.register_task_worker(MyWorker)
 app.register_task_worker(ComplexWorker)

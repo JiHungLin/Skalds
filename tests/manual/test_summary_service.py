@@ -15,12 +15,12 @@ from typing import Dict, Any
 # Add the project root to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from skald.proxy.mongo import MongoProxy, MongoConfig
-from skald.system_controller.store.task_store import TaskStore
-from skald.system_controller.store.skald_store import SkaldStore
-from skald.system_controller.service.summary_service import SummaryService
-from skald.model.task import Task, TaskLifecycleStatus
-from skald.utils.logging import logger
+from skalds.proxy.mongo import MongoProxy, MongoConfig
+from skalds.system_controller.store.task_store import TaskStore
+from skalds.system_controller.store.skald_store import SkaldStore
+from skalds.system_controller.service.summary_service import SummaryService
+from skalds.model.task import Task, TaskLifecycleStatus
+from skalds.utils.logging import logger
 
 
 class SummaryServiceTester:

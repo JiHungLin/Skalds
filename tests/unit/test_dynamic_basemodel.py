@@ -1,6 +1,6 @@
 import pytest
 from pydantic import BaseModel, ValidationError
-from skald.model.task import Task
+from skalds.model.task import Task
 
 # 1. 簡單自訂 BaseModel
 class SimpleAttachment(BaseModel):

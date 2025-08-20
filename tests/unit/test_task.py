@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
 from pydantic import BaseModel, ValidationError
-from skald.model.task import (
+from skalds.model.task import (
     ModeEnum,
     TaskLifecycleStatus,
     Task,

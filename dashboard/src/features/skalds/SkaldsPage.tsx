@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api/client'
 import DataGrid from '../../components/ui/DataGrid'
 import StatusIndicator from '../../components/ui/StatusIndicator'
-import { Skald, DataGridColumn } from '../../types'
+import { Skalds, DataGridColumn } from '../../types'
 import { XCircleIcon, WifiIcon } from '@heroicons/react/24/outline'
 import { useSSE } from '../../contexts/SSEContext'
 
@@ -22,19 +22,19 @@ export default function SkaldsPage() {
   const mergedSkalds = useMemo(() => {
     if (!skalds?.items) return []
     
-    return skalds.items.map(skald => {
-      const sseSkald = sseSkalds.get(skald.id)
+    return skalds.items.map(skalds => {
+      const sseSkald = sseSkalds.get(skalds.id)
       if (sseSkald) {
         // Merge API data with SSE updates, prioritizing SSE for real-time fields
         return {
-          ...skald,
+          ...skalds,
           ...sseSkald,
           // Keep original API data for fields that SSE doesn't update
-          supportedTasks: skald.supportedTasks,
-          type: skald.type
+          supportedTasks: skalds.supportedTasks,
+          type: skalds.type
         }
       }
-      return skald
+      return skalds
     })
   }, [skalds?.items, sseSkalds])
 
@@ -44,10 +44,10 @@ export default function SkaldsPage() {
 
     const unsubscribers: (() => void)[] = []
 
-    skalds.items.forEach(skald => {
-      // Initialize skald in SSE context if not already present
-      if (!sseSkalds.has(skald.id)) {
-        updateSkald(skald.id, skald)
+    skalds.items.forEach(skalds => {
+      // Initialize skalds in SSE context if not already present
+      if (!sseSkalds.has(skalds.id)) {
+        updateSkald(skalds.id, skalds)
       }
     })
 
@@ -75,7 +75,7 @@ export default function SkaldsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Skalds</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Monitor and manage your Skald workers
+            Monitor and manage your Skalds workers
           </p>
         </div>
         
@@ -89,7 +89,7 @@ export default function SkaldsPage() {
                 Failed to Load Skalds
               </h3>
               <div className="mt-2 text-sm text-red-700">
-                <p>Unable to fetch Skald data from the API.</p>
+                <p>Unable to fetch Skalds data from the API.</p>
                 <p className="mt-2 font-mono text-xs bg-red-100 p-2 rounded">
                   Error: {error instanceof Error ? error.message : 'Unknown error'}
                 </p>
@@ -109,10 +109,10 @@ export default function SkaldsPage() {
     )
   }
 
-  const columns: DataGridColumn<Skald>[] = [
+  const columns: DataGridColumn<Skalds>[] = [
     {
       key: 'id',
-      header: 'Skald ID',
+      header: 'Skalds ID',
       sortable: true,
     },
     {
@@ -168,7 +168,7 @@ export default function SkaldsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Skalds</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Monitor and manage your Skald workers
+            Monitor and manage your Skalds workers
           </p>
         </div>
         

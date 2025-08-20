@@ -3,16 +3,16 @@ import {
   GetTasksRequest,
   GetTasksResponse,
   Task,
-  Skald,
+  Skalds,
   UpdateTaskStatusRequest,
   UpdateTaskAttachmentsRequest,
   DashboardSummary
 } from '../../types/index'
 
 // Mock data for development
-const mockSkalds: Skald[] = [
+const mockSkalds: Skalds[] = [
   {
-    id: 'skald-node-001',
+    id: 'skalds-node-001',
     type: 'node',
     status: 'online',
     lastHeartbeat: new Date().toISOString(),
@@ -20,7 +20,7 @@ const mockSkalds: Skald[] = [
     currentTasks: ['task-001', 'task-003']
   },
   {
-    id: 'skald-node-002',
+    id: 'skalds-node-002',
     type: 'node',
     status: 'online',
     lastHeartbeat: new Date(Date.now() - 30000).toISOString(),
@@ -28,7 +28,7 @@ const mockSkalds: Skald[] = [
     currentTasks: ['task-002']
   },
   {
-    id: 'skald-edge-001',
+    id: 'skalds-edge-001',
     type: 'edge',
     status: 'offline',
     lastHeartbeat: new Date(Date.now() - 300000).toISOString(),
@@ -43,7 +43,7 @@ const mockTasks: Task[] = [
     mode: 'Active',
     className: 'data_processing',
     lifecycleStatus: 'Running',
-    executor: 'skald-node-001',
+    executor: 'skalds-node-001',
     createDateTime: new Date(Date.now() - 3600000).toISOString(),
     updateDateTime: new Date(Date.now() - 1800000).toISOString(),
     attachments: { inputFile: 'data.csv', outputPath: '/tmp/processed' },
@@ -56,7 +56,7 @@ const mockTasks: Task[] = [
     mode: 'Active',
     className: 'ml_training',
     lifecycleStatus: 'Running',
-    executor: 'skald-node-002',
+    executor: 'skalds-node-002',
     createDateTime: new Date(Date.now() - 7200000).toISOString(),
     updateDateTime: new Date(Date.now() - 900000).toISOString(),
     attachments: { model: 'neural_network', dataset: 'training_data.json' },
@@ -69,7 +69,7 @@ const mockTasks: Task[] = [
     mode: 'Active',
     className: 'file_conversion',
     lifecycleStatus: 'Finished',
-    executor: 'skald-node-001',
+    executor: 'skalds-node-001',
     createDateTime: new Date(Date.now() - 1800000).toISOString(),
     updateDateTime: new Date(Date.now() - 300000).toISOString(),
     attachments: { sourceFile: 'document.pdf', targetFormat: 'docx' },
@@ -82,7 +82,7 @@ const mockTasks: Task[] = [
     mode: 'Active',
     className: 'data_processing',
     lifecycleStatus: 'Failed',
-    executor: 'skald-node-002',
+    executor: 'skalds-node-002',
     createDateTime: new Date(Date.now() - 5400000).toISOString(),
     updateDateTime: new Date(Date.now() - 3600000).toISOString(),
     attachments: { inputFile: 'corrupted_data.csv' },
@@ -190,13 +190,13 @@ class ApiClient {
     throw new Error(`No mock data available for ${endpoint}`)
   }
 
-  // Skald endpoints
+  // Skalds endpoints
   async getSkalds(): Promise<GetSkaldsResponse> {
     return this.fetchApi<GetSkaldsResponse>('/api/skalds/')
   }
 
-  async getSkald(id: string): Promise<Skald> {
-    return this.fetchApi<Skald>(`/api/skalds/${id}`)
+  async getSkald(id: string): Promise<Skalds> {
+    return this.fetchApi<Skalds>(`/api/skalds/${id}`)
   }
 
   // Task endpoints

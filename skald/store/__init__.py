@@ -1,1 +1,0 @@
-"""Disk Storage module for Skald."""

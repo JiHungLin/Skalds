@@ -27,8 +27,8 @@ class SlaveStore:
 
     @classmethod
     def addSlave(cls, id, update_time):
-        skald = SlaveData(id, update_time)
-        cls.allSlaves[id] = skald
+        skalds = SlaveData(id, update_time)
+        cls.allSlaves[id] = skalds
     
     @classmethod
     def updateSlaveUpdateTime(cls, id, new_update_time):
