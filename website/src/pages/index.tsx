@@ -85,9 +85,6 @@ export default function Home() {
               <li>⚡ 高併發後端服務，支援動態擴展的後端服務架構，適合負載波動大且需快速調整資源的場景。</li>
               <li>⏱️ 即時任務管理，提供靈活的任務控制能力，支持任務的暫停、取消與動態更新。</li>
             </ul>
-
-            <Heading as="h2" style={{marginTop: '2rem'}}>快速開始</Heading>
-            <p>請參考專案根目錄的 <code>README.md</code> 以獲取詳細的安裝與啟動說明。</p>
           </div>
         </section>
       </main>
