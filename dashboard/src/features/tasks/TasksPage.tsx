@@ -28,11 +28,12 @@ export default function TasksPage() {
   }, [taskIdFilter])
 
   // Fetch all available Task class names from backend
-  const { data: classNameOptions = [] } = useQuery({
+  const { data: classNameOptionsRaw = [] } = useQuery({
     queryKey: ['task-classnames'],
     queryFn: () => apiClient.getTaskClassNames(),
     staleTime: 5 * 60 * 1000,
   })
+  const classNameOptions = Array.isArray(classNameOptionsRaw) ? classNameOptionsRaw : [];
 
   const { data: tasks, isLoading, error } = useQuery<{ items: Task[]; total: number; page: number; pageSize: number }, Error>({
     queryKey: ['tasks', page, statusFilter, typeFilter, debouncedTaskId],

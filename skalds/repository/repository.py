@@ -5,6 +5,7 @@ Provides CRUD operations for Task objects using MongoDB.
 """
 
 from datetime import datetime
+from pydantic import BaseModel
 import pymongo
 import pymongo.errors
 from typing import Optional
@@ -29,6 +30,12 @@ class TaskRepository:
             logger.error("MongoProxy is not defined")
             raise ValueError("MongoProxy is not defined")
         self.mongo_proxy = mongo_proxy
+        try:
+            self.mongo_proxy.db.tasks.create_index("id", unique=True)
+        except pymongo.errors.OperationFailure as e:
+            logger.error(f"Failed to create index on 'id': {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error creating index on 'id': {e}")
         logger.info("TaskRepository initialized.")
 
     def get_task_by_task_id(self, id: str, strict_mode: bool = True) -> Optional[Task]:
@@ -129,6 +136,29 @@ class TaskRepository:
             raise TimeoutError("Timeout creating task")
         except Exception as e:
             logger.error(f"Error creating task: {e}")
+            raise
+
+
+    def update_attachments(self, id: str, attachments: BaseModel) -> Optional[Task]:
+        try:
+            result = self.mongo_proxy.db.tasks.update_one(
+                {"id": id},
+                {"$set": {"attachments": attachments.model_dump(by_alias=True), "updateDateTime": int(datetime.now().timestamp() * 1000)}}
+            )
+            if result.modified_count > 0:
+                logger.info(f"Task with id: {id} updated attachments")
+                return self.get_task_by_task_id(id)
+            else:
+                logger.warning(f"No task found with id: {id} or attachments already set")
+                return None
+        except pymongo.errors.ExecutionTimeout as e:
+            logger.error(f"MongoDB execution timeout: {e}")
+            raise TimeoutError(f"Timeout updating attachments for task id: {id}")
+        except pymongo.errors.ServerSelectionTimeoutError as e:
+            logger.error(f"MongoDB server selection timeout: {e}")
+            raise TimeoutError(f"Timeout updating attachments for task id: {id}")
+        except Exception as e:
+            logger.error(f"Error updating attachments for task id: {id}, error: {e}")
             raise
 
 # End of file

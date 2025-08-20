@@ -1,5 +1,4 @@
 import asyncio
-import atexit
 import signal
 import sys
 from typing import Optional
@@ -19,7 +18,7 @@ import multiprocessing as mp
 from skalds.utils.logging import init_logger
 
 
-class Skalds:
+class Skald:
     """
     Main class for the Skalds application.
     """
