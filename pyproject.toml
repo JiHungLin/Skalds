@@ -34,6 +34,9 @@ dependencies = [
 [tool.setuptools.packages.find]
 include = ["skalds*"]
 
+[tool.setuptools.package-data]
+"skalds.system_controller" = ["static/**/*"]
+
 
 [project.urls]
 "Homepage" = "https://github.com/JiHungLin/skalds"

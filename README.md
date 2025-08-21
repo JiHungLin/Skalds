@@ -86,6 +86,12 @@ cp .env.example .env
 
 ### 2. 啟動 System Controller
 
+請先安裝 System Controller 相依套件，務必使用下列指令（skalds[backend] 為分割出來的套件，確保所有後端元件正確安裝）：
+
+```bash
+pip install "skalds[backend]"
+```
+
 安裝好相依套件與設定好 `.env` 後，於專案根目錄執行下列指令啟動服務：
 
 ```bash

@@ -4,6 +4,26 @@
 本教學範例完整原始碼可參考：[GitHub 範例程式](https://github.com/JiHungLin/Skalds/tree/main/examples/single_task_worker_define)
 
 ---
+## 安裝套件
+
+根據你的需求，請選擇安裝一般版或包含後端功能的進階版：
+
+### 1. 一般安裝（僅需基本功能/Edge 模式）
+
+適用於只需本地運算、YAML 配置與 TaskWorker 的使用者。
+
+```bash
+pip install skalds
+```
+
+### 2. 進階安裝（需後端整合，如 System Controller、API、監控等）
+
+skalds[backend] 為分割出來的套件，包含所有後端相依元件（如 FastAPI，Monitor，Dispatcher 等）。
+
+```bash
+pip install "skalds[backend]"
+```
+---
 
 ## 1. 什麼是 Edge 模式？為何用 YAML？
 

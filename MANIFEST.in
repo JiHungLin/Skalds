@@ -4,3 +4,4 @@ include pyproject.toml
 recursive-include skalds *.py
 recursive-include tests *.py
 recursive-include examples *
+recursive-include skalds/system_controller/static *
