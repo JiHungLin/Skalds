@@ -29,14 +29,14 @@ class SystemConfig:
     YAML_FILE: str = os.getenv("YAML_FILE", "")
 
     # Redis Config
-    REDIS_HOST: str = os.getenv("REDIS_HOST", "")
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
     REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD", "")
     REDIS_SYNC_PERIOD: int = int(os.getenv("REDIS_SYNC_PERIOD", 3))
     REDIS_KEY_TTL: int = int(os.getenv("REDIS_KEY_TTL", 3600))
 
     # Kafka Config
-    KAFKA_HOST: str = os.getenv("KAFKA_HOST", "")
+    KAFKA_HOST: str = os.getenv("KAFKA_HOST", "localhost")
     KAFKA_PORT: int = int(os.getenv("KAFKA_PORT", 9092))
     KAFKA_USERNAME: str = os.getenv("KAFKA_USERNAME", "")
     KAFKA_PASSWORD: str = os.getenv("KAFKA_PASSWORD", "")
@@ -44,7 +44,7 @@ class SystemConfig:
     KAFKA_REPLICATION_FACTOR: int = int(os.getenv("KAFKA_REPLICATION_FACTOR", 3))
 
     # Mongo Config
-    MONGO_HOST: str = os.getenv("MONGO_HOST", "")
+    MONGO_HOST: str = os.getenv("MONGO_HOST", "mongodb://root:root@localhost:27017/")
     DB_NAME: str = os.getenv("DB_NAME", "skalds")
 
     TASK_WORKER_RETRY: int = int(os.getenv("TASK_WORKER_RETRY", -1))

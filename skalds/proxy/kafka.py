@@ -40,6 +40,10 @@ class KafkaConfig:
         username: str = "",
         password: str = "",
     ) -> None:
+        if host is None or host.strip() == "":
+            host = "localhost"
+        if port is None or port <= 0:
+            port = 9092
         self.host = host
         self.port = port
         self.consume_topic_list = consume_topic_list or []

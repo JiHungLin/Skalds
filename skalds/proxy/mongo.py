@@ -15,6 +15,8 @@ class MongoConfig:
     """
 
     def __init__(self, host: str = "mongodb://localhost:27017/", db_name: str = SystemConfig.DB_NAME) -> None:
+        if host is None or host.strip() == "":
+            host = "mongodb://localhost:27017/"
         self.host = host
         self.db_name = db_name
 
