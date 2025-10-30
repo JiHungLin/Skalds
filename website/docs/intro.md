@@ -91,11 +91,13 @@ class MyWorker(BaseTaskWorker[MyDataModel]):
 ```yaml
 TaskWorkers:
   TaskWorker1:
+    isPersistent: true
     attachments:
       fix_frame: 10
       rtsp_url: rtsp://192.168.1.1/camera1
     className: MyWorker
   TaskWorker2:
+    isPersistent: false
     attachments:
       enable_feature_x: true
       job_id: job-12345
@@ -109,6 +111,8 @@ TaskWorkers:
           fail_chance: 0.1
     className: ComplexWorker
 ```
+
+> `isPersistent` 旗標僅在 `single_process` 模式生效，協助區分長期常駐任務（Deployment）與一次性任務（Job/CronJob）。
 
 ### 3. 啟動 Skalds（Edge/Node）
 

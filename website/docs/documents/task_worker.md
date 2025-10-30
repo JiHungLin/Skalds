@@ -167,11 +167,14 @@ class MyWorker(BaseTaskWorker[MyDataModel]):
 ```yaml
 TaskWorkers:
   TaskWorker1:
+    isPersistent: true
     attachments:
       fixFrame: 30
       rtspUrl: rtsp://192.168.1.1/camera1
     className: MyWorker
 ```
+
+> `isPersistent` 僅在 `single_process` 模式下生效，決定任務是否常駐（對應 Deployment）或一次性（適合 Job/CronJob）。
 
 ### 4. 註冊與啟動
 

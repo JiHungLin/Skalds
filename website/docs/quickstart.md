@@ -88,6 +88,7 @@ if __name__ == "__main__":
 ```yaml
 TaskWorkers:
   TaskWorker1:
+    isPersistent: true
     attachments:
       fix_frame: 10
       rtsp_url: rtsp://192.168.1.1/camera1
@@ -95,6 +96,7 @@ TaskWorkers:
 ```
 **說明：**
 - `TaskWorkers` 下可定義多個 worker 實例。
+- `isPersistent`（預設 `true`）僅在 `single_process` 模式生效，用來區分長期常駐（Deployment）與一次性任務（Job/CronJob）。
 - `attachments` 對應資料模型欄位，將自動注入至 worker。
 - `className` 指定對應的 Python Worker 類別。
 

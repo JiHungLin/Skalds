@@ -130,6 +130,7 @@ data:
   all_workers.yml: |
     TaskWorkers:
       TaskWorker1:
+        isPersistent: true
         attachments:
           fix_frame: 10
           rtsp_url: rtsp://192.168.1.1/camera1
@@ -154,6 +155,7 @@ def create_worker_configmap(namespace: str = "default", task_name: str = "task-a
     data = {
         "all_workers.yml": """TaskWorkers:
   TaskWorker1:
+    isPersistent: true
     attachments:
       fix_frame: 10
       rtsp_url: rtsp://192.168.1.1/camera1
@@ -175,6 +177,8 @@ if __name__ == "__main__":
 ```
 
 若同一 Namespace 需要多組 `all_workers.yml`，建議為不同任務使用獨立的 ConfigMap 與 Deployment，並在命名上加入任務識別（例如 `skald-worker-config-<task>`、`skald-single-worker-<task>`），避免混淆。
+
+`isPersistent` 欄位（僅在 `single_process` 模式適用）可協助你在建立 Kubernetes 資源時判斷要使用 Deployment（長期常駐，`true`）或 Job（一次性批次，`false`）。下列範例以常駐任務為例。
 
 2. 接著建立 Deployment（以 `task-alpha` 為例，可另存為 `task-alpha-deploy.yaml`，或直接以 API 建立）：
 
@@ -237,6 +241,7 @@ def create_single_process_resources(namespace: str, task_name: str):
     config_map_data = {
         "all_workers.yml": """TaskWorkers:
   TaskWorker1:
+    isPersistent: true
     attachments:
       fix_frame: 10
       rtsp_url: rtsp://192.168.1.1/camera1
@@ -317,6 +322,7 @@ kubectl logs deploy/skald-single-worker-task-alpha
 **注意事項**
 - ConfigMap 中僅會啟動第一個 `TaskWorker`；若需不同任務，請為每份 YAML 準備對應的 Deployment（或建立多個 ConfigMap + Deployment 組合）。
 - `SKALD_MODE` 必須設為 `single_process`，且 `YAML_FILE` 應指向掛載後的路徑，以保持與本地 `all_workers.yml` 相同的格式。
+- `isPersistent: false`（僅 `single_process` 模式適用）時可考慮改以 Kubernetes Job/CronJob 觸發單次工作，與 Skald 長期任務配置做出區隔。
 - Kubernetes 可透過 Deployment、CronJob 等資源管理 Single Process Pod 的生命週期，藉此彈性擴展或排程任務。
 
 ---
@@ -368,11 +374,13 @@ YAML 配置檔用於 Edge 節點批量定義 TaskWorker，結構如下：
 ```yaml
 TaskWorkers:
   TaskWorker1:
+    isPersistent: true
     attachments:
       fixFrame: 30
       rtspUrl: rtsp://192.168.1.1/camera1
     className: MyWorker
   TaskWorker2:
+    isPersistent: false
     attachments:
       jobId: job-12345
       retries: 2
@@ -387,6 +395,7 @@ TaskWorkers:
 ```
 
 - `TaskWorker1`、`TaskWorker2`：每個工作者的唯一名稱（即任務 ID）。
+- `isPersistent`：任務是否常駐（`true`）或一次性（`false`），僅在 `single_process` 模式作為切換 Deployment / Job 的依據。
 - `attachments`：初始化參數，需對應 Python 類別的 Pydantic 資料模型。
 - `className`：對應已註冊於 Skalds 的 Python 類別名稱。
 

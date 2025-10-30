@@ -21,6 +21,7 @@ YAML 配置檔的頂層通常包含 `TaskWorkers` 區塊，每個工作者以唯
 |--------------|----------------|----------------------------------------------|------------------------------|
 | TaskWorkers  | dict           | 所有工作者定義的集合，key 為工作者名稱        | TaskWorker1, TaskWorker2     |
 | attachments  | dict           | 工作者初始化參數，對應 Pydantic 資料模型欄位  | fixFrame, rtspUrl, ...       |
+| isPersistent | bool           | 任務是否常駐（預設 `true`）；`false` 代表一次性任務，僅在 `single_process` 模式會被使用 | true / false                 |
 | className    | str            | 對應 Python 中的 TaskWorker 類別名稱          | MyWorker, ComplexWorker      |
 
 ---
@@ -34,12 +35,14 @@ YAML 配置檔的頂層通常包含 `TaskWorkers` 區塊，每個工作者以唯
 ```yaml
 TaskWorkers:
   TaskWorker1:
+    isPersistent: true
     attachments:
       fixFrame: 30
       rtspUrl: rtsp://192.168.1.1/camera1
     className: MyWorker
 
   TaskWorker2:
+    isPersistent: false
     attachments:
       jobId: job-12345
       retries: 2
@@ -61,6 +64,7 @@ TaskWorkers:
 |----------------|--------------------------------------------------------------|
 | TaskWorker1, TaskWorker2 | 每個工作者的唯一名稱（即任務 ID，對應 Task.id）        |
 | attachments    | 初始化參數，需對應該 TaskWorker 類別的 Pydantic 資料模型欄位   |
+| isPersistent   | 是否為長期常駐任務（預設 `true`）；`false` 時適合一次性批次或 Job，僅在 `single_process` 模式生效 |
 | className      | 指定 Python 中的 TaskWorker 類別名稱，需已註冊於 Skalds 系統   |
 | sub_tasks      | 巢狀參數範例，支援 list/dict 結構，適用於複雜任務             |
 | enable_feature_x, jobId, retries | 依 TaskWorker 類型自訂的參數                |
@@ -79,6 +83,7 @@ TaskWorkers:
 
 - attachments 內的 key 必須與對應 TaskWorker 的 Pydantic 欄位名稱（或 alias）一致。
 - className 必須為已註冊於 Skalds 的 Python 類別名稱。
+- isPersistent 僅在 `single_process` 模式生效：`true` 可對應常駐型 Deployment，`false` 適合短期 Job/CronJob。
 - 建議將 YAML 配置檔與程式碼版本控管，確保任務定義可追溯。
 - 若有複雜巢狀結構，建議先於 Python 端驗證資料模型正確性。
 
