@@ -156,6 +156,7 @@ python skald_edge.py
 
 - 可依需求擴充資料模型與執行邏輯，或定義多個 Worker。
 - 更多 YAML 配置與進階功能，請參考[完整文件](./documents)與[範例程式](./examples)。
+- 若需在 Kubernetes 中以獨立 Pod 執行單一 TaskWorker，可參考 [Single Process 模式與 K8s 教學](./documents/skald.md#33-在-kubernetes-建立-single-process-任務)。
 - 本教學完整原始碼：[GitHub 範例程式](https://github.com/JiHungLin/Skalds/tree/main/examples/single_task_worker_define)
 
 ---

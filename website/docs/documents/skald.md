@@ -3,9 +3,9 @@ sidebar_position: 6
 sidebar_label: Skald
 ---
 
-# Skald 節點（Skald Node/Edge）技術說明
+# Skald 節點（Edge/Node/Single Process）技術說明
 
-Skald 是 Skalds 分散式任務調度系統的**任務生成與調度核心模組**，負責任務的初始化、分配、與 TaskWorker 的管理。Skald 支援兩種運作模式：**Edge（邊緣節點）**與**Node（工作節點）**，可依據應用場景彈性部署，實現高效能、可擴展的任務調度與執行。
+Skald 是 Skalds 分散式任務調度系統的**任務生成與調度核心模組**，負責任務的初始化、分配、與 TaskWorker 的管理。Skald 現支援三種運作模式：**Edge（邊緣節點）**、**Node（工作節點）**與 **Single Process（單一行程）**，可依據應用場景彈性部署，實現高效能、可擴展的任務調度與執行。
 
 ---
 
@@ -14,7 +14,7 @@ Skald 是 Skalds 分散式任務調度系統的**任務生成與調度核心模�
 Skalds 系統架構如下：
 
 - **System Controller**：系統核心控制器，負責 API、監控、調度與狀態管理。
-- **Task Generator（Skald）**：負責任務生成、分配與 TaskWorker 管理，支援 Edge/Node 模式。
+- **Task Generator（Skald）**：負責任務生成、分配與 TaskWorker 管理，支援 Edge / Node / Single Process 模式。
 - **Task Worker**：實際執行任務的獨立進程。
 - **Event Queue**：基於 Kafka 的事件佇列，實現模組間高效通訊。
 - **Cache Memory**：Redis 快取，負責任務狀態、心跳等高頻資料同步。
@@ -38,6 +38,13 @@ Skald 作為 Task Generator，承上（System Controller/Dispatcher），啟動�
 - 任務由 System Controller 動態分配，Skald 根據事件建立 TaskWorker。
 - 適合彈性擴展、即時任務調度。
 
+### Single Process 模式（skald_mode="single_process"）
+
+- 適用於**僅需啟動單一 TaskWorker**、且交由外部排程器管理生命週期的場景。
+- 啟動後直接從 YAML 中取得第一個 TaskWorker 設定並以獨立行程執行，不會註冊 Skald 節點，也不依賴 Skald heartbeat。
+- 可在缺少 Kafka / Redis 等基礎設施時執行；若環境中有相依服務亦可照常透過環境變數注入。
+- 非常適合搭配 Kubernetes Deployment 或 Job，將每個 TaskWorker 打包成獨立 Pod，由 K8s 負責擴縮與生命周期。
+
 ---
 
 ## 3. 啟動流程與配置
@@ -47,7 +54,7 @@ Skald 作為 Task Generator，承上（System Controller/Dispatcher），啟動�
 Skald 啟動時需傳入 [`SkaldConfig`](https://github.com/JiHungLin/skalds/blob/main/skalds/config/skald_config.py) 物件，支援下列主要參數：
 
 - `skald_id`：Skald 節點唯一識別碼
-- `skald_mode`：運作模式（"edge" 或 "node"）
+- `skald_mode`：運作模式（`"edge"`、`"node"` 或 `"single_process"`）
 - `yaml_file`：YAML 配置檔路徑（Edge 模式需指定）
 - `redis_host`、`kafka_host`、`mongo_host`：外部服務連線資訊
 - 其他日誌、認證、重試等參數
@@ -89,6 +96,228 @@ app = Skalds(config)
 app.register_task_worker(MyWorker)
 app.run()
 ```
+
+#### Single Process 行程
+
+```python
+config = SkaldConfig(
+    skald_mode="single_process",
+    yaml_file="all_workers.yml",
+    log_level="INFO"
+)
+
+app = Skalds(config)
+app.register_task_worker(MyWorker)
+app.run()
+```
+
+> `single_process` 會直接啟動 YAML 中的第一個 TaskWorker，流程結束後程式即告退出，適合整合至批次或容器化環境。
+
+---
+
+## 3.3 在 Kubernetes 建立 Single Process 任務
+
+Single Process 模式能讓每個 TaskWorker 以獨立 Pod 運行，透過 Kubernetes 管理生命週期與擴縮。以下示範以 Deployment 常駐執行單一 Worker，並搭配 Python `kubernetes` 套件的 `create_namespaced_deployment` 建立資源。
+
+1. 先將 `tests/manual/all_workers.yml` 內容轉換為 ConfigMap，可選擇使用 `kubectl` 或 Python 客戶端建立：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skald-worker-config
+data:
+  all_workers.yml: |
+    TaskWorkers:
+      TaskWorker1:
+        attachments:
+          fix_frame: 10
+          rtsp_url: rtsp://192.168.1.1/camera1
+        className: MyWorker
+```
+
+套用 ConfigMap：
+
+```bash
+kubectl apply -f skald-worker-config.yaml
+```
+
+或透過 Python 建立（針對單一任務）：
+
+```python
+from kubernetes import client, config
+
+def create_worker_configmap(namespace: str = "default", task_name: str = "task-alpha"):
+    config.load_kube_config()
+
+    config_map_name = f"skald-worker-config-{task_name}"
+    data = {
+        "all_workers.yml": """TaskWorkers:
+  TaskWorker1:
+    attachments:
+      fix_frame: 10
+      rtsp_url: rtsp://192.168.1.1/camera1
+    className: MyWorker
+"""
+    }
+
+    config_map = client.V1ConfigMap(
+        metadata=client.V1ObjectMeta(name=config_map_name),
+        data=data
+    )
+
+    core_v1 = client.CoreV1Api()
+    core_v1.create_namespaced_config_map(namespace=namespace, body=config_map)
+    print(f"ConfigMap '{config_map_name}' created.")
+
+if __name__ == "__main__":
+    create_worker_configmap()
+```
+
+若同一 Namespace 需要多組 `all_workers.yml`，建議為不同任務使用獨立的 ConfigMap 與 Deployment，並在命名上加入任務識別（例如 `skald-worker-config-<task>`、`skald-single-worker-<task>`），避免混淆。
+
+2. 接著建立 Deployment（以 `task-alpha` 為例，可另存為 `task-alpha-deploy.yaml`，或直接以 API 建立）：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skald-single-worker-task-alpha
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skald-single-worker-task-alpha
+  template:
+    metadata:
+      labels:
+        app: skald-single-worker-task-alpha
+    spec:
+      containers:
+        - name: worker
+          image: <your-registry>/<your-worker-image>:latest
+          env:
+            - name: SKALD_MODE
+              value: single_process
+            - name: SKALD_ID
+              value: worker-sp-task-alpha
+            - name: YAML_FILE
+              value: /config/all_workers.yml
+            - name: LOG_LEVEL
+              value: INFO
+            # 依需求注入 Kafka、Redis、Mongo 相關環境變數
+            - name: KAFKA_HOST
+              value: ""
+            - name: REDIS_HOST
+              value: ""
+            - name: MONGO_HOST
+              value: mongodb://username:password@mongo:27017/
+          volumeMounts:
+            - name: worker-config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: worker-config
+          configMap:
+            name: skald-worker-config-task-alpha
+```
+
+3. 若想以 Python 程式控制建立 ConfigMap 與 Deployment，可將任務名稱作為參數：
+
+```python
+from kubernetes import client, config
+
+def create_single_process_resources(namespace: str, task_name: str):
+    config.load_kube_config()  # 也可改用 load_incluster_config()
+
+    config_map_name = f"skald-worker-config-{task_name}"
+    deployment_name = f"skald-single-worker-{task_name}"
+    pod_label = {"app": deployment_name}
+
+    config_map_data = {
+        "all_workers.yml": """TaskWorkers:
+  TaskWorker1:
+    attachments:
+      fix_frame: 10
+      rtsp_url: rtsp://192.168.1.1/camera1
+    className: MyWorker
+"""
+    }
+
+    core_v1 = client.CoreV1Api()
+    core_v1.create_namespaced_config_map(
+        namespace=namespace,
+        body=client.V1ConfigMap(
+            metadata=client.V1ObjectMeta(name=config_map_name),
+            data=config_map_data
+        )
+    )
+
+    container = client.V1Container(
+        name="worker",
+        image="<your-registry>/<your-worker-image>:latest",
+        env=[
+            client.V1EnvVar(name="SKALD_MODE", value="single_process"),
+            client.V1EnvVar(name="SKALD_ID", value=f"worker-sp-{task_name}"),
+            client.V1EnvVar(name="YAML_FILE", value="/config/all_workers.yml"),
+            client.V1EnvVar(name="LOG_LEVEL", value="INFO"),
+            client.V1EnvVar(name="KAFKA_HOST", value=""),
+            client.V1EnvVar(name="REDIS_HOST", value=""),
+            client.V1EnvVar(name="MONGO_HOST", value="mongodb://username:password@mongo:27017/"),
+        ],
+        volume_mounts=[
+            client.V1VolumeMount(name="worker-config", mount_path="/config", read_only=True)
+        ]
+    )
+
+    pod_spec = client.V1PodSpec(
+        containers=[container],
+        volumes=[
+            client.V1Volume(
+                name="worker-config",
+                config_map=client.V1ConfigMapVolumeSource(name=config_map_name)
+            )
+        ]
+    )
+
+    template = client.V1PodTemplateSpec(
+        metadata=client.V1ObjectMeta(labels=pod_label),
+        spec=pod_spec
+    )
+
+    spec = client.V1DeploymentSpec(
+        replicas=1,
+        selector=client.V1LabelSelector(match_labels=pod_label),
+        template=template
+    )
+
+    deployment = client.V1Deployment(
+        api_version="apps/v1",
+        kind="Deployment",
+        metadata=client.V1ObjectMeta(name=deployment_name),
+        spec=spec
+    )
+
+    apps_v1 = client.AppsV1Api()
+    apps_v1.create_namespaced_deployment(namespace=namespace, body=deployment)
+    print(f"ConfigMap '{config_map_name}' and Deployment '{deployment_name}' created.")
+
+if __name__ == "__main__":
+    create_single_process_resources(namespace="default", task_name="task-alpha")
+```
+
+4. 不論透過 YAML 或 Python API 建立，皆可用以下指令檢查狀態與日誌：
+
+```bash
+kubectl get deploy skald-single-worker-task-alpha
+kubectl get pods -l app=skald-single-worker-task-alpha
+kubectl logs deploy/skald-single-worker-task-alpha
+```
+
+**注意事項**
+- ConfigMap 中僅會啟動第一個 `TaskWorker`；若需不同任務，請為每份 YAML 準備對應的 Deployment（或建立多個 ConfigMap + Deployment 組合）。
+- `SKALD_MODE` 必須設為 `single_process`，且 `YAML_FILE` 應指向掛載後的路徑，以保持與本地 `all_workers.yml` 相同的格式。
+- Kubernetes 可透過 Deployment、CronJob 等資源管理 Single Process Pod 的生命週期，藉此彈性擴展或排程任務。
 
 ---
 
