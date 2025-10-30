@@ -37,6 +37,14 @@ class Skald:
             if hasattr(SystemConfig, sys_attr):
                 setattr(SystemConfig, sys_attr, getattr(config, attr))
 
+        if config.skald_mode == SkaldModeEnum.EDGE:
+            TaskWorkerConfig.mode = "edge"
+        elif config.skald_mode == SkaldModeEnum.SINGLE_PROCESS:
+            TaskWorkerConfig.mode = "single_process"
+            SystemConfig.SKALD_ID = f"[SP]{SystemConfig.SKALD_ID}"
+        else:
+            TaskWorkerConfig.mode = "node"
+
         init_logger(
             logger_name=SystemConfig.SKALD_ID,
             level=SystemConfig.LOG_LEVEL,
@@ -51,13 +59,8 @@ class Skald:
                                    logger_instance=logger)
         self.logger_cleaner.start()
 
-        if config.skald_mode == SkaldModeEnum.EDGE:
-            TaskWorkerConfig.mode = "edge"
-        else:
-            TaskWorkerConfig.mode = "node"
-
         # kafka
-        if config.skald_mode == "edge" and not SystemConfig.KAFKA_HOST:
+        if ( config.skald_mode == "edge" or config.skald_mode == "single_process") and not SystemConfig.KAFKA_HOST:
             kafka_config = None
             self.kafka_proxy = None
         else:
@@ -69,7 +72,7 @@ class Skald:
                     KafkaTopic.TASK_UPDATE_ATTACHMENT,
                     KafkaTopic.TESTING_PRODUCER
                 ]
-            elif config.skald_mode == "edge":
+            elif config.skald_mode == "edge" or config.skald_mode == "single_process":
                 consume_topic_list = [
                     KafkaTopic.TASK_UPDATE_ATTACHMENT,
                     KafkaTopic.TESTING_PRODUCER
@@ -85,7 +88,7 @@ class Skald:
         self.task_worker_manager: Optional[TaskWorkerManager] = None
 
         # redis
-        if config.skald_mode == "edge" and not SystemConfig.REDIS_HOST:
+        if (config.skald_mode == "edge" or config.skald_mode == "single_process") and not SystemConfig.REDIS_HOST:
             redis_config = None
             self.redis_proxy = None
             logger.info("Edge mode, No Redis Config. Skip update skalds task.")
@@ -193,7 +196,7 @@ class Skald:
         logger.info("\n=============================Start main loop.=============================")
         
         # Start Skalds activity registration and heartbeat to Redis
-        if self.redis_proxy is not None:
+        if self.redis_proxy is not None and  self.config.skald_mode != SkaldModeEnum.SINGLE_PROCESS:
             self.skald_survive_handler = SurviveHandler(
                 redis_proxy=self.redis_proxy,
                 key=RedisKey.skald_heartbeat(SystemConfig.SKALD_ID), 
@@ -213,24 +216,37 @@ class Skald:
         )
         self.task_worker_manager.start_kafka_consume()
 
-        if self.config.yaml_file and self.config.skald_mode == "edge":
-            self.task_worker_manager.load_taskworker_from_yaml(yaml_file=self.config.yaml_file)
+        if self.config.skald_mode == "single_process":
+            process = None
+            try:
+                process = self.task_worker_manager.get_first_taskworker_from_yaml(yaml_file=self.config.yaml_file)
+                process.start()
+                process.join()
+            except Exception as e:
+                logger.error(f"Runtime error occurred in single process mode: {e}")
+            finally:
+                if process and process.is_alive():
+                    process.terminate()
+                logger.info("Single process mode completely shutdown")
+        else:
+            if self.config.yaml_file and self.config.skald_mode == "edge":
+                self.task_worker_manager.load_taskworker_from_yaml(yaml_file=self.config.yaml_file)
 
-        # Use new event loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        try:
-            # Setup signal handlers
-            self._setup_signal_handlers(loop)
+            # Use new event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             
-            # Run async main program
-            loop.run_until_complete(self._run_async())
-            
-        except Exception as e:
-            logger.error(f"Runtime error occurred: {e}")
-        finally:
-            # Ensure event loop is closed
-            if not loop.is_closed():
-                loop.close()
-            logger.info("Program completely shutdown")
+            try:
+                # Setup signal handlers
+                self._setup_signal_handlers(loop)
+                
+                # Run async main program
+                loop.run_until_complete(self._run_async())
+                
+            except Exception as e:
+                logger.error(f"Runtime error occurred: {e}")
+            finally:
+                # Ensure event loop is closed
+                if not loop.is_closed():
+                    loop.close()
+                logger.info("Program completely shutdown")

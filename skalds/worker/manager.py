@@ -140,6 +140,7 @@ class TaskWorkerManager:
                                 source="YAML",
                                 executor=SystemConfig.SKALD_ID,
                                 mode=ModeEnum.ACTIVE,
+                                is_persistent=remote_task.is_persistent,
                                 create_date_time=remote_task.create_date_time,
                                 update_date_time=int(datetime.datetime.now().timestamp() * 1000),
                                 deadline_date_time=remote_task.deadline_date_time,
@@ -164,6 +165,7 @@ class TaskWorkerManager:
                             source="YAML",
                             executor=SystemConfig.SKALD_ID,
                             mode=ModeEnum.ACTIVE,
+                            is_persistent=remote_task.is_persistent,
                             create_date_time=int(datetime.datetime.now().timestamp() * 1000),
                             update_date_time=int(datetime.datetime.now().timestamp() * 1000),
                             deadline_date_time=0,
@@ -186,6 +188,7 @@ class TaskWorkerManager:
                         source="YAML",
                         executor=SystemConfig.SKALD_ID,
                         mode=ModeEnum.ACTIVE,
+                        is_persistent=remote_task.is_persistent,
                         create_date_time=int(datetime.datetime.now().timestamp() * 1000),
                         update_date_time=int(datetime.datetime.now().timestamp() * 1000),
                         deadline_date_time=0,
@@ -213,6 +216,54 @@ class TaskWorkerManager:
                 yaml.dump(config, f)
         except Exception as e:
             logger.error(f"Failed to write back to YAML file '{yaml_file}': {e}")
+
+
+    def get_first_taskworker_from_yaml(self, yaml_file: str) -> Optional[BaseTaskWorker]:
+        """
+        Get the first TaskWorker defined in a YAML configuration file.
+
+        Args:
+            yaml_file: Path to the YAML file.
+        Returns:
+            An instance of the first TaskWorker, or None if not found.
+        """
+        yaml = YAML(typ="safe")
+        yaml.default_flow_style = False
+
+        try:
+            with open(yaml_file, 'r') as f:
+                config = yaml.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load YAML file '{yaml_file}': {e}")
+            return None
+
+        if config and config.get("TaskWorkers"):
+            for task_id, value in config["TaskWorkers"].items():
+                attachments = value.get('attachments', {})
+                is_persistent = value.get('isPersistent', True)
+                attachments_obj = TaskWorkerFactory.create_attachment_with_class_name_and_dict(
+                    value['className'],
+                    attachments
+                )
+                task = Task(
+                    id=task_id,
+                    name=task_id,
+                    class_name=value['className'],
+                    description=f"Passive TaskWorker from YAML. ClassName: {value['className']}",
+                    source="YAML",
+                    executor="",
+                    mode=ModeEnum.PASSIVE,
+                    is_persistent=is_persistent,
+                    create_date_time=int(datetime.datetime.now().timestamp() * 1000),
+                    update_date_time=int(datetime.datetime.now().timestamp() * 1000),
+                    deadline_date_time=0,
+                    lifecycle_status=TaskLifecycleStatus.RUNNING,
+                    priority=0,
+                    attachments=attachments_obj
+                )
+                task_worker = TaskWorkerFactory.create_task_worker(task=task)
+                return task_worker
+        return None
 
     # -------------------
     # Task Creation

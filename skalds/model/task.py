@@ -65,6 +65,7 @@ class Task(BaseModel):
     executor: Optional[str] = None
     dependencies: Optional[List[str]] = None
     mode: ModeEnum = Field(ModeEnum.PASSIVE.value, description="Task mode, either Active or Passive")
+    is_persistent: bool = Field(default=True, alias="isPersistent")
     create_date_time: int = Field(default_factory=lambda: int(datetime.now().timestamp() * 1000), alias="createDateTime")
     update_date_time: int = Field(default_factory=lambda: int(datetime.now().timestamp() * 1000), alias="updateDateTime")
     deadline_date_time: int = Field(default_factory=lambda: int((datetime.now() + timedelta(days=7)).timestamp() * 1000), alias="deadlineDateTime")

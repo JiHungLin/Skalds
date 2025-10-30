@@ -16,6 +16,7 @@ class SkaldEnvEnum(str, Enum):
 class SkaldModeEnum(str, Enum):
     EDGE = "edge"
     NODE = "node"
+    SINGLE_PROCESS = "single_process"
 
 class SystemControllerModeEnum(str, Enum):
     """Enumeration for SystemController operational modes."""
