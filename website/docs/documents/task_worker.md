@@ -102,6 +102,7 @@ TaskWorker 是 Skalds 系統中負責實際執行任務的核心元件。每個 
 | update_date_time     | int | 最後更新時間（毫秒）                                     | 1724131300000                                                |
 | deadline_date_time   | int | 截止時間（毫秒）                                       | 1724736000000                                                |
 | lifecycle_status     | TaskLifecycleStatus | 任務生命週期狀態 | "Running" |
+| is_persistent        | bool                    | 是否為常駐任務，僅在 `single_process` 模式下生效；`true` 表示常駐（類似 Deployment），`false` 表示一次性任務（類似 Job/CronJob） | true                                                         |
 | priority             | int                     | 優先權（0~10，預設0）                                        | 5                                                            |
 | attachments          | Optional[BaseModel]     | 任務參數（Pydantic BaseModel 實例，依任務類型自訂）           | MyDataModel(rtsp_url="...", fix_frame=10)                    |
 #### 任務生命週期狀態（TaskLifecycleStatus）列表
