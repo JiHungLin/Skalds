@@ -232,6 +232,22 @@ class AbstractTaskWorker(mp.Process, ABC, Generic[T]):
                     raise
             else:
                 raise NotImplementedError("No custom run_main handler registered.")
+        elif custom_attr == "_custom_run_before":
+            # Call base method first for run_before
+            try:
+                base_method(*args, **kwargs)
+            except Exception as exc:
+                logger.error(f"Exception in base method {base_method.__name__}: {exc}", exc_info=True)
+                raise
+            
+            # Then call custom handler if available
+            if callable(custom_handler):
+                try:
+                    logger.debug(f"Calling custom handler: {custom_attr}")
+                    custom_handler(*args, **kwargs)
+                except Exception as exc:
+                    logger.error(f"Exception in custom {custom_attr}: {exc}", exc_info=True)
+                    raise
         else:
             # Call custom handler first if available
             if callable(custom_handler):
