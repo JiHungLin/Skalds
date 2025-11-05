@@ -16,6 +16,7 @@ class ModeEnum(str, Enum):
     """Enumeration for task execution modes."""
     ACTIVE = "Active"
     PASSIVE = "Passive"
+    PASSIVE_PROCESS = "PassiveProcess"
 
     @classmethod
     def list(cls) -> list[str]:
