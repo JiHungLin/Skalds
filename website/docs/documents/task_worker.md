@@ -86,6 +86,12 @@ TaskWorker 是 Skalds 系統中負責實際執行任務的核心元件。每個 
 
 ## 資料結構與型別
 
+### ModeEnum 執行模式
+
+- `ACTIVE`：透過 YAML 配置主動載入並持續執行的任務，常用於長駐型任務或需要立即啟動的工作。
+- `PASSIVE`：由中心調度系統動態分配給最適合的 Skald 節點執行，適合依需求觸發的任務。
+- `PASSIVE_PROCESS`：專供單機 `SingleProcess` 模式使用，讓任務在同一個常駐進程中運行並保持狀態，執行狀態與主系統無強制綁定，可另外透過k8、docker等方式自訂。
+
 ### Task 定義（來自 [`skalds/model/task.py`](https://github.com/JiHungLin/skalds/blob/main/skalds/model/task.py)）
 
 | 欄位名稱             | 型別                    | 說明                                                         | 範例                                                         |
@@ -97,7 +103,7 @@ TaskWorker 是 Skalds 系統中負責實際執行任務的核心元件。每個 
 | description          | Optional[str]           | 任務描述（可選）                                             | "處理 RTSP 影像流"                                           |
 | executor             | Optional[str]           | 執行者（如 skalds ID，可選）                                 | "skalds-1"                                                   |
 | dependencies         | Optional[List[str]]     | 依賴任務 ID 列表（可選）                                     | ["task_001", "task_002"]                                     |
-| mode                 | ModeEnum                | 執行模式（Active/Passive）                                   | "Active"                                                     |
+| mode                 | ModeEnum                | 任務執行模式，對應 `ModeEnum` 三種取值                       | "PassiveProcess"                                             |
 | create_date_time     | int | 建立時間（毫秒）                                         | 1724131200000                                                |
 | update_date_time     | int | 最後更新時間（毫秒）                                     | 1724131300000                                                |
 | deadline_date_time   | int | 截止時間（毫秒）                                       | 1724736000000                                                |
