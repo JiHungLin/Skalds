@@ -244,7 +244,16 @@ class AbstractTaskWorker(mp.Process, ABC, Generic[T]):
             if callable(custom_handler):
                 try:
                     logger.debug(f"Calling custom handler: {custom_attr}")
-                    custom_handler(*args, **kwargs)
+                    # Try calling with all args/kwargs first
+                    try:
+                        custom_handler(*args, **kwargs)
+                    except TypeError as te:
+                        # If TypeError occurs, try calling with only self (no args/kwargs)
+                        if "positional argument" in str(te) or "keyword argument" in str(te):
+                            logger.debug(f"Custom handler {custom_attr} doesn't accept args/kwargs, calling with self only")
+                            custom_handler()
+                        else:
+                            raise
                 except Exception as exc:
                     logger.error(f"Exception in custom {custom_attr}: {exc}", exc_info=True)
                     raise
