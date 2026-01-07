@@ -8,7 +8,7 @@ from pretty_loguru import LoggerConfig, create_logger, configure_logger, Enhance
 from skalds.config._enum import LogLevelEnum
 from skalds.config.systemconfig import SystemConfig
 
-config = LoggerConfig(level="INFO", rotation="1 day", retention="7 days")
+config = LoggerConfig(level="INFO", rotation="10 MB", retention="7 days")
 
 # 預設全域 logger
 logger = create_logger()

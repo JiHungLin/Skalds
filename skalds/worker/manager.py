@@ -128,6 +128,11 @@ class TaskWorkerManager:
                 try:
                     remote_task = self.task_repository.get_task_by_task_id(id=task_id)
                     if remote_task is not None:
+                        if remote_task.class_name != value['className']:
+                            logger.error(
+                                f"Task {task_id} class name mismatch: YAML({value['className']}) != MongoDB({remote_task.class_name})"
+                            )
+                            continue
                         # If task already exists, update task attachments
                         value['attachments'] = remote_task.attachments.model_dump()
                         logger.info(f"Task {task_id} already exists, updating attachments from MongoDB.")
@@ -147,6 +152,10 @@ class TaskWorkerManager:
                                 lifecycle_status=remote_task.lifecycle_status,
                                 priority=remote_task.priority,
                                 attachments=remote_task.attachments
+                            )
+                            attachments_obj = TaskWorkerFactory.create_attachment_with_class_name_and_dict(
+                                value['className'],
+                                value['attachments']
                             )
                         except Exception as e:
                             logger.error(f"Failed to create task from remote: {e}")
