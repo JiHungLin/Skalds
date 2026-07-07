@@ -4,6 +4,8 @@ Mongo Proxy Module
 Provides a simple, user-friendly interface for MongoDB connections.
 """
 
+import threading
+import time
 import pymongo
 from skalds.utils.logging import logger
 from skalds.config.systemconfig import SystemConfig
@@ -48,9 +50,30 @@ class MongoProxy:
             logger.error(f"Failed to connect to MongoDB at {self.host}: {e}")
             raise
     
-    def init_db_index(self):
-        # Create unique index for tasks collection
-        self.db.tasks.create_index([("id", pymongo.ASCENDING)], unique=True)
+    def init_db_index(self, is_block: bool = True) -> None:
+        """
+        Create unique index for the tasks collection.
+
+        MongoClient connects lazily, so this is typically the first call that
+        actually touches the server. If Mongo is unreachable, retry forever
+        instead of letting a ServerSelectionTimeoutError escape uncaught -
+        otherwise the caller (e.g. Skald.__init__ in node mode) dies with an
+        unhandled exception before any retry/reconnect logic ever runs.
+        """
+        def worker():
+            while True:
+                try:
+                    self.db.tasks.create_index([("id", pymongo.ASCENDING)], unique=True)
+                    logger.success(f"MongoDB index initialized on {self.host}.")
+                    return
+                except Exception as e:
+                    logger.error(f"Failed to initialize MongoDB index at {self.host}: {e}. Retrying in 5 seconds...")
+                    time.sleep(5)
+
+        if is_block:
+            worker()
+        else:
+            threading.Thread(target=worker, daemon=True).start()
 
     def close(self):
         """
